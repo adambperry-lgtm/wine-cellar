@@ -155,7 +155,10 @@
           All Bottles
         </button>
         <button onclick="setFilter('ready')" id="btnFilterReady" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-900/60 transition-all">
-          🍷 Ready to Drink Now
+          🍷 Ready to Drink (Peak)
+        </button>
+        <button onclick="setFilter('approaching')" id="btnFilterApproaching" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-900/60 transition-all">
+          🌊 Approaching Peak
         </button>
         <button onclick="setFilter('aging')" id="btnFilterAging" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/60 transition-all">
           ⏳ Needs to Age
@@ -764,15 +767,15 @@ Upstairs Fridge:
       const map = {
         'all': 'btnFilterAll',
         'ready': 'btnFilterReady',
+        'peak': 'btnFilterReady',
+        'approaching': 'btnFilterApproaching',
         'aging': 'btnFilterAging',
+        'hold': 'btnFilterAging',
         'urgent': 'btnFilterUrgent',
         'basement': 'btnFilterBasement',
         'upstairs': 'btnFilterUpstairs',
         'fridge1': 'btnFilterBasement',
-        'fridge2': 'btnFilterUpstairs',
-        'peak': 'btnFilterReady',
-        'hold': 'btnFilterAging',
-        'approaching': 'btnFilterReady'
+        'fridge2': 'btnFilterUpstairs'
       };
       const activeBtn = document.getElementById(map[filter]);
       if (activeBtn) {
@@ -792,9 +795,14 @@ Upstairs Fridge:
         const st = dw ? dw.status : '';
         const rackLower = (b.location_rack || '').toLowerCase();
 
-        if (currentFilter === 'ready' && dw && dw.status.includes('Hold')) return false;
-        if (currentFilter === 'aging' && (!dw || !dw.status.includes('Hold'))) return false;
-        if (currentFilter === 'urgent' && !st.includes('Drink Soon') && !st.includes('Past Peak')) return false;
+        // 'ready' strictly filters for Peak Window
+        if ((currentFilter === 'ready' || currentFilter === 'peak') && (!dw || !st.includes('Peak Window') || st.includes('Approaching'))) return false;
+        // 'approaching' filters for Approaching Peak (early window / decant)
+        if (currentFilter === 'approaching' && (!dw || !st.includes('Approaching'))) return false;
+        // 'aging' filters for Hold (Too young)
+        if ((currentFilter === 'aging' || currentFilter === 'hold') && (!dw || !st.includes('Hold'))) return false;
+        // 'urgent' filters for late peak / drink soon
+        if (currentFilter === 'urgent' && (!dw || (!st.includes('Drink Soon') && !st.includes('Past Peak')))) return false;
         if (currentFilter === 'basement' && !(rackLower.includes('basement') || rackLower.includes('rack a') || rackLower.includes('rack c'))) return false;
         if (currentFilter === 'upstairs' && !(rackLower.includes('upstairs') || rackLower.includes('rack b') || rackLower.includes('sparkling'))) return false;
 
