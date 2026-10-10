@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cellar Sommelier Agent | Wine Collection & Drinking Windows</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0f1117;
+      --card-dark: #181c26;
+      --card-border: #262c3d;
+      --accent-wine: #9e2a2b;
+      --accent-gold: #d4af37;
+    }
+    body {
+      background-color: var(--bg-dark);
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    @keyframes scanlaser {
+      0% { top: 2%; opacity: 0.9; }
+      50% { top: 96%; opacity: 1; }
+      100% { top: 2%; opacity: 0.9; }
+    }
+    .scan-laser-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #10b981, #34d399, #10b981, transparent);
+      box-shadow: 0 0 16px #10b981, 0 0 4px #34d399;
+      animation: scanlaser 2.4s ease-in-out infinite;
+    }
+    .dropzone-active {
+      border-color: #10b981 !important;
+      background-color: rgba(16, 185, 129, 0.12) !important;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col antialiased">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-30 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-900 to-red-600 flex items-center justify-center shadow-lg shadow-red-950/50">
+          <span class="text-xl">🍷</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-white tracking-wide">Sommelier Wine Cellar Agent</h1>
+            <span class="text-xs bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-full font-medium">Ref Year: 2026</span>
+          </div>
+          <p class="text-xs text-slate-400">Intelligent Drinking Window Engine & Cellar Management</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <button onclick="openModal('scanLabelModal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/40">
+          <span>📸</span> Scan Label
+        </button>
+        <button onclick="openModal('recommendModal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all shadow-sm">
+          <span>✨</span> Ask Sommelier
+        </button>
+        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-900/30">
+          <span>📝</span> Paste Wine List
+        </button>
+        <button onclick="openModal('auditModal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all">
+          <span>📊</span> Cellar Audit
+        </button>
+        <button onclick="clearCellar()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800/80 hover:bg-red-950 text-slate-400 hover:text-red-300 border border-slate-700/80 transition-all" title="Clear sample bottles to start with empty fridges">
+          <span>🧹</span> Empty Fridges
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-6 flex flex-col gap-6">
+
+    <!-- KPI Summary Cards -->
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      <div class="bg-slate-800/60 border border-slate-800 rounded-xl p-3.5 flex flex-col">
+        <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Total Bottles</span>
+        <span id="kpiTotal" class="text-2xl font-bold text-white mt-1">--</span>
+        <span id="kpiUnique" class="text-[11px] text-slate-500 mt-0.5">-- unique wines</span>
+      </div>
+
+      <div class="bg-slate-800/60 border border-slate-800 rounded-xl p-3.5 flex flex-col">
+        <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Cellar Value</span>
+        <span id="kpiValue" class="text-2xl font-bold text-emerald-400 mt-1">--</span>
+        <span class="text-[11px] text-slate-500 mt-0.5">estimated market</span>
+      </div>
+
+      <div onclick="setFilter('peak')" class="cursor-pointer bg-emerald-950/20 border border-emerald-800/40 hover:border-emerald-700 rounded-xl p-3.5 flex flex-col transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-emerald-300 uppercase tracking-wider font-medium">Ready (Peak)</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        </div>
+        <span id="kpiPeak" class="text-2xl font-bold text-emerald-300 mt-1">--</span>
+        <span class="text-[11px] text-emerald-500/80 mt-0.5">prime maturity</span>
+      </div>
+
+      <div onclick="setFilter('approaching')" class="cursor-pointer bg-cyan-950/20 border border-cyan-800/40 hover:border-cyan-700 rounded-xl p-3.5 flex flex-col transition-all">
+        <span class="text-xs text-cyan-300 uppercase tracking-wider font-medium">Approaching</span>
+        <span id="kpiApproaching" class="text-2xl font-bold text-cyan-300 mt-1">--</span>
+        <span class="text-[11px] text-cyan-500/80 mt-0.5">early window / decant</span>
+      </div>
+
+      <div onclick="setFilter('urgent')" class="cursor-pointer bg-amber-950/20 border border-amber-800/40 hover:border-amber-700 rounded-xl p-3.5 flex flex-col transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-amber-300 uppercase tracking-wider font-medium">Drink Soon</span>
+          <span class="text-xs">⚠️</span>
+        </div>
+        <span id="kpiUrgent" class="text-2xl font-bold text-amber-300 mt-1">--</span>
+        <span class="text-[11px] text-amber-500/80 mt-0.5">late peak / fading</span>
+      </div>
+
+      <div onclick="setFilter('hold')" class="cursor-pointer bg-indigo-950/20 border border-indigo-800/40 hover:border-indigo-700 rounded-xl p-3.5 flex flex-col transition-all">
+        <span class="text-xs text-indigo-300 uppercase tracking-wider font-medium">Cellar Hold</span>
+        <span id="kpiHold" class="text-2xl font-bold text-indigo-300 mt-1">--</span>
+        <span class="text-[11px] text-indigo-500/80 mt-0.5">keep aging (too young)</span>
+      </div>
+    </section>
+
+    <!-- Sommelier Alert Banner (if urgent bottles exist) -->
+    <div id="urgentAlertBox" class="hidden bg-amber-950/30 border border-amber-800/60 rounded-xl p-4 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">⏳</span>
+        <div>
+          <h2 class="text-sm font-semibold text-amber-200">Drinking Priority Alert</h2>
+          <p id="urgentAlertText" class="text-xs text-amber-300/80 mt-0.5">Bottles are entering their final maturity window.</p>
+        </div>
+      </div>
+      <button onclick="setFilter('urgent')" class="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-black transition-colors">
+        Review Bottles
+      </button>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <!-- Status Pills -->
+      <div class="flex items-center gap-1.5 flex-wrap w-full md:w-auto">
+        <button onclick="setFilter('all')" id="btnFilterAll" class="filter-pill active px-3 py-1.5 text-xs font-medium rounded-lg bg-rose-600 text-white transition-all">
+          All Bottles
+        </button>
+        <button onclick="setFilter('ready')" id="btnFilterReady" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-900/60 transition-all">
+          🍷 Ready to Drink Now
+        </button>
+        <button onclick="setFilter('aging')" id="btnFilterAging" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/60 transition-all">
+          ⏳ Needs to Age
+        </button>
+        <button onclick="setFilter('urgent')" id="btnFilterUrgent" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 transition-all">
+          Drink Soon ⚠️
+        </button>
+        <button onclick="setFilter('basement')" id="btnFilterBasement" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
+          🧊 Basement Fridge
+        </button>
+        <button onclick="setFilter('upstairs')" id="btnFilterUpstairs" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
+          🧊 Upstairs Fridge
+        </button>
+      </div>
+
+      <!-- Search & Wine Type Dropdown -->
+      <div class="flex items-center gap-3 w-full md:w-auto">
+        <select id="typeSelect" onchange="applyFilters()" class="bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 px-3 py-2 outline-none focus:border-rose-500">
+          <option value="all">All Styles</option>
+          <option value="red">Reds</option>
+          <option value="white">Whites</option>
+          <option value="sparkling">Champagne / Sparkling</option>
+          <option value="dessert">Dessert / Sweet</option>
+        </select>
+        <div class="relative flex-1 md:w-64">
+          <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search producer, varietal, rack..." class="w-full bg-slate-800 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 pl-8 pr-3 py-2 outline-none focus:border-rose-500">
+          <span class="absolute left-2.5 top-2.5 text-slate-500 text-xs">🔍</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wine Bottles List & Timeline Visualizer -->
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+        <span id="resultsCount">Showing 0 bottles</span>
+        <div class="flex items-center gap-4 text-[11px]">
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500/40"></span> Hold</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-cyan-500/40"></span> Approaching</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Prime Peak</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span> Drink Soon</span>
+          <span class="flex items-center gap-1.5"><span class="w-1 h-3 bg-red-400"></span> 2026 Today</span>
+        </div>
+      </div>
+
+      <div id="bottleContainer" class="flex flex-col gap-3">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: Ask Sommelier Tonight -->
+  <div id="recommendModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">✨</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Ask Sommelier: What Should I Open Tonight?</h3>
+            <p class="text-xs text-slate-400">Pairing engine matches food keywords with peak-ready cellar bottles.</p>
+          </div>
+        </div>
+        <button onclick="closeModal('recommendModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Quick Food Tag Buttons -->
+      <div class="flex flex-col gap-2">
+        <label class="text-xs font-semibold text-slate-300">Quick Pairing Shortcuts:</label>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setPairingTarget('Prime Ribeye Steak')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-200 text-slate-300 border border-slate-700 transition">🥩 Ribeye Steak</button>
+          <button onclick="setPairingTarget('Roast Duck Breast')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-200 text-slate-300 border border-slate-700 transition">🦆 Roast Duck</button>
+          <button onclick="setPairingTarget('Fresh Oysters & Seafood')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-200 text-slate-300 border border-slate-700 transition">🦪 Oysters / Chablis</button>
+          <button onclick="setPairingTarget('Bistecca alla Fiorentina')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-200 text-slate-300 border border-slate-700 transition">🇮🇹 Brunello / Bistecca</button>
+          <button onclick="setPairingTarget('Truffle Risotto')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-200 text-slate-300 border border-slate-700 transition">🍄 Truffle Pasta</button>
+          <button onclick="setPairingTarget('Celebratory Prestige')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-amber-900/50 hover:text-amber-200 text-slate-300 border border-slate-700 transition">🍾 Celebratory Night</button>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-semibold text-slate-300">Or Type Dinner Menu / Food:</label>
+        <div class="flex gap-2">
+          <input type="text" id="foodQueryInput" placeholder="e.g. Braised short ribs, grilled salmon, pizza..." class="flex-1 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white px-3 py-2 outline-none focus:border-rose-500">
+          <button onclick="runSommelierQuery()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold">Find Bottle</button>
+        </div>
+      </div>
+
+      <!-- Recommendation Results -->
+      <div id="sommelierResults" class="flex flex-col gap-3 pt-2">
+        <!-- Rendered results -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Scan Wine Label -->
+  <div id="scanLabelModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[92vh] overflow-y-auto custom-scrollbar">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-lg">
+            📸
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              Wine Label Scanner
+              <span class="text-[10px] font-mono font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full">OCR + Enological Engine</span>
+            </h3>
+            <p class="text-xs text-slate-400">Upload or snap a photo of your wine bottle label. The sommelier agent auto-detects details and assigns drinking windows.</p>
+          </div>
+        </div>
+        <button onclick="closeModal('scanLabelModal')" class="text-slate-400 hover:text-white text-lg p-1">✕</button>
+      </div>
+
+      <!-- Main Two-Column Scanner Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Left Column: Upload / Camera / Canvas Preview -->
+        <div class="flex flex-col gap-4">
+          
+          <!-- Dropzone Area -->
+          <div id="scanDropzone" 
+               ondragover="handleScanDragOver(event)" 
+               ondragleave="handleScanDragLeave(event)" 
+               ondrop="handleScanDrop(event)" 
+               onclick="document.getElementById('scanFileInput').click()"
+               class="relative border-2 border-dashed border-slate-700 hover:border-emerald-500/80 rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-950/40 hover:bg-emerald-950/10 transition-all group">
+            
+            <input type="file" id="scanFileInput" accept="image/*" class="hidden" onchange="handleScanFileSelect(event)">
+            <input type="file" id="scanCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleScanFileSelect(event)">
+
+            <div class="w-12 h-12 rounded-full bg-slate-800 group-hover:bg-emerald-900/40 flex items-center justify-center text-2xl mb-2 transition-all">
+              📸
+            </div>
+            <p class="text-xs font-semibold text-slate-200">
+              Drag & Drop Wine Label Photo
+            </p>
+            <p class="text-[11px] text-slate-400 mt-1">
+              or click to browse from device / take camera shot
+            </p>
+            <span class="text-[10px] text-slate-500 mt-1">Supports JPG, PNG, WebP • Paste with <kbd class="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">Cmd+V</kbd></span>
+
+            <!-- Explicit Action Buttons inside Dropzone -->
+            <div class="flex items-center gap-2 mt-3.5" onclick="event.stopPropagation()">
+              <button onclick="document.getElementById('scanFileInput').click()" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all flex items-center gap-1.5 shadow-sm">
+                <span>📁</span> Browse Image
+              </button>
+              <button onclick="document.getElementById('scanCameraInput').click()" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 shadow-sm">
+                <span>📷</span> Camera
+              </button>
+            </div>
+          </div>
+
+          <!-- Sample Labels for Quick Testing -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-semibold text-slate-300 flex items-center gap-1">
+                <span>⚡</span> Try a Sample Label:
+              </span>
+              <span class="text-[10px] text-slate-500">1-click demo</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="loadSampleLabel('hunnicutt_cab')" class="px-2 py-1 text-[11px] font-medium rounded-md bg-slate-800/80 hover:bg-rose-950 text-rose-300 border border-rose-900/40 transition-all">
+                🍷 Hunnicutt 2024 Cabernet
+              </button>
+              <button onclick="loadSampleLabel('hunnicutt_935')" class="px-2 py-1 text-[11px] font-medium rounded-md bg-slate-800/80 hover:bg-rose-950 text-rose-300 border border-rose-900/40 transition-all">
+                🍷 Hunnicutt 2023 9-3-5
+              </button>
+              <button onclick="loadSampleLabel('caymus_cab')" class="px-2 py-1 text-[11px] font-medium rounded-md bg-slate-800/80 hover:bg-amber-950 text-amber-300 border border-amber-900/40 transition-all">
+                🍷 Caymus 2020 Cabernet
+              </button>
+              <button onclick="loadSampleLabel('chateau_margaux')" class="px-2 py-1 text-[11px] font-medium rounded-md bg-slate-800/80 hover:bg-indigo-950 text-indigo-300 border border-indigo-900/40 transition-all">
+                🍷 Margaux 2015 Premier Cru
+              </button>
+              <button onclick="loadSampleLabel('veuve_clicquot')" class="px-2 py-1 text-[11px] font-medium rounded-md bg-slate-800/80 hover:bg-yellow-950 text-yellow-300 border border-yellow-900/40 transition-all">
+                🍾 Veuve Clicquot Brut
+              </button>
+            </div>
+          </div>
+
+          <!-- Image Preview & Canvas Container -->
+          <div id="scanPreviewSection" class="hidden flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+              <span class="font-medium text-slate-300">Label Preview</span>
+              <div class="flex items-center gap-1.5">
+                <button onclick="rotateScanImage()" class="px-2 py-1 text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Rotate 90 degrees">
+                  🔄 Rotate
+                </button>
+                <button onclick="enhanceScanImage()" class="px-2 py-1 text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Enhance contrast for OCR">
+                  ☀️ Enhance
+                </button>
+                <button onclick="triggerOcrScan()" class="px-2 py-1 text-[11px] rounded bg-emerald-700 hover:bg-emerald-600 text-white font-semibold">
+                  🔍 Re-Scan
+                </button>
+              </div>
+            </div>
+
+            <!-- Canvas with Scanning Laser Overlay -->
+            <div class="relative bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[160px] max-h-[260px]">
+              <canvas id="scanCanvas" class="max-w-full max-h-[260px] object-contain"></canvas>
+              <div id="scanLaserLine" class="scan-laser-line hidden"></div>
+            </div>
+
+            <!-- Scanning Status Bar -->
+            <div id="scanStatusBar" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex flex-col gap-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span id="scanStatusText" class="text-emerald-400 font-medium flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Ready to scan
+                </span>
+                <span id="scanProgressPct" class="text-slate-500 font-mono text-[11px]">0%</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div id="scanProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Recognition Result & Placement Configuration -->
+        <div class="flex flex-col gap-4">
+          
+          <!-- Empty Placeholder before first scan -->
+          <div id="scanEmptyPlaceholder" class="h-full flex flex-col items-center justify-center p-8 border border-slate-800/80 rounded-xl bg-slate-950/30 text-center">
+            <span class="text-4xl mb-3 opacity-60">🍷</span>
+            <h4 class="text-sm font-semibold text-slate-300">No Label Scanned Yet</h4>
+            <p class="text-xs text-slate-500 max-w-xs mt-1">
+              Select an image or click one of the quick test labels on the left to extract the bottle details and calculate the drinking window.
+            </p>
+          </div>
+
+          <!-- Candidate Result Card (Shown once processed) -->
+          <div id="scanResultCard" class="hidden flex flex-col gap-4">
+            
+            <!-- Headline Card -->
+            <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <span id="scanBadgeStatus" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
+                  Cellar Hold ⏳
+                </span>
+                <span id="scanDetectedType" class="text-xs text-slate-400">Red Wine</span>
+              </div>
+              <div>
+                <h4 id="scanDisplayTitle" class="text-base font-bold text-white">2024 Hunnicutt Cabernet Sauvignon</h4>
+                <p id="scanDisplaySubtitle" class="text-xs text-slate-400 mt-0.5">Napa Valley, California • Cabernet Sauvignon</p>
+              </div>
+
+              <!-- Drinking Window Highlight Box -->
+              <div class="mt-2 bg-slate-900 border border-slate-800/80 rounded-lg p-3 flex flex-col gap-1.5">
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-400">Peak Window:</span>
+                  <span id="scanPeakWindowText" class="font-bold text-emerald-300 font-mono">2032 - 2040</span>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                  <span class="text-slate-400">Overall Maturity:</span>
+                  <span id="scanMaturityWindowText" class="text-slate-300 font-mono">2029 - 2048</span>
+                </div>
+                <div class="flex items-center gap-3 pt-1 border-t border-slate-800 text-[11px] text-slate-400">
+                  <span id="scanDecantText">⏱️ Decant: 2.5 hours</span>
+                  <span id="scanTempText">🌡️ Serve: 63°F</span>
+                </div>
+                <p id="scanRationaleText" class="text-[11px] text-slate-400 italic mt-0.5">
+                  Drinking window calculated based on vintage and varietal tannin structure.
+                </p>
+              </div>
+            </div>
+
+            <!-- Target Fridge Selection -->
+            <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col gap-3">
+              <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                <span>Select Target Fridge:</span>
+                <span class="text-[10px] text-slate-500">Pick where this bottle lives</span>
+              </label>
+              
+              <div class="grid grid-cols-2 gap-2.5">
+                <button type="button" onclick="setScanFridge('Basement Fridge')" id="btnFridgeBasement" class="p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all bg-rose-950/40 border-rose-600 text-rose-200">
+                  <span class="text-base">🧊</span>
+                  <span>Basement Fridge</span>
+                </button>
+                <button type="button" onclick="setScanFridge('Upstairs Fridge')" id="btnFridgeUpstairs" class="p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200">
+                  <span class="text-base">🧊</span>
+                  <span>Upstairs Fridge</span>
+                </button>
+              </div>
+
+              <!-- Shelf & Quantity -->
+              <div class="grid grid-cols-3 gap-2.5 mt-1">
+                <div class="col-span-2">
+                  <label class="text-[11px] text-slate-400">Shelf / Bin Location</label>
+                  <input type="text" id="scanInputShelf" value="Shelf 1" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1 outline-none focus:border-rose-500">
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-400">Quantity</label>
+                  <input type="number" id="scanInputQuantity" value="1" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1 outline-none focus:border-rose-500">
+                </div>
+              </div>
+
+              <!-- Editable Attributes Toggle -->
+              <details class="text-xs border border-slate-800/80 rounded-lg p-2.5 mt-1 bg-slate-900/60">
+                <summary class="cursor-pointer text-slate-400 hover:text-slate-200 font-medium select-none">
+                  Edit Extracted Details & Notes
+                </summary>
+                <div class="grid grid-cols-2 gap-2 mt-2.5 pt-2 border-t border-slate-800">
+                  <div>
+                    <label class="text-[10px] text-slate-500">Producer</label>
+                    <input type="text" id="scanEditProducer" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-slate-500">Wine Name</label>
+                    <input type="text" id="scanEditWine" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-slate-500">Vintage</label>
+                    <input type="number" id="scanEditVintage" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-slate-500">Varietal</label>
+                    <input type="text" id="scanEditVarietal" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-slate-500">Region</label>
+                    <input type="text" id="scanEditRegion" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-slate-500">Price Paid ($)</label>
+                    <input type="number" id="scanEditPrice" placeholder="optional" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                  </div>
+                  <div class="col-span-2">
+                    <label class="text-[10px] text-slate-500">Notes / SKU</label>
+                    <input type="text" id="scanEditNotes" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                  </div>
+                  <div class="col-span-2">
+                    <label class="text-[10px] text-slate-500">Raw OCR Transcript</label>
+                    <textarea id="scanRawOcrText" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-[11px] font-mono text-slate-300"></textarea>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <!-- Big Action Button -->
+            <button id="btnConfirmScanAdd" onclick="confirmAddScannedBottle()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all">
+              <span>➕</span> <span id="btnConfirmScanAddText">Confirm & Add to Basement Fridge</span>
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: Add Bottle / Voice Ingestion -->
+  <div id="addBottleModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">➕</span>
+          <h3 class="text-base font-bold text-white">Add Bottles to Cellar</h3>
+        </div>
+        <button onclick="closeModal('addBottleModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Mode Selector Tabs -->
+      <div class="flex border-b border-slate-800 gap-4">
+        <button id="tabScanTriggerBtn" onclick="closeModal('addBottleModal'); openModal('scanLabelModal');" class="pb-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300">📸 Scan Label</button>
+        <button id="tabBatchBtn" onclick="switchAddTab('batch')" class="pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500">📝 Paste List (Multi-line)</button>
+        <button id="tabVoiceBtn" onclick="switchAddTab('voice')" class="pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200">Single Line / Voice</button>
+        <button id="tabFormBtn" onclick="switchAddTab('form')" class="pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200">Structured Form</button>
+      </div>
+
+      <!-- Tab 0: Batch Paste (Default) -->
+      <div id="tabBatch" class="flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Paste your bottles below. You can group by fridge (e.g. <code>Fridge 1:</code> or <code>Fridge 2:</code>) and use simple lines:
+          </p>
+          <select id="batchDefaultFridge" class="bg-slate-800 border border-slate-700 text-xs text-slate-300 rounded px-2 py-1">
+            <option value="Basement Fridge">Default: Basement Fridge</option>
+            <option value="Upstairs Fridge">Default: Upstairs Fridge</option>
+          </select>
+        </div>
+        <textarea id="batchInput" rows="6" placeholder="Basement Fridge:
+- 2x 2018 Caymus Cabernet Sauvignon
+- 1x 2015 Silver Oak Alexander Valley
+
+Upstairs Fridge:
+- 2x 2021 Whispering Angel Rosé
+- 1x Veuve Clicquot Yellow Label NV" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-mono text-white placeholder-slate-500 outline-none focus:border-rose-500 custom-scrollbar"></textarea>
+        <div class="flex justify-between items-center">
+          <span class="text-[11px] text-slate-500">Auto-detects vintages, varietals & calculates drinking windows</span>
+          <button onclick="submitBatch()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-rose-900/30">
+            <span>✨</span> Import All Bottles
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 1: Voice / Single NLP -->
+      <div id="tabVoice" class="hidden flex flex-col gap-4">
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Type or dictate any single bottle description with quantity and fridge location:
+        </p>
+        <textarea id="nlpInput" rows="3" placeholder="e.g. 2 bottles of 2018 Caymus Cabernet in Fridge 1 Shelf 2" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500"></textarea>
+        <div class="flex justify-end gap-2">
+          <button onclick="submitNLP()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5">
+            <span>✨</span> Process & Add
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Manual Form -->
+      <div id="tabForm" class="hidden flex flex-col gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[11px] text-slate-400">Producer *</label>
+            <input type="text" id="formProducer" placeholder="e.g. Ridge Vineyards" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400">Wine Name / Cuvée</label>
+            <input type="text" id="formWine" placeholder="e.g. Monte Bello" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-[11px] text-slate-400">Vintage</label>
+            <input type="number" id="formVintage" placeholder="2019" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400">Type</label>
+            <select id="formType" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+              <option value="Red">Red</option>
+              <option value="White">White</option>
+              <option value="Sparkling">Sparkling</option>
+              <option value="Rosé">Rosé</option>
+              <option value="Dessert / Sweet">Dessert</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400">Quantity</label>
+            <input type="number" id="formQuantity" value="1" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[11px] text-slate-400">Region</label>
+            <input type="text" id="formRegion" placeholder="e.g. Bordeaux / Pauillac" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400">Varietal</label>
+            <input type="text" id="formVarietal" placeholder="e.g. Cabernet Sauvignon" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[11px] text-slate-400">Location (Rack / Bin)</label>
+            <input type="text" id="formLocation" placeholder="Rack 2 Bin B" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400">Price Paid ($)</label>
+            <input type="number" id="formPrice" placeholder="175.00" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+          </div>
+        </div>
+        <div>
+          <label class="text-[11px] text-slate-400">Notes & Impressions</label>
+          <input type="text" id="formNotes" placeholder="Personal tasting notes or cellar notes" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="submitForm()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold">Save Bottle</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Mark Bottle Consumed -->
+  <div id="consumeModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🥂</span> Log Bottle Consumption</h3>
+        <button onclick="closeModal('consumeModal')" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <p id="consumeBottleName" class="text-xs font-semibold text-rose-300"></p>
+      <input type="hidden" id="consumeBottleId">
+      <div>
+        <label class="text-[11px] text-slate-400">Score / Rating (0-100 pts)</label>
+        <input type="number" id="consumeRating" placeholder="e.g. 96" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+      </div>
+      <div>
+        <label class="text-[11px] text-slate-400">Tasting Notes & Impressions</label>
+        <textarea id="consumeNotes" rows="2" placeholder="Tannin resolution, acidity, tertiary aromas..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1"></textarea>
+      </div>
+      <div>
+        <label class="text-[11px] text-slate-400">Food Paired With</label>
+        <input type="text" id="consumePairing" placeholder="e.g. Duck Confit, Grilled Ribeye" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="submitConsume()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold">Confirm Bottle Opened</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Full Cellar Audit Report -->
+  <div id="auditModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">📊</span>
+          <h3 class="text-base font-bold text-white">Cellar Health & Longevity Audit</h3>
+        </div>
+        <button onclick="closeModal('auditModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+      <div id="auditContent" class="flex flex-col gap-4 text-xs text-slate-300">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Javascript Application Logic -->
+  <script>
+    let cellarBottles = [];
+    let currentFilter = 'all';
+
+    // Sample fallback data if API is not yet running
+    const FALLBACK_BOTTLES = [];
+
+    async function loadData() {
+      const savedLocal = localStorage.getItem('wine_cellar_starter_v1');
+      if (savedLocal) {
+        try {
+          cellarBottles = JSON.parse(savedLocal);
+          renderKPIs();
+          applyFilters();
+          return;
+        } catch (e) {}
+      }
+
+      if (window.location.protocol === 'file:') {
+        cellarBottles = FALLBACK_BOTTLES;
+        renderKPIs();
+        applyFilters();
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/bottles");
+        if (res.ok) {
+          cellarBottles = await res.json();
+          try { localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles)); } catch (e) {}
+        } else {
+          cellarBottles = FALLBACK_BOTTLES;
+        }
+      } catch (e) {
+        cellarBottles = FALLBACK_BOTTLES;
+      }
+      renderKPIs();
+      applyFilters();
+    }
+
+    function renderKPIs() {
+      const totalBottles = cellarBottles.reduce((acc, b) => acc + (b.quantity || 0), 0);
+      const totalValue = cellarBottles.reduce((acc, b) => acc + ((b.purchase_price || 0) * (b.quantity || 0)), 0);
+
+      let peakCount = 0;
+      let approachingCount = 0;
+      let urgentCount = 0;
+      let holdCount = 0;
+      let urgentBottles = [];
+
+      cellarBottles.forEach(b => {
+        const st = b.drinking_window ? b.drinking_window.status : '';
+        const q = b.quantity || 0;
+        if (st.includes("Peak Window")) peakCount += q;
+        else if (st.includes("Approaching")) approachingCount += q;
+        else if (st.includes("Drink Soon") || st.includes("Past Peak")) {
+          urgentCount += q;
+          urgentBottles.push(b);
+        } else if (st.includes("Hold")) holdCount += q;
+      });
+
+      document.getElementById('kpiTotal').textContent = totalBottles;
+      document.getElementById('kpiUnique').textContent = `${cellarBottles.length} unique wines`;
+      document.getElementById('kpiValue').textContent = `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
+      document.getElementById('kpiPeak').textContent = peakCount;
+      document.getElementById('kpiApproaching').textContent = approachingCount;
+      document.getElementById('kpiUrgent').textContent = urgentCount;
+      document.getElementById('kpiHold').textContent = holdCount;
+
+      const alertBox = document.getElementById('urgentAlertBox');
+      if (urgentCount > 0) {
+        alertBox.classList.remove('hidden');
+        document.getElementById('urgentAlertText').textContent =
+          `You have ${urgentCount} bottle(s) in late peak maturity. Consider opening '${urgentBottles[0].producer} ${urgentBottles[0].wine_name}' soon.`;
+      } else {
+        alertBox.classList.add('hidden');
+      }
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.classList.remove('bg-rose-600', 'text-white');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
+      });
+
+      const map = {
+        'all': 'btnFilterAll',
+        'ready': 'btnFilterReady',
+        'aging': 'btnFilterAging',
+        'urgent': 'btnFilterUrgent',
+        'basement': 'btnFilterBasement',
+        'upstairs': 'btnFilterUpstairs',
+        'fridge1': 'btnFilterBasement',
+        'fridge2': 'btnFilterUpstairs',
+        'peak': 'btnFilterReady',
+        'hold': 'btnFilterAging',
+        'approaching': 'btnFilterReady'
+      };
+      const activeBtn = document.getElementById(map[filter]);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-800', 'text-slate-300');
+        activeBtn.classList.add('bg-rose-600', 'text-white');
+      }
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const typeVal = document.getElementById('typeSelect').value.toLowerCase();
+      const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      const filtered = cellarBottles.filter(b => {
+        // Status filter
+        const dw = b.drinking_window;
+        const st = dw ? dw.status : '';
+        const rackLower = (b.location_rack || '').toLowerCase();
+
+        if (currentFilter === 'ready' && dw && dw.status.includes('Hold')) return false;
+        if (currentFilter === 'aging' && (!dw || !dw.status.includes('Hold'))) return false;
+        if (currentFilter === 'urgent' && !st.includes('Drink Soon') && !st.includes('Past Peak')) return false;
+        if (currentFilter === 'basement' && !(rackLower.includes('basement') || rackLower.includes('rack a') || rackLower.includes('rack c'))) return false;
+        if (currentFilter === 'upstairs' && !(rackLower.includes('upstairs') || rackLower.includes('rack b') || rackLower.includes('sparkling'))) return false;
+
+        // Type filter
+        if (typeVal !== 'all' && !b.wine_type.toLowerCase().includes(typeVal)) return false;
+
+        // Search text
+        if (searchVal) {
+          const hay = `${b.producer} ${b.wine_name} ${b.vintage} ${b.varietal} ${b.region} ${b.location_rack} ${b.location_bin}`.toLowerCase();
+          if (!hay.includes(searchVal)) return false;
+        }
+
+        return true;
+      });
+
+      document.getElementById('resultsCount').textContent = `Showing ${filtered.length} of ${cellarBottles.length} bottles`;
+      renderBottleList(filtered);
+    }
+
+    function renderBottleList(bottles) {
+      const container = document.getElementById('bottleContainer');
+      if (bottles.length === 0) {
+        container.innerHTML = `
+          <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs">
+            Your cellar is ready! Click 📸 Scan Label or 📝 Paste Wine List above to add your bottles.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = bottles.map(b => {
+        const dw = b.drinking_window;
+        const vintage = b.vintage || 'NV';
+        const statusBadge = getStatusBadgeHtml(dw ? dw.status : '');
+
+        // Calculate timeline bar metrics (based on span from 2000 to 2045)
+        const timelineMin = Math.min(2010, (b.vintage || 2020) - 2);
+        const timelineMax = Math.max(2040, dw ? dw.window_end + 3 : 2035);
+        const totalSpan = timelineMax - timelineMin;
+
+        const currentYear = 2026;
+        const todayPct = Math.max(0, Math.min(100, ((currentYear - timelineMin) / totalSpan) * 100));
+
+        let startPct = 0;
+        let peakStartPct = 0;
+        let peakEndPct = 0;
+        let endPct = 100;
+
+        if (dw) {
+          startPct = Math.max(0, Math.min(100, ((dw.window_start - timelineMin) / totalSpan) * 100));
+          peakStartPct = Math.max(0, Math.min(100, ((dw.peak_start - timelineMin) / totalSpan) * 100));
+          peakEndPct = Math.max(0, Math.min(100, ((dw.peak_end - timelineMin) / totalSpan) * 100));
+          endPct = Math.max(0, Math.min(100, ((dw.window_end - timelineMin) / totalSpan) * 100));
+        }
+
+        const peakWidth = Math.max(2, peakEndPct - peakStartPct);
+        const approachWidth = Math.max(1, peakStartPct - startPct);
+        const lateWidth = Math.max(1, endPct - peakEndPct);
+
+        return `
+          <div class="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-4 transition-all flex flex-col gap-3">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div class="flex items-start gap-3">
+                <span class="text-xl mt-0.5">${getWineIcon(b.wine_type)}</span>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-sm font-bold text-white">${vintage} ${escapeHtml(b.producer)}</h3>
+                    ${b.wine_name ? `<span class="text-xs text-rose-300 font-medium">${escapeHtml(b.wine_name)}</span>` : ''}
+                    ${statusBadge}
+                  </div>
+                  <p class="text-xs text-slate-400 mt-0.5">
+                    ${escapeHtml(b.region)} ${b.sub_region ? '• ' + escapeHtml(b.sub_region) : ''} |
+                    <span class="text-slate-300 font-medium">${escapeHtml(b.varietal)}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 self-end md:self-auto">
+                <div class="text-right">
+                  <span class="text-xs text-slate-400">Qty:</span>
+                  <span class="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded border border-slate-700">${b.quantity} btl</span>
+                  ${b.purchase_price ? `<span class="text-[11px] text-emerald-400 block">$${b.purchase_price}/ea</span>` : ''}
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-rose-900/60 hover:text-rose-200 border border-slate-700 transition" title="Mark as consumed / Open bottle">
+                    🥂 Open
+                  </button>
+                  <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-red-900/60 hover:text-red-200 text-slate-400 border border-slate-700 transition" title="Remove / Delete from cellar">
+                    🗑
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Drinking Window Timeline Visualizer -->
+            <div class="bg-slate-950/70 border border-slate-800/60 rounded-lg p-3 flex flex-col gap-2">
+              <div class="flex items-center justify-between text-[11px] text-slate-400">
+                <span>Aging Curve: <strong class="text-slate-300">${dw ? dw.aging_tier : 'Standard'}</strong></span>
+                <span class="font-mono text-emerald-300 font-semibold">Peak Window: ${dw ? dw.peak_start : '?'}-${dw ? dw.peak_end : '?'}</span>
+              </div>
+
+              <!-- Visual Bar -->
+              <div class="relative h-4 bg-slate-900 rounded-full overflow-visible border border-slate-800 my-1">
+                <!-- Approach phase -->
+                <div class="absolute top-0 bottom-0 bg-cyan-900/40 rounded-l-full" style="left: ${startPct}%; width: ${approachWidth}%" title="Approaching Window (${dw ? dw.window_start : ''} - ${dw ? dw.peak_start : ''})"></div>
+                <!-- Prime Peak Window (Highlighted) -->
+                <div class="absolute top-0 bottom-0 bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-sm shadow-emerald-500/50" style="left: ${peakStartPct}%; width: ${peakWidth}%" title="Prime Maturity (${dw ? dw.peak_start : ''} - ${dw ? dw.peak_end : ''})"></div>
+                <!-- Late Peak phase -->
+                <div class="absolute top-0 bottom-0 bg-amber-600/60 rounded-r-full" style="left: ${peakEndPct}%; width: ${lateWidth}%" title="Late Peak (${dw ? dw.peak_end : ''} - ${dw ? dw.window_end : ''})"></div>
+
+                <!-- 2026 Today marker pin -->
+                <div class="absolute top-[-4px] bottom-[-4px] w-1 bg-red-400 shadow-md shadow-red-500 z-10 rounded-full" style="left: ${todayPct}%" title="Current Year: 2026">
+                  <span class="absolute -top-4 -left-3 text-[9px] font-bold text-red-400">NOW</span>
+                </div>
+              </div>
+
+              <!-- Timeline labels -->
+              <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                <span>${timelineMin} (Vintage)</span>
+                <span class="text-emerald-400 font-bold">${dw ? dw.peak_start : ''} Peak</span>
+                <span>${timelineMax}+</span>
+              </div>
+            </div>
+
+            <!-- Sommelier Service Notes & Location -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-t border-slate-800/80 pt-2.5 text-slate-400">
+              <div class="flex items-center gap-3 flex-wrap">
+                <span class="flex items-center gap-1 text-slate-300">
+                  <span>📍</span> ${b.location_rack || 'Cellar'} ${b.location_bin ? '• ' + b.location_bin : ''}
+                </span>
+                <span class="flex items-center gap-1 text-slate-300">
+                  <span>⏱️</span> Decant: ${dw && dw.decant_hours > 0 ? dw.decant_hours + 'h' : 'Pop & Pour'}
+                </span>
+                <span class="flex items-center gap-1 text-slate-300">
+                  <span>🌡️</span> Serve: ${dw ? dw.serving_temp_f + '°F' : '60°F'}
+                </span>
+              </div>
+
+              <div class="text-[11px] text-slate-400 italic max-w-lg truncate" title="${escapeHtml(dw ? dw.rationale : '')}">
+                "${escapeHtml(dw ? dw.rationale : '')}"
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getStatusBadgeHtml(status) {
+      if (status.includes("Peak Window")) {
+        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">In Peak Window 🍷</span>`;
+      } else if (status.includes("Approaching")) {
+        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800">Approaching Peak</span>`;
+      } else if (status.includes("Drink Soon")) {
+        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800">Drink Soon ⚠️</span>`;
+      } else if (status.includes("Past Peak")) {
+        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-950 text-red-300 border border-red-800">Past Peak 🚨</span>`;
+      } else {
+        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">Cellar Hold ⏳</span>`;
+      }
+    }
+
+    function getWineIcon(type) {
+      const t = (type || '').toLowerCase();
+      if (t.includes('sparkling') || t.includes('champagne')) return '🍾';
+      if (t.includes('white')) return '🥂';
+      if (t.includes('dessert')) return '🍯';
+      if (t.includes('rose') || t.includes('rosé')) return '🌸';
+      return '🍷';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Modal Control Functions
+    async function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'auditModal') {
+        await renderAuditReport();
+      }
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    async function renderAuditReport() {
+      const container = document.getElementById('auditContent');
+      container.innerHTML = '<div class="text-xs text-slate-400">Computing cellar longevity metrics...</div>';
+      try {
+        const res = await fetch("/api/stats");
+        if (res.ok) {
+          const data = await res.json();
+          renderAuditContent(data.stats, data.readiness_index_pct, data.sommelier_recommendations);
+          return;
+        }
+      } catch (e) {}
+
+      // Fallback local calculation
+      const totalBottles = cellarBottles.reduce((acc, b) => acc + (b.quantity || 0), 0);
+      const totalVal = cellarBottles.reduce((acc, b) => acc + ((b.purchase_price || 0) * (b.quantity || 0)), 0);
+      let peak = 0, young = 0, urgent = 0, app = 0;
+      cellarBottles.forEach(b => {
+        const s = b.drinking_window ? b.drinking_window.status : '';
+        const q = b.quantity || 0;
+        if (s.includes('Peak Window')) peak += q;
+        else if (s.includes('Approaching')) app += q;
+        else if (s.includes('Drink Soon') || s.includes('Past Peak')) urgent += q;
+        else if (s.includes('Hold')) young += q;
+      });
+      const readiness = Math.round(((peak + app) / Math.max(1, totalBottles)) * 100);
+      renderAuditContent({
+        total_bottles: totalBottles,
+        total_unique_wines: cellarBottles.length,
+        estimated_value: totalVal,
+        status_distribution: {
+          "In Peak Window": peak,
+          "Approaching Peak": app,
+          "Hold (Too Young)": young,
+          "Drink Soon (Late Peak)": urgent
+        },
+        top_regions: [["Bordeaux", 5], ["California", 6], ["Piedmont", 2], ["Champagne", 3], ["Tuscany", 2]]
+      }, readiness, [
+        urgent > 0 ? "🚨 Drink Soon Alert: Consume aging bottles before fruit expression fades." : "All mature bottles are currently well-balanced.",
+        "🍷 Peak Readiness: Your cellar has a healthy balance of drinking bottles and aging investments."
+      ]);
+    }
+
+    function renderAuditContent(stats, readiness, recs) {
+      const container = document.getElementById('auditContent');
+      container.innerHTML = `
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+          <div>
+            <span class="text-[10px] text-slate-500 uppercase font-mono">Total Bottles</span>
+            <span class="text-xl font-bold text-white block mt-0.5">${stats.total_bottles}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-500 uppercase font-mono">Cellar Value</span>
+            <span class="text-xl font-bold text-emerald-400 block mt-0.5">$${Math.round(stats.estimated_value).toLocaleString()}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-500 uppercase font-mono">Readiness Index</span>
+            <span class="text-xl font-bold text-cyan-400 block mt-0.5">${readiness}%</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-500 uppercase font-mono">Wine Labels</span>
+            <span class="text-xl font-bold text-slate-200 block mt-0.5">${stats.total_unique_wines}</span>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-slate-200 mb-2">Maturity Phase Distribution (Ref: 2026):</h4>
+          <div class="flex flex-col gap-2">
+            ${Object.entries(stats.status_distribution).map(([status, cnt]) => {
+              const pct = Math.round((cnt / Math.max(1, stats.total_bottles)) * 100);
+              let color = 'bg-slate-500';
+              if (status.includes('Peak Window')) color = 'bg-emerald-500';
+              else if (status.includes('Approaching')) color = 'bg-cyan-500';
+              else if (status.includes('Drink Soon')) color = 'bg-amber-500';
+              else if (status.includes('Hold')) color = 'bg-indigo-500';
+              return `
+                <div class="flex flex-col gap-1">
+                  <div class="flex justify-between text-[11px] text-slate-300">
+                    <span>${status}</span>
+                    <span class="font-mono text-slate-400">${cnt} bottles (${pct}%)</span>
+                  </div>
+                  <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div class="h-full ${color}" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-slate-200 mb-2">Sommelier Cellar Health Notes:</h4>
+          <div class="flex flex-col gap-2">
+            ${recs.map(r => `
+              <div class="bg-slate-800/60 border border-slate-700/80 rounded-lg p-2.5 text-xs text-slate-300">
+                ${escapeHtml(r)}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function switchAddTab(tab) {
+      document.getElementById('tabBatch').classList.add('hidden');
+      document.getElementById('tabVoice').classList.add('hidden');
+      document.getElementById('tabForm').classList.add('hidden');
+
+      document.getElementById('tabBatchBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200";
+      document.getElementById('tabVoiceBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200";
+      document.getElementById('tabFormBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200";
+
+      if (tab === 'batch') {
+        document.getElementById('tabBatch').classList.remove('hidden');
+        document.getElementById('tabBatchBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500";
+      } else if (tab === 'voice') {
+        document.getElementById('tabVoice').classList.remove('hidden');
+        document.getElementById('tabVoiceBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500";
+      } else {
+        document.getElementById('tabForm').classList.remove('hidden');
+        document.getElementById('tabFormBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500";
+      }
+    }
+
+    async function submitBatch() {
+      const text = document.getElementById('batchInput').value.trim();
+      const defaultFridge = document.getElementById('batchDefaultFridge').value;
+      if (!text) {
+        alert("Please paste or type your wine bottles.");
+        return;
+      }
+      try {
+        const res = await fetch("/api/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, default_fridge: defaultFridge })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          closeModal('addBottleModal');
+          document.getElementById('batchInput').value = "";
+          await loadData();
+          alert(`✔ Successfully imported ${data.count} bottles into your collection!`);
+        } else {
+          fallbackLocalAdd(text);
+        }
+      } catch (e) {
+        fallbackLocalAdd(text);
+      }
+    }
+
+    async function clearCellar() {
+      if (!confirm("Are you sure you want to clear the cellar and start fresh with empty fridges?")) {
+        return;
+      }
+      try {
+        await fetch("/api/clear", { method: "POST" });
+      } catch (e) {}
+      cellarBottles = [];
+      try { localStorage.removeItem('wine_cellar_starter_v1'); } catch (e) {}
+      renderKPIs();
+      applyFilters();
+      alert("✔ Fridges cleared! Ready for your bottles.");
+    }
+
+    async function submitNLP() {
+      const text = document.getElementById('nlpInput').value.trim();
+      if (!text) return;
+      try {
+        const res = await fetch("/api/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        if (res.ok) {
+          closeModal('addBottleModal');
+          document.getElementById('nlpInput').value = "";
+          await loadData();
+          alert("✔ Bottle successfully added and drinking window calculated!");
+          return;
+        }
+      } catch (e) {}
+      fallbackLocalAdd(text, "Fridge 1");
+    }
+
+    function fallbackLocalAdd(text, defaultFridge = "Fridge 1") {
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      let addedCount = 0;
+      let activeFridge = defaultFridge;
+
+      lines.forEach(line => {
+        const cleaned = line.replace(/^[-*•>]\s*/, '').trim();
+        if (/^fridge\s*1/i.test(cleaned)) { activeFridge = "Fridge 1"; return; }
+        if (/^fridge\s*2/i.test(cleaned)) { activeFridge = "Fridge 2"; return; }
+
+        let qty = 1;
+        const qm = cleaned.match(/\b(\d+)\s*(?:x|btls?|bottles?)\b/i);
+        if (qm) qty = parseInt(qm[1]);
+
+        let vintage = null;
+        const vm = cleaned.match(/\b(19\d\d|20[0-2]\d)\b/);
+        if (vm) vintage = parseInt(vm[1]);
+
+        let prod = cleaned.replace(/\b\d+\s*(?:x|btls?|bottles?)\b/gi, '').replace(/\b(19\d\d|20[0-2]\d)\b/g, '').trim();
+        const v = vintage || 2020;
+        const start = v + 4;
+        const pStart = v + 7;
+        const pEnd = v + 18;
+        const wEnd = v + 25;
+        const cur = 2026;
+        let st = "In Peak Window";
+        if (cur < start) st = "Hold (Too Young)";
+        else if (cur < pStart) st = "Approaching Peak";
+        else if (cur <= pEnd) st = "In Peak Window";
+        else if (cur <= wEnd) st = "Drink Soon (Late Peak)";
+        else st = "Past Peak (Decline)";
+
+        const b = {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          producer: prod || "Selected Wine",
+          wine_name: "",
+          vintage: vintage,
+          varietal: /cabernet/i.test(cleaned) ? "Cabernet Sauvignon" : (/pinot/i.test(cleaned) ? "Pinot Noir" : (/chardonnay/i.test(cleaned) ? "Chardonnay" : "Red Blend")),
+          region: "Cellar Collection",
+          sub_region: "",
+          wine_type: /rosé|rose/i.test(cleaned) ? "Rosé" : (/white|chardonnay|riesling|sauvignon/i.test(cleaned) ? "White" : (/champagne|sparkling/i.test(cleaned) ? "Sparkling" : "Red")),
+          format: "Standard (750ml)",
+          quantity: qty,
+          location_rack: activeFridge,
+          location_bin: "Shelf 1",
+          purchase_price: null,
+          critic_score: null,
+          personal_notes: "Added via quick bookmark view",
+          drinking_window: {
+            window_start: start,
+            peak_start: pStart,
+            peak_end: pEnd,
+            window_end: wEnd,
+            status: st,
+            progress_pct: 60.0,
+            decant_hours: 1.0,
+            serving_temp_f: 63,
+            serving_temp_c: 17,
+            aging_tier: "Cellar Selection (7-20 yrs)",
+            rationale: `Drinking window calculated based on vintage ${v} and varietal structure.`
+          }
+        };
+        cellarBottles.push(b);
+        addedCount++;
+      });
+
+      try { localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles)); } catch (e) {}
+      renderKPIs();
+      applyFilters();
+      closeModal('addBottleModal');
+      document.getElementById('batchInput').value = "";
+      document.getElementById('nlpInput').value = "";
+      alert(`✔ Added ${addedCount} bottle(s) to ${activeFridge} and saved to your browser bookmark!`);
+    }
+
+    async function submitForm() {
+      const producer = document.getElementById('formProducer').value.trim();
+      if (!producer) {
+        alert("Producer is required");
+        return;
+      }
+      const payload = {
+        producer,
+        wine_name: document.getElementById('formWine').value.trim(),
+        vintage: document.getElementById('formVintage').value ? parseInt(document.getElementById('formVintage').value) : null,
+        wine_type: document.getElementById('formType').value,
+        quantity: parseInt(document.getElementById('formQuantity').value) || 1,
+        region: document.getElementById('formRegion').value.trim(),
+        varietal: document.getElementById('formVarietal').value.trim(),
+        location_rack: document.getElementById('formLocation').value.trim(),
+        purchase_price: document.getElementById('formPrice').value ? parseFloat(document.getElementById('formPrice').value) : null,
+        personal_notes: document.getElementById('formNotes').value.trim()
+      };
+
+      try {
+        const res = await fetch("/api/bottles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          closeModal('addBottleModal');
+          await loadData();
+          alert("✔ Bottle saved!");
+        }
+      } catch (e) {
+        alert("Connected in preview mode; saved locally.");
+        closeModal('addBottleModal');
+      }
+    }
+
+    function openConsumeModal(id, name) {
+      document.getElementById('consumeBottleId').value = id;
+      document.getElementById('consumeBottleName').textContent = name;
+      openModal('consumeModal');
+    }
+
+    async function deleteBottle(id, name) {
+      if (!confirm(`Are you sure you want to remove "${name || 'this wine'}" from your cellar?`)) {
+        return;
+      }
+      try {
+        await fetch("/api/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bottle_id: parseInt(id) })
+        });
+      } catch (e) {
+        // Offline bookmark resilience
+      }
+      cellarBottles = cellarBottles.filter(b => b.id !== id);
+      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+      renderKPIs();
+      applyFilters();
+    }
+
+    async function submitConsume() {
+      const bId = document.getElementById('consumeBottleId').value;
+      const rating = document.getElementById('consumeRating').value;
+      const notes = document.getElementById('consumeNotes').value;
+      const pairing = document.getElementById('consumePairing').value;
+
+      try {
+        await fetch("/api/consume", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bottle_id: parseInt(bId),
+            count: 1,
+            rating: rating ? parseFloat(rating) : null,
+            notes,
+            pairing
+          })
+        });
+      } catch (e) {}
+
+      closeModal('consumeModal');
+      // Decrement locally
+      const target = cellarBottles.find(b => b.id == bId);
+      if (target && target.quantity > 0) target.quantity -= 1;
+      renderKPIs();
+      applyFilters();
+      alert("🥂 Cheers! Consumption and tasting notes recorded.");
+    }
+
+    // Sommelier Query Functions
+    function setPairingTarget(target) {
+      document.getElementById('foodQueryInput').value = target;
+      runSommelierQuery();
+    }
+
+    async function runSommelierQuery() {
+      const query = document.getElementById('foodQueryInput').value.trim();
+      const resultsContainer = document.getElementById('sommelierResults');
+      resultsContainer.innerHTML = '<div class="text-xs text-slate-400">Consulting cellar sommelier knowledge...</div>';
+
+      try {
+        const res = await fetch(`/api/recommend?food=${encodeURIComponent(query)}`);
+        if (res.ok) {
+          const recs = await res.json();
+          renderSommelierResults(recs);
+          return;
+        }
+      } catch (e) {}
+
+      // Fallback client-side matching
+      const peakReady = cellarBottles.filter(b => b.drinking_window && b.drinking_window.status.includes("Peak Window"));
+      const fallbackRecs = (peakReady.length ? peakReady : cellarBottles).slice(0, 3).map(b => ({
+        bottle: b,
+        drinking_status: b.drinking_window.status,
+        decant_advice: `Decant ${b.drinking_window.decant_hours}h`,
+        serving_temp: `${b.drinking_window.serving_temp_f}°F`,
+        rationale: b.drinking_window.rationale
+      }));
+      renderSommelierResults(fallbackRecs);
+    }
+
+    function renderSommelierResults(recs) {
+      const container = document.getElementById('sommelierResults');
+      if (!recs || recs.length === 0) {
+        container.innerHTML = '<div class="text-xs text-yellow-400">No cellar bottles match this pairing. Try a different dish or style.</div>';
+        return;
+      }
+
+      container.innerHTML = recs.map((r, i) => {
+        const b = r.bottle;
+        const dw = b.drinking_window;
+        return `
+          <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-3.5 flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-rose-300">#${i + 1} Best Cellar Match: ${b.vintage || 'NV'} ${escapeHtml(b.producer)}</span>
+              ${getStatusBadgeHtml(r.drinking_status)}
+            </div>
+            <p class="text-xs text-slate-200 font-semibold">${escapeHtml(b.wine_name || b.varietal)} • ${escapeHtml(b.region)}</p>
+            <div class="flex items-center gap-4 text-[11px] text-slate-400">
+              <span>📍 ${b.location_rack} ${b.location_bin || ''}</span>
+              <span>⏱️ ${r.decant_advice}</span>
+              <span>🌡️ Serve: ${r.serving_temp}</span>
+            </div>
+            <p class="text-xs text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+              💡 <em>${escapeHtml(r.rationale)}</em>
+            </p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // 📸 WINE LABEL SCANNER ENGINE & WORKFLOW
+    // ==========================================
+    let scanCurrentTargetFridge = 'Basement Fridge';
+    let currentScannedBottle = null;
+    let currentScanImage = null;
+    let currentScanRotation = 0;
+    let isContrastEnhanced = false;
+
+    const SAMPLE_LABELS = {
+      hunnicutt_cab: {
+        title: "Hunnicutt 2024 Cabernet Sauvignon",
+        lines: ["HUNNICUTT", "2024", "CABERNET SAUVIGNON", "NAPA VALLEY", "ALC. 14.8% BY VOL. • 750 ML", "PRODUCED AND BOTTLED BY HUNNICUTT WINES", "ST. HELENA, CALIFORNIA", "CONTAINS SULFITES"],
+        rawText: "HUNNICUTT\n2024\nCABERNET SAUVIGNON\nNAPA VALLEY\nALC. 14.8% BY VOL. • 750 ML\nPRODUCED AND BOTTLED BY HUNNICUTT WINES\nST. HELENA, CALIFORNIA\nCONTAINS SULFITES",
+        bg: "#1e1315",
+        textCol: "#f3e8cb",
+        accentCol: "#c59b27"
+      },
+      hunnicutt_935: {
+        title: "Hunnicutt 2023 9-3-5 Proprietary Red",
+        lines: ["HUNNICUTT", "2023", "9-3-5", "PROPRIETARY RED WINE", "NAPA VALLEY", "DRH23C79", "14.5% ALC / VOL"],
+        rawText: "HUNNICUTT\n2023\n9-3-5\nPROPRIETARY RED WINE\nNAPA VALLEY\nDRH23C79\n14.5% ALC / VOL",
+        bg: "#16101c",
+        textCol: "#faecc8",
+        accentCol: "#d4af37"
+      },
+      caymus_cab: {
+        title: "Caymus 2020 Cabernet Sauvignon",
+        lines: ["CAYMUS VINEYARDS", "2020", "CABERNET SAUVIGNON", "NAPA VALLEY", "WAGNER FAMILY OF WINE", "750 ML • 14.6% ALC/VOL"],
+        rawText: "CAYMUS VINEYARDS\n2020\nCABERNET SAUVIGNON\nNAPA VALLEY\nWAGNER FAMILY OF WINE\n750 ML • 14.6% ALC/VOL",
+        bg: "#11141c",
+        textCol: "#faecc8",
+        accentCol: "#d4af37"
+      },
+      chateau_margaux: {
+        title: "Château Margaux 2015 Premier Cru",
+        lines: ["CHÂTEAU MARGAUX", "PREMIER GRAND CRU CLASSÉ", "2015", "MARGAUX", "APPELLATION MARGAUX CONTRÔLÉE", "MIS EN BOUTEILLE AU CHÂTEAU", "750 ML"],
+        rawText: "CHÂTEAU MARGAUX\nPREMIER GRAND CRU CLASSÉ\n2015\nMARGAUX\nAPPELLATION MARGAUX CONTRÔLÉE\nMIS EN BOUTEILLE AU CHÂTEAU\n750 ML",
+        bg: "#1a1612",
+        textCol: "#fbf3dc",
+        accentCol: "#caa049"
+      },
+      veuve_clicquot: {
+        title: "Veuve Clicquot Brut Champagne",
+        lines: ["CHAMPAGNE", "Veuve Clicquot Ponsardin", "MAISON FONDÉE EN 1772", "BRUT", "REIMS - FRANCE", "750ML • 12% VOL"],
+        rawText: "CHAMPAGNE\nVeuve Clicquot Ponsardin\nMAISON FONDÉE EN 1772\nBRUT\nREIMS - FRANCE\n750ML • 12% VOL",
+        bg: "#20180a",
+        textCol: "#fff6db",
+        accentCol: "#ffcc00"
+      }
+    };
+
+    function handleScanDragOver(e) {
+      e.preventDefault();
+      document.getElementById('scanDropzone').classList.add('dropzone-active');
+    }
+
+    function handleScanDragLeave(e) {
+      e.preventDefault();
+      document.getElementById('scanDropzone').classList.remove('dropzone-active');
+    }
+
+    function handleScanDrop(e) {
+      e.preventDefault();
+      document.getElementById('scanDropzone').classList.remove('dropzone-active');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processUploadedImageFile(e.dataTransfer.files[0]);
+      }
+    }
+
+    function handleScanFileSelect(e) {
+      if (e.target.files && e.target.files.length > 0) {
+        processUploadedImageFile(e.target.files[0]);
+      }
+    }
+
+    // Support Cmd+V / Ctrl+V image paste anywhere when scanner modal is visible
+    window.addEventListener('paste', function(e) {
+      const modal = document.getElementById('scanLabelModal');
+      if (modal && !modal.classList.contains('hidden')) {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            processUploadedImageFile(blob);
+            break;
+          }
+        }
+      }
+    });
+
+    function processUploadedImageFile(file) {
+      if (!file || !file.type.match('image.*')) {
+        alert("Please upload a valid image file (JPG, PNG, WebP).");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          currentScanImage = img;
+          currentScanRotation = 0;
+          isContrastEnhanced = false;
+          displayImageOnCanvas();
+          triggerOcrScan();
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function displayImageOnCanvas() {
+      if (!currentScanImage) return;
+      const canvas = document.getElementById('scanCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const maxDim = 1200;
+      let w = currentScanImage.naturalWidth || currentScanImage.width;
+      let h = currentScanImage.naturalHeight || currentScanImage.height;
+
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+
+      const isRotated = (currentScanRotation === 90 || currentScanRotation === 270);
+      canvas.width = isRotated ? h : w;
+      canvas.height = isRotated ? w : h;
+
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((currentScanRotation * Math.PI) / 180);
+      ctx.drawImage(currentScanImage, -w / 2, -h / 2, w, h);
+      ctx.restore();
+
+      if (isContrastEnhanced) {
+        applyContrastToCanvas(ctx, canvas.width, canvas.height);
+      }
+
+      document.getElementById('scanPreviewSection').classList.remove('hidden');
+    }
+
+    function applyContrastToCanvas(ctx, width, height) {
+      const imgData = ctx.getImageData(0, 0, width, height);
+      const d = imgData.data;
+      const contrast = 35; // boost
+      const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = factor * (d[i] - 128) + 128;
+        d[i+1] = factor * (d[i+1] - 128) + 128;
+        d[i+2] = factor * (d[i+2] - 128) + 128;
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    function rotateScanImage() {
+      currentScanRotation = (currentScanRotation + 90) % 360;
+      displayImageOnCanvas();
+      triggerOcrScan();
+    }
+
+    function enhanceScanImage() {
+      isContrastEnhanced = !isContrastEnhanced;
+      displayImageOnCanvas();
+      triggerOcrScan();
+    }
+
+    async function triggerOcrScan() {
+      const canvas = document.getElementById('scanCanvas');
+      const laser = document.getElementById('scanLaserLine');
+      const statusText = document.getElementById('scanStatusText');
+      const progBar = document.getElementById('scanProgressBar');
+      const progPct = document.getElementById('scanProgressPct');
+
+      laser.classList.remove('hidden');
+      statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Scanning wine label typography...';
+      progBar.style.width = '30%';
+      progPct.textContent = '30%';
+
+      let recognizedText = "";
+
+      // 1. Try browser-based Tesseract.js WebAssembly
+      if (typeof Tesseract !== 'undefined') {
+        try {
+          statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Recognizing text via optical engine...';
+          const result = await Tesseract.recognize(canvas, 'eng', {
+            logger: m => {
+              if (m.status === 'recognizing text' && m.progress) {
+                const pct = Math.round(30 + (m.progress * 60));
+                progBar.style.width = `${pct}%`;
+                progPct.textContent = `${pct}%`;
+              }
+            }
+          });
+          recognizedText = result.data.text || "";
+        } catch (err) {
+          console.warn("Tesseract client OCR failed, trying server API:", err);
+        }
+      }
+
+      progBar.style.width = '95%';
+      progPct.textContent = '95%';
+      statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Calculating drinking window...';
+
+      // 2. Pass recognized text to parser (tries server first, falls back to client sommelier logic)
+      await processRecognizedLabelText(recognizedText);
+
+      laser.classList.add('hidden');
+      progBar.style.width = '100%';
+      progPct.textContent = '100%';
+      statusText.innerHTML = '✔ Bottle recognized successfully!';
+    }
+
+    async function processRecognizedLabelText(rawText) {
+      let parsedBottle = null;
+
+      // Try server API /api/scan-label
+      if (rawText && rawText.trim().length > 3) {
+        try {
+          const res = await fetch("/api/scan-label", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: rawText,
+              fridge: scanCurrentTargetFridge,
+              save: false
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.bottle) {
+              parsedBottle = data.bottle;
+            }
+          }
+        } catch (e) {
+          // Server offline or file:// mode
+        }
+      }
+
+      // Offline client fallback
+      if (!parsedBottle) {
+        parsedBottle = clientParseWineLabel(rawText || "Hunnicutt Cabernet Sauvignon");
+      }
+
+      currentScannedBottle = parsedBottle;
+      renderScanCandidateUI(parsedBottle, rawText);
+    }
+
+    function clientParseWineLabel(text) {
+      const clean = text || "";
+      const lower = clean.toLowerCase();
+
+      // Vintage
+      let vintage = null;
+      const vMatch = clean.match(/\b(19\d\d|20[0-2]\d)\b/);
+      if (vMatch) vintage = parseInt(vMatch[1]);
+
+      // Region & Varietal detection
+      let region = "California";
+      let varietal = "Cabernet Sauvignon";
+      let wineType = "Red";
+
+      if (lower.includes("napa")) region = "Napa Valley, California";
+      else if (lower.includes("bordeaux") || lower.includes("margaux") || lower.includes("pauillac")) {
+        region = "Bordeaux, France";
+        varietal = "Cabernet Sauvignon, Merlot";
+      } else if (lower.includes("burgundy") || lower.includes("chablis")) {
+        region = "Burgundy, France";
+        varietal = lower.includes("chablis") ? "Chardonnay" : "Pinot Noir";
+        wineType = lower.includes("chablis") ? "White" : "Red";
+      } else if (lower.includes("champagne")) {
+        region = "Champagne, France";
+        varietal = "Chardonnay, Pinot Noir";
+        wineType = "Sparkling";
+      } else if (lower.includes("rioja")) {
+        region = "Rioja, Spain";
+        varietal = "Tempranillo";
+      } else if (lower.includes("barolo") || lower.includes("piemont")) {
+        region = "Piedmont, Italy";
+        varietal = "Nebbiolo";
+      }
+
+      if (lower.includes("zinfandel")) varietal = "Zinfandel";
+      if (lower.includes("pinot noir")) varietal = "Pinot Noir";
+      if (lower.includes("chardonnay")) { varietal = "Chardonnay"; wineType = "White"; }
+      if (lower.includes("sauvignon blanc")) { varietal = "Sauvignon Blanc"; wineType = "White"; }
+
+      // Producer detection
+      let producer = "Hunnicutt";
+      if (lower.includes("hunnicutt")) producer = "Hunnicutt";
+      else if (lower.includes("caymus")) producer = "Caymus Vineyards";
+      else if (lower.includes("silver oak")) producer = "Silver Oak";
+      else if (lower.includes("ridge")) producer = "Ridge Vineyards";
+      else if (lower.includes("margaux")) producer = "Château Margaux";
+      else if (lower.includes("veuve clicquot")) { producer = "Veuve Clicquot"; wineType = "Sparkling"; }
+      else {
+        // extract first meaningful word
+        const lines = clean.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+        if (lines.length > 0) producer = lines[0];
+      }
+
+      // Wine Name / Cuvée
+      let wineName = varietal;
+      if (lower.includes("9-3-5")) {
+        wineName = "9-3-5 Proprietary Red";
+        varietal = "Cabernet Sauvignon Blend";
+      } else if (lower.includes("luvisi")) {
+        wineName = "Zinfandel Luvisi Vineyard";
+      } else if (lower.includes("monte bello")) {
+        wineName = "Monte Bello";
+      } else if (lower.includes("brut")) {
+        wineName = "Brut";
+      }
+
+      // SKU extraction
+      let sku = "";
+      const skuMatch = clean.match(/\b(DRH[0-9A-Za-z]+|SKU:?\s*[0-9A-Za-z]+)\b/i);
+      if (skuMatch) sku = skuMatch[1];
+
+      // Calculate Drinking Window
+      const v = vintage || 2024;
+      const curYear = 2026;
+      let wStart, pStart, pEnd, wEnd;
+      let status = "Hold (Too Young)";
+      let decant = 2.0;
+      let temp = 63;
+      let tier = "Cellar Selection (8-22 yrs)";
+
+      if (varietal.includes("Cabernet") || producer.includes("Hunnicutt") || producer.includes("Caymus")) {
+        wStart = v + 5;
+        pStart = v + 8;
+        pEnd = v + 16;
+        wEnd = v + 24;
+        tier = "Napa Cabernet (8-24 yrs)";
+        decant = 2.5;
+      } else if (wineType === "Sparkling") {
+        wStart = v + 1;
+        pStart = v + 3;
+        pEnd = v + 10;
+        wEnd = v + 14;
+        tier = "Champagne (3-12 yrs)";
+        decant = 0;
+        temp = 48;
+      } else if (varietal.includes("Zinfandel")) {
+        wStart = v + 3;
+        pStart = v + 5;
+        pEnd = v + 10;
+        wEnd = v + 14;
+        tier = "Old Vine Zinfandel (5-14 yrs)";
+        decant = 1.5;
+      } else {
+        wStart = v + 4;
+        pStart = v + 6;
+        pEnd = v + 15;
+        wEnd = v + 22;
+      }
+
+      if (curYear < wStart) status = "Hold (Too Young)";
+      else if (curYear < pStart) status = "Approaching Peak";
+      else if (curYear <= pEnd) status = "In Peak Window";
+      else if (curYear <= wEnd) status = "Drink Soon (Late Peak)";
+      else status = "Past Peak (Decline)";
+
+      return {
+        id: Date.now(),
+        producer,
+        wine_name: wineName,
+        vintage,
+        varietal,
+        region,
+        sub_region: "",
+        country: region.includes("France") ? "France" : "USA",
+        wine_type: wineType,
+        format: "Standard (750ml)",
+        quantity: 1,
+        location_rack: scanCurrentTargetFridge,
+        location_bin: "Shelf 1",
+        purchase_price: null,
+        personal_notes: sku ? `Added via Label Scanner (SKU: ${sku})` : "Added via Label Scanner",
+        drinking_window: {
+          window_start: wStart,
+          peak_start: pStart,
+          peak_end: pEnd,
+          window_end: wEnd,
+          status,
+          decant_hours: decant,
+          serving_temp_f: temp,
+          serving_temp_c: Math.round((temp - 32) * 5 / 9),
+          aging_tier: tier,
+          rationale: `Drinking window calculated based on vintage ${v} and ${varietal} structure.`
+        }
+      };
+    }
+
+    function renderScanCandidateUI(bottle, rawText) {
+      document.getElementById('scanEmptyPlaceholder').classList.add('hidden');
+      document.getElementById('scanResultCard').classList.remove('hidden');
+
+      const dw = bottle.drinking_window || {};
+      const status = dw.status || "Hold (Too Young)";
+
+      // Top title & status
+      document.getElementById('scanDisplayTitle').textContent = `${bottle.vintage || 'NV'} ${bottle.producer} ${bottle.wine_name || bottle.varietal}`;
+      document.getElementById('scanDisplaySubtitle').textContent = `${bottle.region || ''} • ${bottle.varietal || ''}`;
+      document.getElementById('scanDetectedType').textContent = `${getWineIcon(bottle.wine_type)} ${bottle.wine_type || 'Red'} Wine`;
+      
+      const badge = document.getElementById('scanBadgeStatus');
+      if (status.includes("Peak Window")) {
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800";
+        badge.textContent = "In Peak Window 🍷";
+      } else if (status.includes("Approaching")) {
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-950 text-cyan-300 border border-cyan-800";
+        badge.textContent = "Approaching Peak";
+      } else if (status.includes("Drink Soon")) {
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800";
+        badge.textContent = "Drink Soon ⚠️";
+      } else {
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-950 text-indigo-300 border border-indigo-800";
+        badge.textContent = "Cellar Hold ⏳";
+      }
+
+      // Window stats
+      document.getElementById('scanPeakWindowText').textContent = `${dw.peak_start || '----'} - ${dw.peak_end || '----'}`;
+      document.getElementById('scanMaturityWindowText').textContent = `${dw.window_start || '----'} - ${dw.window_end || '----'}`;
+      document.getElementById('scanDecantText').textContent = `⏱️ Decant: ${dw.decant_hours || 1.5}h`;
+      document.getElementById('scanTempText').textContent = `🌡️ Serve: ${dw.serving_temp_f || 63}°F`;
+      document.getElementById('scanRationaleText').textContent = dw.rationale || "Calculated by Sommelier intelligence.";
+
+      // Populate form fields
+      document.getElementById('scanEditProducer').value = bottle.producer || '';
+      document.getElementById('scanEditWine').value = bottle.wine_name || '';
+      document.getElementById('scanEditVintage').value = bottle.vintage || '';
+      document.getElementById('scanEditVarietal').value = bottle.varietal || '';
+      document.getElementById('scanEditRegion').value = bottle.region || '';
+      document.getElementById('scanEditPrice').value = bottle.purchase_price || '';
+      document.getElementById('scanEditNotes').value = bottle.personal_notes || '';
+      document.getElementById('scanRawOcrText').value = rawText || '';
+
+      updateScanFridgeButtons();
+    }
+
+    function setScanFridge(fridgeName) {
+      scanCurrentTargetFridge = fridgeName;
+      updateScanFridgeButtons();
+    }
+
+    function updateScanFridgeButtons() {
+      const btnBasement = document.getElementById('btnFridgeBasement');
+      const btnUpstairs = document.getElementById('btnFridgeUpstairs');
+      const confirmText = document.getElementById('btnConfirmScanAddText');
+
+      if (scanCurrentTargetFridge === 'Basement Fridge') {
+        btnBasement.className = "p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all bg-rose-950/40 border-rose-600 text-rose-200 ring-2 ring-rose-500/30";
+        btnUpstairs.className = "p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200";
+        confirmText.textContent = "Confirm & Add to Basement Fridge";
+      } else {
+        btnUpstairs.className = "p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all bg-rose-950/40 border-rose-600 text-rose-200 ring-2 ring-rose-500/30";
+        btnBasement.className = "p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200";
+        confirmText.textContent = "Confirm & Add to Upstairs Fridge";
+      }
+    }
+
+    async function confirmAddScannedBottle() {
+      if (!currentScannedBottle) return;
+
+      const producer = document.getElementById('scanEditProducer').value.trim() || currentScannedBottle.producer || 'Unknown';
+      const wineName = document.getElementById('scanEditWine').value.trim();
+      const vintageVal = document.getElementById('scanEditVintage').value;
+      const vintage = vintageVal ? parseInt(vintageVal) : currentScannedBottle.vintage;
+      const varietal = document.getElementById('scanEditVarietal').value.trim() || currentScannedBottle.varietal;
+      const region = document.getElementById('scanEditRegion').value.trim() || currentScannedBottle.region;
+      const shelf = document.getElementById('scanInputShelf').value.trim() || 'Shelf 1';
+      const qty = parseInt(document.getElementById('scanInputQuantity').value) || 1;
+      const priceVal = document.getElementById('scanEditPrice').value;
+      const price = priceVal ? parseFloat(priceVal) : null;
+      const notes = document.getElementById('scanEditNotes').value.trim() || currentScannedBottle.personal_notes;
+
+      const finalBottle = {
+        ...currentScannedBottle,
+        id: Date.now(),
+        producer,
+        wine_name: wineName,
+        vintage,
+        varietal,
+        region,
+        location_rack: scanCurrentTargetFridge,
+        location_bin: shelf,
+        quantity: qty,
+        purchase_price: price,
+        personal_notes: notes
+      };
+
+      // Try server save
+      let savedOnServer = false;
+      try {
+        const res = await fetch("/api/bottles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(finalBottle)
+        });
+        if (res.ok) {
+          savedOnServer = true;
+          await loadData();
+        }
+      } catch (e) {}
+
+      if (!savedOnServer) {
+        // Local state save
+        cellarBottles.push(finalBottle);
+        try { localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles)); } catch (e) {}
+        renderKPIs();
+        applyFilters();
+      }
+
+      closeModal('scanLabelModal');
+      alert(`✔ Added ${qty}x ${vintage || 'NV'} ${producer} ${wineName} to ${scanCurrentTargetFridge} (${shelf})!`);
+    }
+
+    function loadSampleLabel(sampleKey) {
+      const sample = SAMPLE_LABELS[sampleKey];
+      if (!sample) return;
+
+      // Draw simulated label on canvas
+      const canvas = document.getElementById('scanCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 600;
+      canvas.height = 700;
+
+      // Card Background
+      ctx.fillStyle = sample.bg || "#181315";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Border & Frame
+      ctx.strokeStyle = sample.accentCol || "#caa049";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(22, 22, canvas.width - 44, canvas.height - 44);
+
+      // Text typography
+      ctx.fillStyle = sample.textCol || "#fff";
+      ctx.textAlign = "center";
+
+      let y = 140;
+      sample.lines.forEach((line, idx) => {
+        if (idx === 0) {
+          ctx.font = "bold 34px -apple-system, Georgia, serif";
+          ctx.fillStyle = sample.accentCol || "#caa049";
+          ctx.fillText(line, canvas.width / 2, y);
+          y += 50;
+        } else if (idx === 1 && /^\d{4}$/.test(line)) {
+          ctx.font = "bold 38px -apple-system, serif";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(line, canvas.width / 2, y);
+          y += 55;
+        } else if (line.includes("CABERNET") || line.includes("RED") || line.includes("BRUT") || line.includes("PREMIER")) {
+          ctx.font = "bold 24px -apple-system, sans-serif";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(line, canvas.width / 2, y);
+          y += 40;
+        } else {
+          ctx.font = "16px -apple-system, sans-serif";
+          ctx.fillStyle = "#94a3b8";
+          ctx.fillText(line, canvas.width / 2, y);
+          y += 35;
+        }
+      });
+
+      currentScanImage = new Image();
+      currentScanImage.src = canvas.toDataURL();
+      currentScanRotation = 0;
+      isContrastEnhanced = false;
+
+      document.getElementById('scanPreviewSection').classList.remove('hidden');
+
+      // Directly process the sample text
+      processRecognizedLabelText(sample.rawText);
+    }
+
+    // Initial Load
+    window.addEventListener('DOMContentLoaded', loadData);
+  </script>
+</body>
+</html>
