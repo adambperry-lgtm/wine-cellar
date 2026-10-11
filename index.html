@@ -84,6 +84,9 @@
         <button onclick="openStorageModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
           <span>🧊</span> Edit Storage
         </button>
+        <button onclick="exportCellarDatabase()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
+          <span>📥</span> Export Database
+        </button>
       </div>
     </div>
   </header>
@@ -605,6 +608,18 @@ Upstairs Fridge:
             <p id="csvSelectedFileName" class="text-[11px] text-slate-500">Supports standard cellar spreadsheets, Excel, Google Sheets (.csv)</p>
           </div>
 
+          <!-- CellarTracker Helper Box -->
+          <div class="bg-indigo-950/40 border border-indigo-800/40 rounded-xl p-3 text-xs flex flex-col gap-1.5">
+            <div class="flex items-center justify-between text-indigo-300 font-bold">
+              <span class="flex items-center gap-1.5"><span>🍇</span> Importing from CellarTracker?</span>
+              <span class="text-[10px] bg-indigo-900/70 border border-indigo-700/50 px-2 py-0.5 rounded text-indigo-200">1-Click Compatible</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              In CellarTracker on desktop: <strong>My Cellar</strong> → switch view to <strong>Individual Bottles</strong> → click <strong>Export (CSV)</strong>.
+              Drop that file here to import your collection with locations, bins, bottle sizes, community scores, and drinking windows intact!
+            </p>
+          </div>
+
           <!-- Or Paste CSV Directly -->
           <details class="text-xs border border-slate-800 rounded-lg p-2.5 bg-slate-900/60">
             <summary class="cursor-pointer text-slate-400 hover:text-slate-200 font-medium select-none flex items-center justify-between">
@@ -896,6 +911,68 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     </div>
   </div>
 
+  <!-- MODAL: Public Critic Reviews & Scores -->
+  <div id="criticModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[88vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🏆</span>
+          <div>
+            <h3 id="criticModalTitle" class="text-base font-bold text-white">Public Critic Scores</h3>
+            <p id="criticModalSubtitle" class="text-xs text-slate-400">James Suckling, Wine Advocate, Vinous & premier reviews</p>
+          </div>
+        </div>
+        <button onclick="closeModal('criticModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div id="criticReviewsContainer" class="flex flex-col gap-3">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Add Custom / New Critic Score Form -->
+      <details class="text-xs border border-slate-800 rounded-xl p-3 bg-slate-950/40">
+        <summary class="cursor-pointer text-slate-400 hover:text-slate-200 font-semibold select-none flex items-center justify-between">
+          <span>➕ Add / Record another critic score for this wine</span>
+          <span class="text-[10px] text-slate-500">Click to expand</span>
+        </summary>
+        <div class="flex flex-col gap-2.5 mt-3 pt-2 border-t border-slate-800">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Critic / Publication</label>
+              <select id="newCriticSource" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none">
+                <option value="James Suckling">James Suckling (JS)</option>
+                <option value="Robert Parker's Wine Advocate">Wine Advocate (WA/RP)</option>
+                <option value="Wine Spectator">Wine Spectator (WS)</option>
+                <option value="Vinous">Vinous / Galloni (VN)</option>
+                <option value="Jeb Dunnuck">Jeb Dunnuck (JD)</option>
+                <option value="Decanter">Decanter (DEC)</option>
+                <option value="Wine Enthusiast">Wine Enthusiast (WE)</option>
+                <option value="CellarTracker Community">CellarTracker (CT)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Score (out of 100)</label>
+              <input type="number" id="newCriticScore" min="50" max="100" placeholder="e.g. 96" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none">
+            </div>
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Critic Note / Quote (optional)</label>
+            <textarea id="newCriticReview" rows="2" placeholder="e.g. Aromas of cedar, fresh tobacco, hazelnut and dark currants. Firm and elegant." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 outline-none"></textarea>
+          </div>
+          <button type="button" onclick="saveNewCriticScore()" class="self-end px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow">
+            Save Critic Score
+          </button>
+        </div>
+      </details>
+
+      <div class="flex justify-end pt-2 border-t border-slate-800">
+        <button onclick="closeModal('criticModal')" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Javascript Application Logic -->
   <script>
     let cellarBottles = [];
@@ -1115,6 +1192,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
                     ${b.wine_name ? `<span class="text-xs text-rose-300 font-medium">${escapeHtml(b.wine_name)}</span>` : ''}
                     ${statusBadge}
                     ${b.user_rating ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/60 flex items-center gap-1 shadow-sm" title="Your Rating"><span>★</span> ${b.user_rating}/5</span>` : ''}
+                    ${getCriticBadgesHtml(b)}
                   </div>
                   <p class="text-xs text-slate-400 mt-0.5">
                     ${escapeHtml(b.region)} ${b.sub_region ? '• ' + escapeHtml(b.sub_region) : ''} |
@@ -1208,6 +1286,171 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       } else {
         return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">Cellar Hold ⏳</span>`;
       }
+    }
+
+    function getCriticBadgesHtml(b) {
+      const reviews = b.critic_reviews || [];
+      if (reviews.length > 0) {
+        return reviews.map(r => {
+          const code = r.code || r.source.slice(0, 2).toUpperCase();
+          const score = r.score;
+          let colorClasses = "bg-amber-950/70 text-amber-300 border-amber-700/60";
+          if (code === "JS") colorClasses = "bg-emerald-950/80 text-emerald-300 border-emerald-600/70 shadow-sm shadow-emerald-900/40";
+          else if (code === "WA" || code === "RP") colorClasses = "bg-rose-950/80 text-rose-300 border-rose-600/70";
+          else if (code === "JD") colorClasses = "bg-purple-950/80 text-purple-300 border-purple-600/70";
+          else if (code === "VN") colorClasses = "bg-teal-950/80 text-teal-300 border-teal-600/70";
+          else if (code === "WS") colorClasses = "bg-blue-950/80 text-blue-300 border-blue-600/70";
+          else if (code === "WE") colorClasses = "bg-indigo-950/80 text-indigo-300 border-indigo-600/70";
+
+          const tooltip = escapeHtml(`${r.source}: ${score} pts${r.reviewer ? ' (' + r.reviewer + ')' : ''}${r.review ? ' — "' + r.review + '"' : ''}`);
+          return `
+            <button type="button" onclick="openCriticModal(${b.id})" class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorClasses} flex items-center gap-1 hover:brightness-125 transition cursor-pointer" title="${tooltip}">
+              <span>🏆</span> ${code} <strong class="text-white">${score}</strong>
+            </button>
+          `;
+        }).join('');
+      } else if (b.critic_score) {
+        return `
+          <button type="button" onclick="openCriticModal(${b.id})" class="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-950/60 text-amber-300 border-amber-700/50 flex items-center gap-1 hover:brightness-125 transition cursor-pointer" title="Critic Score">
+            <span>🏆</span> Score <strong class="text-white">${b.critic_score}</strong>
+          </button>
+        `;
+      }
+      return '';
+    }
+
+    let activeCriticBottleId = null;
+
+    function openCriticModal(bottleId) {
+      activeCriticBottleId = bottleId;
+      const b = cellarBottles.find(x => x.id === bottleId);
+      if (!b) return;
+
+      const titleEl = document.getElementById('criticModalTitle');
+      const subEl = document.getElementById('criticModalSubtitle');
+      const container = document.getElementById('criticReviewsContainer');
+
+      if (titleEl) titleEl.textContent = `${b.vintage || 'NV'} ${b.producer} ${b.wine_name || ''}`;
+      if (subEl) subEl.textContent = `${b.varietal || 'Wine'} • ${b.region || ''} • Public Critic Scores`;
+
+      const reviews = b.critic_reviews || [];
+      if (container) {
+        if (reviews.length === 0 && !b.critic_score) {
+          container.innerHTML = `
+            <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 text-center text-xs text-slate-400">
+              No professional critic reviews recorded yet for this wine.
+            </div>
+          `;
+        } else if (reviews.length === 0 && b.critic_score) {
+          container.innerHTML = `
+            <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-white">Professional Consensus Score</span>
+                <p class="text-[11px] text-slate-400">Consensus wine critic rating</p>
+              </div>
+              <span class="px-3 py-1 bg-amber-950/80 text-amber-300 border border-amber-700/60 font-bold text-sm rounded-lg">
+                ${b.critic_score} pts
+              </span>
+            </div>
+          `;
+        } else {
+          container.innerHTML = reviews.map(r => {
+            let badgeBg = "bg-slate-800 text-amber-300 border-amber-700/50";
+            if (r.code === "JS") badgeBg = "bg-emerald-950/80 text-emerald-300 border-emerald-600/70";
+            else if (r.code === "WA" || r.code === "RP") badgeBg = "bg-rose-950/80 text-rose-300 border-rose-600/70";
+            else if (r.code === "JD") badgeBg = "bg-purple-950/80 text-purple-300 border-purple-600/70";
+            else if (r.code === "VN") badgeBg = "bg-teal-950/80 text-teal-300 border-teal-600/70";
+            else if (r.code === "WS") badgeBg = "bg-blue-950/80 text-blue-300 border-blue-600/70";
+            else if (r.code === "WE") badgeBg = "bg-indigo-950/80 text-indigo-300 border-indigo-600/70";
+
+            return `
+              <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded text-xs font-bold border ${badgeBg}">${r.code || 'CRITIC'}</span>
+                    <span class="text-xs font-bold text-white">${escapeHtml(r.source)}</span>
+                    ${r.reviewer ? `<span class="text-[11px] text-slate-400 font-medium">(${escapeHtml(r.reviewer)})</span>` : ''}
+                  </div>
+                  <span class="text-sm font-extrabold text-white bg-slate-800 border border-slate-700 px-2.5 py-0.5 rounded-lg shadow-sm">
+                    ${r.score} <span class="text-[10px] text-slate-400 font-normal">pts</span>
+                  </span>
+                </div>
+                ${r.review ? `
+                  <p class="text-xs text-slate-300 italic leading-relaxed pl-2 border-l-2 border-slate-700">
+                    "${escapeHtml(r.review)}"
+                  </p>
+                ` : ''}
+                ${r.drinking_window ? `
+                  <div class="text-[10px] text-slate-400 flex items-center gap-1 pt-1">
+                    <span>⏳ Recommended window:</span>
+                    <strong class="text-emerald-400">${escapeHtml(r.drinking_window)}</strong>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      openModal('criticModal');
+    }
+
+    async function saveNewCriticScore() {
+      if (!activeCriticBottleId) return;
+      const b = cellarBottles.find(x => x.id === activeCriticBottleId);
+      if (!b) return;
+
+      const source = document.getElementById('newCriticSource').value;
+      const scoreRaw = document.getElementById('newCriticScore').value;
+      const review = document.getElementById('newCriticReview').value.trim();
+
+      if (!scoreRaw || isNaN(parseInt(scoreRaw))) {
+        alert("Please enter a valid score (50-100).");
+        return;
+      }
+      const score = parseInt(scoreRaw);
+
+      let code = source.slice(0, 2).toUpperCase();
+      if (source.includes("Suckling")) code = "JS";
+      else if (source.includes("Advocate") || source.includes("Parker")) code = "WA";
+      else if (source.includes("Spectator")) code = "WS";
+      else if (source.includes("Vinous")) code = "VN";
+      else if (source.includes("Dunnuck")) code = "JD";
+      else if (source.includes("Decanter")) code = "DEC";
+      else if (source.includes("Enthusiast")) code = "WE";
+      else if (source.includes("CellarTracker")) code = "CT";
+
+      if (!b.critic_reviews) b.critic_reviews = [];
+      b.critic_reviews.push({
+        source,
+        code,
+        score,
+        review,
+        reviewer: source,
+        date: new Date().getFullYear().toString()
+      });
+
+      b.critic_score = Math.max(b.critic_score || 0, score);
+
+      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+
+      // Sync backend
+      try {
+        await fetch(`/api/bottles/${b.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(b)
+        });
+      } catch (e) {}
+
+      // Reset inputs
+      document.getElementById('newCriticScore').value = '';
+      document.getElementById('newCriticReview').value = '';
+
+      openCriticModal(b.id);
+      applyFilters();
     }
 
     function getWineIcon(type) {
@@ -1925,23 +2168,25 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         producer: ['producer', 'winery', 'maker', 'brand', 'estate'],
         wine_name: ['winename', 'wine', 'name', 'cuvee', 'designation', 'label'],
         vintage: ['vintage', 'year', 'vint'],
-        varietal: ['varietal', 'variety', 'grape', 'blend'],
+        varietal: ['varietal', 'mastervarietal', 'variety', 'grape', 'blend'],
         region: ['region', 'appellation', 'area'],
         sub_region: ['subregion', 'vineyard', 'ava'],
         country: ['country'],
         wine_type: ['winetype', 'type', 'color'],
         format: ['format', 'size', 'bottlesize'],
         quantity: ['quantity', 'qty', 'count', 'bottles', 'bottlecount'],
-        location_rack: ['locationrack', 'fridge', 'storage', 'rack', 'storagelocation', 'location'],
-        location_bin: ['locationbin', 'shelf', 'bin', 'binlocation'],
-        purchase_price: ['purchaseprice', 'price', 'cost', 'paid', 'valuation'],
-        critic_score: ['criticscore', 'score', 'points'],
-        user_rating: ['userrating', 'rating', 'stars', 'mystars'],
-        personal_notes: ['personalnotes', 'notes', 'comments', 'sku', 'tastingnotes'],
-        window_start: ['windowstart', 'drinkfrom'],
-        peak_start: ['peakstart'],
-        peak_end: ['peakend'],
-        window_end: ['windowend', 'drinkby'],
+        location_rack: ['locationrack', 'location', 'fridge', 'storage', 'rack', 'storagelocation'],
+        location_bin: ['locationbin', 'shelf', 'bin', 'binlocation', 'row'],
+        purchase_price: ['purchaseprice', 'price', 'cost', 'paid', 'valuation', 'value'],
+        critic_score: ['criticscore', 'score', 'ct', 'communityscore', 'points'],
+        user_rating: ['userrating', 'rating', 'myrating', 'userscore', 'stars', 'mystars'],
+        personal_notes: ['personalnotes', 'notes', 'mynotes', 'privatenotes', 'comments', 'sku', 'tastingnotes', 'review'],
+        iwine: ['iwine', 'iwineid', 'wineid'],
+        barcode: ['barcode'],
+        window_start: ['windowstart', 'drinkfrom', 'beginconsume', 'consume', 'startconsume'],
+        peak_start: ['peakstart', 'beginconsume', 'consume', 'startconsume', 'drinkwindowbegin'],
+        peak_end: ['peakend', 'endconsume', 'stopconsume', 'drinkby', 'drinkwindowend'],
+        window_end: ['windowend', 'drinkby', 'endconsume', 'stopconsume'],
         drinking_status: ['drinkingstatus', 'status', 'currentstatus'],
         decant_hours: ['decanthours', 'decant'],
         serving_temp_f: ['servingtempf', 'servingtemp', 'temp']
@@ -1975,7 +2220,8 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const producer = getVal('producer') || 'Unknown Producer';
         const wineName = getVal('wine_name');
         const vintRaw = getVal('vintage');
-        const vintage = (vintRaw && !isNaN(parseInt(vintRaw))) ? parseInt(vintRaw) : null;
+        const vintMatch = vintRaw ? vintRaw.match(/\b(19\d\d|20\d\d)\b/) : null;
+        const vintage = vintMatch ? parseInt(vintMatch[1]) : (vintRaw && !isNaN(parseInt(vintRaw)) ? parseInt(vintRaw) : null);
         const varietal = getVal('varietal') || 'Red Blend';
         const region = getVal('region') || 'California';
         const subRegion = getVal('sub_region');
@@ -1984,38 +2230,60 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         let wineType = getVal('wine_type') || 'Red';
         if (!['Red', 'White', 'Sparkling', 'Rosé', 'Dessert', 'Fortified'].includes(wineType)) {
           const lower = wineType.toLowerCase();
-          if (lower.includes('white') || lower.includes('chardonnay') || lower.includes('sauvignon blanc')) wineType = 'White';
-          else if (lower.includes('sparkling') || lower.includes('champagne') || lower.includes('prosecco')) wineType = 'Sparkling';
-          else if (lower.includes('rose') || lower.includes('rosé')) wineType = 'Rosé';
+          if (lower.includes('white') || lower.includes('chardonnay') || lower.includes('sauvignon blanc') || lower.includes('riesling')) wineType = 'White';
+          else if (lower.includes('sparkling') || lower.includes('champagne') || lower.includes('prosecco') || lower.includes('cava')) wineType = 'Sparkling';
+          else if (lower.includes('rose') || lower.includes('rosé') || lower.includes('pink')) wineType = 'Rosé';
+          else if (lower.includes('dessert') || lower.includes('sweet') || lower.includes('sauternes') || lower.includes('port')) wineType = 'Dessert';
           else wineType = 'Red';
         }
 
-        const format = getVal('format') || 'Standard (750ml)';
+        // Bottle size normalization (supports 750ml, 1.5L, 375ml, Magnums, etc.)
+        let format = getVal('format') || 'Standard (750ml)';
+        const fLower = format.toLowerCase();
+        if (fLower.includes('1.5') || fLower.includes('1500') || fLower.includes('magnum')) format = 'Magnum (1.5L)';
+        else if (fLower.includes('375') || fLower.includes('half') || fLower.includes('demi')) format = 'Half (375ml)';
+        else if (fLower.includes('3.0') || fLower.includes('3l') || fLower.includes('double')) format = 'Double Magnum (3.0L)';
+        else if (fLower.includes('6.0') || fLower.includes('6l') || fLower.includes('imperial')) format = 'Imperial (6.0L)';
+        else if (fLower.includes('750') || !format) format = 'Standard (750ml)';
+
         const qtyRaw = getVal('quantity');
-        const quantity = (qtyRaw && !isNaN(parseInt(qtyRaw))) ? Math.max(1, parseInt(qtyRaw)) : 1;
+        if (qtyRaw === '0') continue; // Skip consumed CellarTracker bottles
+        const quantity = (qtyRaw && !isNaN(parseInt(qtyRaw.replace(/[^\d]/g, '')))) ? Math.max(1, parseInt(qtyRaw.replace(/[^\d]/g, ''))) : 1;
         const rack = getVal('location_rack') || 'Basement Fridge';
         const binLoc = getVal('location_bin') || 'Shelf 1';
 
-        const priceRaw = getVal('purchase_price').replace(/[$,]/g, '');
+        const priceRaw = getVal('purchase_price').replace(/[^0-9.]/g, '');
         const purchasePrice = (priceRaw && !isNaN(parseFloat(priceRaw))) ? parseFloat(priceRaw) : null;
 
-        const criticRaw = getVal('critic_score');
+        const criticRaw = getVal('critic_score').replace(/[^0-9.]/g, '');
         const criticScore = (criticRaw && !isNaN(parseInt(criticRaw))) ? parseInt(criticRaw) : null;
 
-        const ratingRaw = getVal('user_rating');
+        const ratingRaw = getVal('user_rating').replace(/[^0-9.]/g, '');
         const userRating = (ratingRaw && !isNaN(parseFloat(ratingRaw))) ? parseFloat(ratingRaw) : null;
 
-        const notes = getVal('personal_notes');
+        // Notes and CellarTracker tracking IDs (iWine, Barcode)
+        let notes = getVal('personal_notes') || '';
+        const iwine = getVal('iwine');
+        if (iwine && !notes.includes(`iWine: ${iwine}`)) {
+          notes = notes ? `${notes} | [CT iWine: ${iwine}]` : `[CT iWine: ${iwine}]`;
+        }
+        const barcode = getVal('barcode');
+        if (barcode && !notes.includes(`Barcode: ${barcode}`)) {
+          notes = notes ? `${notes} | [Barcode: ${barcode}]` : `[Barcode: ${barcode}]`;
+        }
 
-        // Drinking window estimation / reading
+        // Drinking window estimation / reading (supports CellarTracker BeginConsume / EndConsume)
         let dw = null;
         const peakStartRaw = getVal('peak_start');
         const peakEndRaw = getVal('peak_end');
         const statusRaw = getVal('drinking_status');
 
-        if (peakStartRaw && peakEndRaw) {
-          const pStart = parseInt(peakStartRaw);
-          const pEnd = parseInt(peakEndRaw);
+        const pStartMatch = (peakStartRaw || '').match(/\b(19\d\d|20\d\d)\b/);
+        const pEndMatch = (peakEndRaw || '').match(/\b(19\d\d|20\d\d)\b/);
+        const pStart = pStartMatch ? parseInt(pStartMatch[1]) : (peakStartRaw && !isNaN(parseInt(peakStartRaw)) ? parseInt(peakStartRaw) : null);
+        const pEnd = pEndMatch ? parseInt(pEndMatch[1]) : (peakEndRaw && !isNaN(parseInt(peakEndRaw)) ? parseInt(peakEndRaw) : null);
+
+        if (pStart && pEnd) {
           const wStart = parseInt(getVal('window_start')) || pStart - 2;
           const wEnd = parseInt(getVal('window_end')) || pEnd + 5;
           let status = statusRaw;
@@ -2109,6 +2377,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         return;
       }
 
+      const rawHeaders = rows[0].map(h => (h || '').trim().toLowerCase().replace(/[\s_-]+/g, ''));
+      const isCellarTracker = rawHeaders.some(h => ['iwine', 'beginconsume', 'endconsume', 'bottlesize', 'location'].includes(h));
+
       const bottles = mapCsvRowsToBottles(rows);
       if (bottles.length === 0) {
         if (previewBox) previewBox.classList.add('hidden');
@@ -2116,7 +2387,13 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
 
       const totalQty = bottles.reduce((acc, b) => acc + (b.quantity || 1), 0);
-      if (summaryEl) summaryEl.textContent = `${bottles.length} wines (${totalQty} bottles) detected ready to import`;
+      if (summaryEl) {
+        if (isCellarTracker) {
+          summaryEl.innerHTML = `🍇 <strong class="text-indigo-400">CellarTracker export detected:</strong> ${bottles.length} wines (${totalQty} bottles) ready to import`;
+        } else {
+          summaryEl.textContent = `${bottles.length} wines (${totalQty} bottles) detected ready to import`;
+        }
+      }
 
       if (listEl) {
         listEl.innerHTML = bottles.slice(0, 5).map((b, idx) => `
