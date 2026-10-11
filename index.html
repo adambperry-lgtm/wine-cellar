@@ -231,7 +231,7 @@
         <span class="text-[11px] text-slate-500">Ref Year: 2026</span>
         <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-amber-300 font-mono text-xs font-semibold shadow-inner" title="Current Application Version">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="appVersionBadge">v2.2.0</span>
+          <span id="appVersionBadge">v2.3.0</span>
         </div>
       </div>
     </div>
@@ -251,12 +251,22 @@
         <button onclick="closeModal('recommendModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
       </div>
 
+      <!-- Intent Tabs: Pull from Cellar vs Purchase Recommendations -->
+      <div class="flex border-b border-slate-800 gap-4">
+        <button type="button" id="tabSommOpen" onclick="setSommelierIntent('open')" class="pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500 whitespace-nowrap flex items-center gap-1.5 transition">
+          <span>🍷</span> What to Open Tonight
+        </button>
+        <button type="button" id="tabSommBuy" onclick="setSommelierIntent('buy')" class="pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center gap-1.5 transition">
+          <span>🛒</span> What to Buy to Complement Cellar
+        </button>
+      </div>
+
       <!-- Sommelier Intelligence Mode & Gemini Controls -->
       <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col gap-2.5">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-white flex items-center gap-1.5">
-              <span>🤖</span> Mode:
+              <span>🤖</span> AI Engine:
             </span>
             <div class="inline-flex rounded-lg bg-slate-900 border border-slate-700/80 p-0.5 text-xs">
               <button type="button" id="btnModeGemini" onclick="setSommelierMode('gemini')" class="px-2.5 py-1 rounded-md font-semibold transition bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm flex items-center gap-1">
@@ -293,9 +303,9 @@
         </div>
       </div>
 
-      <!-- Quick Food Tag Buttons -->
-      <div class="flex flex-col gap-2">
-        <label class="text-xs font-semibold text-slate-300">Quick Pairing Shortcuts:</label>
+      <!-- Quick Food Tag Buttons: Pull from Cellar -->
+      <div id="shortcutsOpenSection" class="flex flex-col gap-2">
+        <label class="text-xs font-semibold text-slate-300">Quick Pairing Shortcuts (From Your Cellar):</label>
         <div class="flex flex-wrap gap-2">
           <button onclick="setPairingTarget('Prime Ribeye Steak')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-200 text-slate-300 border border-slate-700 transition">🥩 Ribeye Steak</button>
           <button onclick="setPairingTarget('Roast Duck Breast')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-900/50 hover:text-rose-200 text-slate-300 border border-slate-700 transition">🦆 Roast Duck</button>
@@ -306,11 +316,26 @@
         </div>
       </div>
 
+      <!-- Quick Acquisition Shortcuts: What to Buy -->
+      <div id="shortcutsBuySection" class="hidden flex flex-col gap-2">
+        <label class="text-xs font-semibold text-indigo-300 flex items-center gap-1">
+          <span>🛒</span> Quick Acquisition Scenarios (To Buy & Complement Collection):
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setPairingTarget('I would like to get some wine that is ready to drink now and serve with a ribeye')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-indigo-700/50 transition font-medium">🥩 Ready to drink now with Ribeye</button>
+          <button onclick="setPairingTarget('Ready-to-drink crisp white wines for seafood and oysters that complement my cellar')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">🦪 Ready-to-drink Seafood Whites</button>
+          <button onclick="setPairingTarget('Age-worthy collectible reds to cellar for 10-20 years that balance my collection')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">⏳ Age-worthy Collectibles (10-20 yrs)</button>
+          <button onclick="setPairingTarget('Mature Spanish Rioja or Italian Brunello ready to open this year')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">🇪🇸 Mature Spanish / Italian Reds</button>
+          <button onclick="setPairingTarget('Great value daily drinkers under $50 that deliver serious quality')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">💰 Everyday Cellar Defenders ($30-$50)</button>
+          <button onclick="setPairingTarget('Prestige Champagne or sparkling to have on hand for celebrations')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">🍾 Celebratory Champagne to Stock</button>
+        </div>
+      </div>
+
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-semibold text-slate-300">Or Type Dinner Menu / Food:</label>
+        <label id="sommelierInputLabel" class="text-xs font-semibold text-slate-300">Or Type Dinner Menu / Food:</label>
         <div class="flex gap-2">
           <input type="text" id="foodQueryInput" placeholder="e.g. Braised short ribs, grilled salmon, pizza..." class="flex-1 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white px-3 py-2 outline-none focus:border-rose-500">
-          <button onclick="runSommelierQuery()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold">Find Bottle</button>
+          <button id="btnRunSommelier" onclick="runSommelierQuery()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold shadow-md">Find Bottle</button>
         </div>
       </div>
 
@@ -1036,7 +1061,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
   <!-- Javascript Application Logic -->
   <script>
-    const APP_VERSION = "v2.2.0";
+    const APP_VERSION = "v2.3.0";
     let cellarBottles = [];
     let tastingHistory = [];
     let storageZones = [];
@@ -2981,6 +3006,124 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       return `<div class="text-xs leading-relaxed text-slate-200">${s}</div>`;
     }
 
+    let sommelierIntent = 'open'; // 'open' or 'buy'
+
+    function setSommelierIntent(intent) {
+      sommelierIntent = intent;
+      const tabOpen = document.getElementById('tabSommOpen');
+      const tabBuy = document.getElementById('tabSommBuy');
+      const shortcutsOpen = document.getElementById('shortcutsOpenSection');
+      const shortcutsBuy = document.getElementById('shortcutsBuySection');
+      const inputLabel = document.getElementById('sommelierInputLabel');
+      const inputEl = document.getElementById('foodQueryInput');
+      const btnEl = document.getElementById('btnRunSommelier');
+
+      if (intent === 'buy') {
+        if (tabBuy) tabBuy.className = "pb-2 text-xs font-bold text-indigo-400 border-b-2 border-indigo-500 whitespace-nowrap flex items-center gap-1.5 transition";
+        if (tabOpen) tabOpen.className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center gap-1.5 transition";
+        if (shortcutsOpen) shortcutsOpen.classList.add('hidden');
+        if (shortcutsBuy) shortcutsBuy.classList.remove('hidden');
+        if (inputLabel) inputLabel.textContent = "What would you like to acquire or pair?";
+        if (inputEl) inputEl.placeholder = "e.g. I'd like to get some wine that is ready to drink now and serve with a ribeye...";
+        if (btnEl) btnEl.textContent = "Recommend Purchases";
+      } else {
+        if (tabOpen) tabOpen.className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500 whitespace-nowrap flex items-center gap-1.5 transition";
+        if (tabBuy) tabBuy.className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center gap-1.5 transition";
+        if (shortcutsBuy) shortcutsBuy.classList.add('hidden');
+        if (shortcutsOpen) shortcutsOpen.classList.remove('hidden');
+        if (inputLabel) inputLabel.textContent = "Or Type Dinner Menu / Food:";
+        if (inputEl) inputEl.placeholder = "e.g. Braised short ribs, grilled salmon, pizza...";
+        if (btnEl) btnEl.textContent = "Find Bottle";
+      }
+    }
+
+    const ACQUISITION_CATALOG = [
+      {
+        wine_name: "Gran Reserva 904",
+        producer: "La Rioja Alta",
+        vintage_sweet_spot: "2015 or 2016",
+        region: "Rioja, Spain",
+        varietal: "Tempranillo / Graciano",
+        est_price: 85,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Decant 45m",
+        serving_temp: "63°F",
+        match_keywords: ["steak", "ribeye", "beef", "meat", "spanish", "ready", "now", "peak", "mature"],
+        rationale: "Aged 10+ years at the estate prior to release. Silky, resolved tannins, cigar box, and cedar that melt through ribeye fat effortlessly.",
+        cellar_complement: "Complements your young Napa Cabernets (2022 Faust, 2021 Gargiulo) by providing immediate mature secondary complexity without needing to sacrifice youthful cellar bottles."
+      },
+      {
+        wine_name: "Château Léoville Barton (or Pontet-Canet)",
+        producer: "Château Léoville Barton",
+        vintage_sweet_spot: "2014, 2015, or 2016",
+        region: "Saint-Julien / Pauillac, Bordeaux",
+        varietal: "Cabernet Sauvignon Blend",
+        est_price: 135,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Decant 1.5h",
+        serving_temp: "64°F",
+        match_keywords: ["steak", "ribeye", "beef", "bordeaux", "cabernet", "ready", "now", "french", "left bank"],
+        rationale: "Classic Left Bank gravel structure with graphite, cassis, and savory tobacco. Built for prime beef cuts.",
+        cellar_complement: "Adds Old World classicism and benchmark tertiary Pauillac/Saint-Julien notes to balance California fruit forwardness."
+      },
+      {
+        wine_name: "Barbaresco Riserva",
+        producer: "Produttori del Barbaresco",
+        vintage_sweet_spot: "2016, 2017, or 2019",
+        region: "Piedmont, Italy",
+        varietal: "Nebbiolo",
+        est_price: 75,
+        drinking_status: "Approaching Peak / Peak",
+        decant_advice: "Decant 2h",
+        serving_temp: "63°F",
+        match_keywords: ["steak", "ribeye", "beef", "truffle", "italian", "nebbiolo", "barolo", "barbaresco", "pasta"],
+        rationale: "High natural acidity and chalky Nebbiolo tannins slice through heavy ribeye marbling with rose petal and tar aromatics.",
+        cellar_complement: "Supplies noble Italian structure to expand your Italian selection beyond Super Tuscans."
+      },
+      {
+        wine_name: "Lytton Springs (or Geyserville)",
+        producer: "Ridge Vineyards",
+        vintage_sweet_spot: "2019, 2020, or 2021",
+        region: "Dry Creek Valley, California",
+        varietal: "Zinfandel / Petite Sirah Blend",
+        est_price: 52,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Decant 1h",
+        serving_temp: "62°F",
+        match_keywords: ["steak", "ribeye", "bbq", "beef", "daily", "american", "zinfandel", "value", "now"],
+        rationale: "Deep bramble fruit, black peppercorn, and muscular Petite Sirah backbone. Irresistible with charred ribeye crust.",
+        cellar_complement: "Acts as an accessible cellar-defender bottle that delivers serious pedigree at an everyday price point."
+      },
+      {
+        wine_name: "Chablis Premier Cru 'Fourchaume'",
+        producer: "Domaine William Fèvre (or Louis Jadot)",
+        vintage_sweet_spot: "2020 or 2022",
+        region: "Chablis, Burgundy",
+        varietal: "Chardonnay",
+        est_price: 60,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Pop and pour",
+        serving_temp: "50°F",
+        match_keywords: ["fish", "seafood", "oyster", "white", "crisp", "chicken", "summer"],
+        rationale: "Kimmeridgian limestone minerality, oyster-shell salinity, and vibrant citrus acidity for seafood and raw bars.",
+        cellar_complement: "Fills a major white wine gap in the cellar, providing premier gastronomic versatility."
+      },
+      {
+        wine_name: "Brut Réserve Champagne",
+        producer: "Billecart-Salmon (or Charles Heidsieck)",
+        vintage_sweet_spot: "NV (Base 2018/2019)",
+        region: "Champagne, France",
+        varietal: "Pinot Noir / Chardonnay / Meunier",
+        est_price: 68,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Serve chilled",
+        serving_temp: "46°F",
+        match_keywords: ["celebrat", "sparkling", "champagne", "prestige", "party", "oyster", "appetizer"],
+        rationale: "Brioche, fine pinpoint bead, and pristine chalky lift. Pairs universally from aperitifs to fried poultry.",
+        cellar_complement: "Ensures you always have world-class celebratory bubbly on hand without having to rush to the store."
+      }
+    ];
+
     function setPairingTarget(target) {
       document.getElementById('foodQueryInput').value = target;
       runSommelierQuery();
@@ -2990,17 +3133,19 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       const query = document.getElementById('foodQueryInput').value.trim();
       const resultsContainer = document.getElementById('sommelierResults');
       if (!query) {
-        resultsContainer.innerHTML = '<div class="text-xs text-amber-400">Please enter a food or occasion query.</div>';
+        resultsContainer.innerHTML = `<div class="text-xs text-amber-400">Please enter a ${sommelierIntent === 'buy' ? 'wine acquisition goal' : 'food or occasion query'}.</div>`;
         return;
       }
 
       if (sommelierMode === 'gemini') {
+        const loadingTitle = sommelierIntent === 'buy' ? 'Consulting Google Gemini AI Acquisition Advisor...' : 'Consulting Google Gemini AI Sommelier...';
+        const loadingDesc = sommelierIntent === 'buy' ? 'Analyzing cellar collection profile to recommend wines to purchase' : 'Grounded in your authentic cellar inventory & drinking windows';
         resultsContainer.innerHTML = `
           <div class="bg-slate-950/80 border border-indigo-900/60 rounded-xl p-4 flex items-center gap-3">
             <span class="text-xl animate-spin">✨</span>
             <div>
-              <span class="text-xs font-bold text-indigo-300">Consulting Google Gemini AI Sommelier...</span>
-              <p class="text-[11px] text-slate-400">Grounded in your authentic cellar inventory & drinking windows</p>
+              <span class="text-xs font-bold text-indigo-300">${loadingTitle}</span>
+              <p class="text-[11px] text-slate-400">${loadingDesc}</p>
             </div>
           </div>
         `;
@@ -3012,7 +3157,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           const res = await fetch('/api/gemini/sommelier', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: query, api_key: userGeminiKey || undefined })
+            body: JSON.stringify({ query: query, api_key: userGeminiKey || undefined, mode: sommelierIntent })
           });
           if (res.ok) {
             const data = await res.json();
@@ -3022,7 +3167,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           }
         } catch (e) {}
 
-        // 2. If no server or running standalone on GitHub Pages, call Gemini REST API directly
+        // 2. Direct browser REST API call if running on GitHub Pages
         if (!geminiResponse && userGeminiKey) {
           try {
             const inStock = cellarBottles.filter(b => (b.quantity || 1) > 0);
@@ -3031,7 +3176,30 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
               return `- [ID ${b.id}] ${b.vintage || 'NV'} ${b.producer} '${b.wine_name || ''}' (${b.varietal}, ${b.region}) | Qty: ${b.quantity} | Status: ${dw.status || 'Approaching Peak'} | Decant: ${dw.decant_hours || 0}h | Serve: ${dw.serving_temp_f || 60}°F | Location: ${b.location_rack || 'Cellar'} ${b.location_bin || ''}${b.critic_score ? ' | Score: ' + b.critic_score : ''}${b.personal_notes ? ' | Notes: ' + b.personal_notes : ''}`;
             }).join('\n');
 
-            const prompt = `You are a Master Sommelier acting as private cellar advisor.
+            let prompt = "";
+            if (sommelierIntent === 'buy') {
+              prompt = `You are a Master Sommelier acting as the private cellar acquisition advisor for a wine collector.
+The collector wants recommendations for wines to PURCHASE to complement their collection.
+
+COLLECTOR'S CURRENT CELLAR INVENTORY:
+${cellarLines}
+
+USER'S ACQUISITION REQUEST:
+"${query}"
+
+INSTRUCTIONS:
+1. Provide a brief 1-2 sentence Master Sommelier assessment of the collector's current cellar profile (e.g. noting varietal strengths, current maturity stages, or readiness gaps).
+2. Recommend 3 to 5 SPECIFIC real-world wines to PURCHASE that fulfill the user's request and complement their collection.
+3. For each recommended purchase, clearly specify:
+   - **Wine & Producer**: Specific estate and cuvée (e.g. *La Rioja Alta Gran Reserva 904*, *Château Léoville Barton*, *Produttori del Barbaresco*)
+   - **Target Vintage(s) to Seek Out**: Specific vintage(s) currently drinking at their prime peak right now (or ready for the specified aging goal)
+   - **Price Tier / Est. Market Price**: Estimated retail price (e.g. ~$45, ~$85, ~$140)
+   - **Why It Complements the Cellar & Dining Goal**: Explain how its tannins, acidity, and flavor profile meet the dining need (e.g. pairing with ribeye) and how it fits alongside what they already own (e.g. giving them an immediately accessible bottle so they don't have to prematurely open young bottles like their 2022 Faust or 2021 Gargiulo).
+   - **Service Guidance**: Decant duration and ideal serving temperature once acquired.
+4. Conclude with 1-2 practical buying tips (e.g. benchmark retail vintages to look for, auction values, or regional sweet spots).
+5. Format with polished Markdown headings, bold text, and bullet points in an inspiring, authoritative sommelier tone.`;
+            } else {
+              prompt = `You are a Master Sommelier acting as private cellar advisor.
 Your recommendations MUST be grounded strictly in the collector's actual cellar bottles below. Do NOT invent bottles.
 
 CURRENT CELLAR INVENTORY:
@@ -3047,6 +3215,7 @@ INSTRUCTIONS:
 4. Use a polished, evocative master sommelier voice with clear markdown headings and bullet points.
 
 USER QUERY: "${query}"`;
+            }
 
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
             const gRes = await fetch(geminiUrl, {
@@ -3054,7 +3223,7 @@ USER QUERY: "${query}"`;
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.4, maxOutputTokens: 1200 }
+                generationConfig: { temperature: 0.4, maxOutputTokens: 1300 }
               })
             });
 
@@ -3069,7 +3238,7 @@ USER QUERY: "${query}"`;
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   contents: [{ parts: [{ text: prompt }] }],
-                  generationConfig: { temperature: 0.4, maxOutputTokens: 1200 }
+                  generationConfig: { temperature: 0.4, maxOutputTokens: 1300 }
                 })
               });
               if (fbRes.ok) {
@@ -3084,6 +3253,7 @@ USER QUERY: "${query}"`;
         }
 
         if (geminiResponse) {
+          const headerBadge = sommelierIntent === 'buy' ? '🛒 CELLAR ACQUISITION ADVISOR' : '✨ PRIVATE SOMMELIER CONSULTATION';
           resultsContainer.innerHTML = `
             <div class="bg-slate-950/90 border border-indigo-700/50 rounded-2xl p-5 flex flex-col gap-3 shadow-xl">
               <div class="flex items-center justify-between border-b border-indigo-900/50 pb-2.5">
@@ -3091,9 +3261,9 @@ USER QUERY: "${query}"`;
                   <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
                     ✨ GOOGLE GEMINI 2.0
                   </span>
-                  <span class="text-xs font-bold text-white">Private Sommelier Consultation</span>
+                  <span class="text-xs font-bold text-white">${headerBadge}</span>
                 </div>
-                <span class="text-[11px] text-indigo-300 font-medium">Grounded in Cellar Inventory</span>
+                <span class="text-[11px] text-indigo-300 font-medium">${sommelierIntent === 'buy' ? 'Complement Collection' : 'Grounded in Cellar'}</span>
               </div>
               <div class="prose prose-invert max-w-none">
                 ${formatMarkdownText(geminiResponse)}
@@ -3107,18 +3277,131 @@ USER QUERY: "${query}"`;
           <div class="bg-amber-950/30 border border-amber-800/60 rounded-xl p-3.5 flex items-center justify-between gap-3 mb-2">
             <div>
               <span class="text-xs font-bold text-amber-200">Google Gemini API Key Needed</span>
-              <p class="text-[11px] text-amber-300/80 mt-0.5">Enter your free Gemini key in the settings above to unlock conversational AI. Displaying Classic Enology matches below:</p>
+              <p class="text-[11px] text-amber-300/80 mt-0.5">Enter your free Gemini key in the settings above to unlock conversational AI. Displaying Classic Enology recommendations below:</p>
             </div>
             <button type="button" onclick="toggleGeminiKeySettings()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-bold rounded-lg shrink-0">
               Set Key
             </button>
           </div>
         `;
-        runClassicSommelierQuery(query, noKeyNotice);
+        if (sommelierIntent === 'buy') {
+          runClassicPurchaseQuery(query, noKeyNotice);
+        } else {
+          runClassicSommelierQuery(query, noKeyNotice);
+        }
         return;
       }
 
-      runClassicSommelierQuery(query);
+      if (sommelierIntent === 'buy') {
+        runClassicPurchaseQuery(query);
+      } else {
+        runClassicSommelierQuery(query);
+      }
+    }
+
+    async function runClassicPurchaseQuery(query, prefixHtml = '') {
+      const resultsContainer = document.getElementById('sommelierResults');
+
+      try {
+        const res = await fetch(`/api/recommend-purchases?query=${encodeURIComponent(query)}`);
+        if (res.ok) {
+          const data = await res.json();
+          renderPurchaseResults(data.recommendations || [], prefixHtml);
+          return;
+        }
+      } catch (e) {}
+
+      // Client-side fallback catalog matching
+      const qLower = query.toLowerCase();
+      const scored = ACQUISITION_CATALOG.map(item => {
+        let score = 10;
+        const combined = `${item.wine_name} ${item.producer} ${item.region} ${item.varietal} ${(item.match_keywords || []).join(' ')}`.lower();
+        const tokens = qLower.split(/\s+/).filter(w => w.length > 2);
+        for (const t of tokens) {
+          if (combined.includes(t)) score += 30;
+        }
+        return { item, score };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+      const topItems = scored.slice(0, 4).map(x => x.item);
+      renderPurchaseResults(topItems, prefixHtml);
+    }
+
+    function renderPurchaseResults(recs, prefixHtml = '') {
+      const container = document.getElementById('sommelierResults');
+      if (!recs || recs.length === 0) {
+        container.innerHTML = prefixHtml + '<div class="text-xs text-yellow-400">No purchase recommendations match this request. Try a different dish or category.</div>';
+        return;
+      }
+
+      const cardsHtml = recs.map((r, i) => {
+        return `
+          <div class="bg-slate-800/90 border border-indigo-900/60 hover:border-indigo-700/80 transition rounded-xl p-4 flex flex-col gap-2.5 shadow-md">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-950 text-indigo-300 border border-indigo-700/60">#${i + 1} Acquisition</span>
+                <h4 class="text-xs font-bold text-white">${escapeHtml(r.producer)} <span class="text-rose-300">${escapeHtml(r.wine_name)}</span></h4>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-amber-300 bg-amber-950/60 border border-amber-700/50 px-2 py-0.5 rounded-md">
+                  est. $${r.est_price || 60}
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                  Target: ${escapeHtml(r.vintage_sweet_spot)}
+                </span>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-300 font-medium">
+              ${escapeHtml(r.region)} • <span class="text-slate-200">${escapeHtml(r.varietal)}</span>
+            </p>
+
+            <div class="bg-slate-900/70 border border-slate-800 rounded-lg p-2.5 flex flex-col gap-1.5 text-xs">
+              <div class="text-slate-300">
+                <strong class="text-rose-300">🍽️ Pairing Harmony:</strong> ${escapeHtml(r.rationale)}
+              </div>
+              <div class="text-indigo-200/90 border-t border-slate-800/80 pt-1.5 mt-0.5">
+                <strong class="text-indigo-300">⚖️ Cellar Complement:</strong> ${escapeHtml(r.cellar_complement)}
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+              <div class="flex items-center gap-3">
+                <span>⏱️ ${escapeHtml(r.decant_advice)}</span>
+                <span>🌡️ Serve: ${escapeHtml(r.serving_temp)}</span>
+              </div>
+              <button type="button" onclick="openAddPreFilledBottle('${escapeHtml(r.producer).replace(/'/g, "\\'")}', '${escapeHtml(r.wine_name).replace(/'/g, "\\'")}', '${escapeHtml(r.vintage_sweet_spot).replace(/'/g, "\\'")}', '${escapeHtml(r.varietal).replace(/'/g, "\\'")}', '${escapeHtml(r.region).replace(/'/g, "\\'")}', ${r.est_price || 0})" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center gap-1 shadow-sm transition">
+                <span>➕</span> Add to Cellar
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = prefixHtml + cardsHtml;
+    }
+
+    function openAddPreFilledBottle(producer, wineName, vintage, varietal, region, price) {
+      closeModal('recommendModal');
+      openModal('addBottleModal');
+      switchAddTab('form');
+      const pInput = document.getElementById('bottleProducer');
+      const wInput = document.getElementById('bottleName');
+      const vInput = document.getElementById('bottleVintage');
+      const vaInput = document.getElementById('bottleVarietal');
+      const rInput = document.getElementById('bottleRegion');
+      const prInput = document.getElementById('bottlePrice');
+
+      if (pInput) pInput.value = producer || '';
+      if (wInput) wInput.value = wineName || '';
+      if (vInput && vintage) {
+        const num = parseInt(vintage.replace(/\D/g, ''));
+        if (!isNaN(num) && num > 1900 && num < 2050) vInput.value = num;
+      }
+      if (vaInput) vaInput.value = varietal || '';
+      if (rInput) rInput.value = region || '';
+      if (prInput && price) prInput.value = price;
     }
 
     async function runClassicSommelierQuery(query, prefixHtml = '') {
