@@ -218,6 +218,25 @@
 
   </main>
 
+  <!-- Application Footer & Version Display -->
+  <footer class="border-t border-slate-800/80 bg-slate-950/70 py-6 px-6 mt-12 text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5 flex-wrap justify-center sm:justify-start">
+        <span class="text-base">🍷</span>
+        <span class="font-bold text-white tracking-wide">Sommelier Wine Cellar Agent</span>
+        <span class="text-slate-600 hidden sm:inline">•</span>
+        <span class="text-slate-400">Intelligent Drinking Window & Inventory Platform</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-[11px] text-slate-500">Ref Year: 2026</span>
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-amber-300 font-mono text-xs font-semibold shadow-inner" title="Current Application Version">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="appVersionBadge">v2.2.0</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
   <!-- MODAL: Ask Sommelier Tonight -->
   <div id="recommendModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -230,6 +249,48 @@
           </div>
         </div>
         <button onclick="closeModal('recommendModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Sommelier Intelligence Mode & Gemini Controls -->
+      <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>🤖</span> Mode:
+            </span>
+            <div class="inline-flex rounded-lg bg-slate-900 border border-slate-700/80 p-0.5 text-xs">
+              <button type="button" id="btnModeGemini" onclick="setSommelierMode('gemini')" class="px-2.5 py-1 rounded-md font-semibold transition bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm flex items-center gap-1">
+                <span>✨</span> Gemini AI
+              </button>
+              <button type="button" id="btnModeClassic" onclick="setSommelierMode('classic')" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition font-medium flex items-center gap-1">
+                <span>🍷</span> Classic Enology
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="geminiStatusPill" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> Checking Key
+            </span>
+            <button type="button" onclick="toggleGeminiKeySettings()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline flex items-center gap-1">
+              <span>⚙️</span> API Key
+            </button>
+          </div>
+        </div>
+
+        <!-- Gemini API Key Collapsible Panel -->
+        <div id="geminiKeyPanel" class="hidden border-t border-slate-800/80 pt-2.5 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-300 font-medium">Google Gemini API Key:</span>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-indigo-400 hover:underline">Get Free Gemini Key ↗</a>
+          </div>
+          <div class="flex gap-2">
+            <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white px-2.5 py-1.5 outline-none focus:border-indigo-500">
+            <button type="button" onclick="saveGeminiKey()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow">
+              Save Key
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500">Key is saved securely in your browser and used to consult Gemini with your authentic cellar inventory.</p>
+        </div>
       </div>
 
       <!-- Quick Food Tag Buttons -->
@@ -975,6 +1036,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
   <!-- Javascript Application Logic -->
   <script>
+    const APP_VERSION = "v2.2.0";
     let cellarBottles = [];
     let tastingHistory = [];
     let storageZones = [];
@@ -1013,6 +1075,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         initStorageZones();
         renderKPIs();
         applyFilters();
+        initGeminiControls();
         return;
       }
 
@@ -1030,6 +1093,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       initStorageZones();
       renderKPIs();
       applyFilters();
+      initGeminiControls();
     }
 
     function renderKPIs() {
@@ -2805,6 +2869,118 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     }
 
     // Sommelier Query Functions
+    // ==========================================
+    // 🤖 GOOGLE GEMINI AI SOMMELIER ENGINE
+    // ==========================================
+    let sommelierMode = localStorage.getItem('sommelier_mode') || 'gemini';
+    let userGeminiKey = localStorage.getItem('gemini_api_key') || '';
+
+    function initGeminiControls() {
+      updateSommelierModeUI();
+      checkGeminiStatus();
+      const keyInput = document.getElementById('geminiApiKeyInput');
+      if (keyInput && userGeminiKey) {
+        keyInput.value = userGeminiKey;
+      }
+    }
+
+    function setSommelierMode(mode) {
+      sommelierMode = mode;
+      localStorage.setItem('sommelier_mode', mode);
+      updateSommelierModeUI();
+    }
+
+    function updateSommelierModeUI() {
+      const btnGemini = document.getElementById('btnModeGemini');
+      const btnClassic = document.getElementById('btnModeClassic');
+      if (!btnGemini || !btnClassic) return;
+
+      if (sommelierMode === 'gemini') {
+        btnGemini.className = "px-2.5 py-1 rounded-md font-semibold transition bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm flex items-center gap-1";
+        btnClassic.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition font-medium flex items-center gap-1";
+      } else {
+        btnClassic.className = "px-2.5 py-1 rounded-md font-semibold transition bg-rose-700 text-white shadow-sm flex items-center gap-1";
+        btnGemini.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition font-medium flex items-center gap-1";
+      }
+    }
+
+    function toggleGeminiKeySettings() {
+      const panel = document.getElementById('geminiKeyPanel');
+      if (panel) {
+        panel.classList.toggle('hidden');
+      }
+    }
+
+    async function saveGeminiKey() {
+      const input = document.getElementById('geminiApiKeyInput');
+      if (!input) return;
+      const key = input.value.trim();
+      if (!key) {
+        alert("Please enter a valid Gemini API key.");
+        return;
+      }
+      userGeminiKey = key;
+      localStorage.setItem('gemini_api_key', key);
+
+      try {
+        await fetch('/api/gemini/save-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: key })
+        });
+      } catch (e) {}
+
+      updateGeminiStatusPill(true, "Key Saved");
+      const panel = document.getElementById('geminiKeyPanel');
+      if (panel) panel.classList.add('hidden');
+      alert("✔ Google Gemini API Key saved! Gemini AI sommelier is now active.");
+    }
+
+    async function checkGeminiStatus() {
+      let isReady = !!userGeminiKey;
+      let label = isReady ? "Gemini Ready" : "No Key Set";
+
+      try {
+        const res = await fetch('/api/gemini/status');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.configured) {
+            isReady = true;
+            label = "Server Key Ready";
+          }
+        }
+      } catch (e) {}
+
+      updateGeminiStatusPill(isReady, label);
+    }
+
+    function updateGeminiStatusPill(ready, label) {
+      const pill = document.getElementById('geminiStatusPill');
+      if (!pill) return;
+      if (ready) {
+        pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 flex items-center gap-1";
+        pill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ${escapeHtml(label)}`;
+      } else {
+        pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-950/60 text-amber-300 border border-amber-700/50 flex items-center gap-1";
+        pill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> ${escapeHtml(label)}`;
+      }
+    }
+
+    function formatMarkdownText(md) {
+      if (!md) return '';
+      let s = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      s = s.replace(/^### (.*$)/gim, '<h4 class="text-xs font-bold text-rose-300 mt-3 mb-1 uppercase tracking-wider">$1</h4>');
+      s = s.replace(/^## (.*$)/gim, '<h3 class="text-sm font-bold text-amber-300 mt-3.5 mb-1.5">$1</h3>');
+      s = s.replace(/^# (.*$)/gim, '<h2 class="text-base font-bold text-white mt-4 mb-2">$1</h2>');
+      s = s.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
+      s = s.replace(/\*(.*?)\*/g, '<em class="text-slate-300 italic">$1</em>');
+      s = s.replace(/^\* (.*$)/gim, '<li class="ml-4 list-disc text-slate-300 my-0.5">$1</li>');
+      s = s.replace(/^\- (.*$)/gim, '<li class="ml-4 list-disc text-slate-300 my-0.5">$1</li>');
+      s = s.replace(/\n\n+/g, '</p><p class="my-2 text-xs leading-relaxed text-slate-200">');
+      s = s.replace(/\n/g, '<br/>');
+      return `<div class="text-xs leading-relaxed text-slate-200">${s}</div>`;
+    }
+
     function setPairingTarget(target) {
       document.getElementById('foodQueryInput').value = target;
       runSommelierQuery();
@@ -2813,39 +2989,232 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     async function runSommelierQuery() {
       const query = document.getElementById('foodQueryInput').value.trim();
       const resultsContainer = document.getElementById('sommelierResults');
-      resultsContainer.innerHTML = '<div class="text-xs text-slate-400">Consulting cellar sommelier knowledge...</div>';
+      if (!query) {
+        resultsContainer.innerHTML = '<div class="text-xs text-amber-400">Please enter a food or occasion query.</div>';
+        return;
+      }
+
+      if (sommelierMode === 'gemini') {
+        resultsContainer.innerHTML = `
+          <div class="bg-slate-950/80 border border-indigo-900/60 rounded-xl p-4 flex items-center gap-3">
+            <span class="text-xl animate-spin">✨</span>
+            <div>
+              <span class="text-xs font-bold text-indigo-300">Consulting Google Gemini AI Sommelier...</span>
+              <p class="text-[11px] text-slate-400">Grounded in your authentic cellar inventory & drinking windows</p>
+            </div>
+          </div>
+        `;
+
+        let geminiResponse = null;
+
+        // 1. Try local Python server endpoint
+        try {
+          const res = await fetch('/api/gemini/sommelier', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: query, api_key: userGeminiKey || undefined })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.advice) {
+              geminiResponse = data.advice;
+            }
+          }
+        } catch (e) {}
+
+        // 2. If no server or running standalone on GitHub Pages, call Gemini REST API directly
+        if (!geminiResponse && userGeminiKey) {
+          try {
+            const inStock = cellarBottles.filter(b => (b.quantity || 1) > 0);
+            const cellarLines = inStock.map(b => {
+              const dw = b.drinking_window || {};
+              return `- [ID ${b.id}] ${b.vintage || 'NV'} ${b.producer} '${b.wine_name || ''}' (${b.varietal}, ${b.region}) | Qty: ${b.quantity} | Status: ${dw.status || 'Approaching Peak'} | Decant: ${dw.decant_hours || 0}h | Serve: ${dw.serving_temp_f || 60}°F | Location: ${b.location_rack || 'Cellar'} ${b.location_bin || ''}${b.critic_score ? ' | Score: ' + b.critic_score : ''}${b.personal_notes ? ' | Notes: ' + b.personal_notes : ''}`;
+            }).join('\n');
+
+            const prompt = `You are a Master Sommelier acting as private cellar advisor.
+Your recommendations MUST be grounded strictly in the collector's actual cellar bottles below. Do NOT invent bottles.
+
+CURRENT CELLAR INVENTORY:
+${cellarLines}
+
+INSTRUCTIONS:
+1. Recommend 1 to 3 specific bottles from the cellar for: "${query}".
+2. PRIORITIZE bottles currently in "In Peak Window", "Approaching Peak", or "Drink Soon".
+3. For each recommendation, provide:
+   - Full Name, Vintage, and Cellar Location (e.g. Basement Fridge Shelf 1)
+   - Why its acid, tannins, and flavors harmonize with the dish/occasion
+   - Service guidance: Exact decanting duration and ideal serving temperature (°F)
+4. Use a polished, evocative master sommelier voice with clear markdown headings and bullet points.
+
+USER QUERY: "${query}"`;
+
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
+            const gRes = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.4, maxOutputTokens: 1200 }
+              })
+            });
+
+            if (gRes.ok) {
+              const gData = await gRes.json();
+              const text = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) geminiResponse = text;
+            } else {
+              const fbUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
+              const fbRes = await fetch(fbUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: prompt }] }],
+                  generationConfig: { temperature: 0.4, maxOutputTokens: 1200 }
+                })
+              });
+              if (fbRes.ok) {
+                const fbData = await fbRes.json();
+                const text = fbData.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) geminiResponse = text;
+              }
+            }
+          } catch (e) {
+            console.error("Direct Gemini API error:", e);
+          }
+        }
+
+        if (geminiResponse) {
+          resultsContainer.innerHTML = `
+            <div class="bg-slate-950/90 border border-indigo-700/50 rounded-2xl p-5 flex flex-col gap-3 shadow-xl">
+              <div class="flex items-center justify-between border-b border-indigo-900/50 pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
+                    ✨ GOOGLE GEMINI 2.0
+                  </span>
+                  <span class="text-xs font-bold text-white">Private Sommelier Consultation</span>
+                </div>
+                <span class="text-[11px] text-indigo-300 font-medium">Grounded in Cellar Inventory</span>
+              </div>
+              <div class="prose prose-invert max-w-none">
+                ${formatMarkdownText(geminiResponse)}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        const noKeyNotice = `
+          <div class="bg-amber-950/30 border border-amber-800/60 rounded-xl p-3.5 flex items-center justify-between gap-3 mb-2">
+            <div>
+              <span class="text-xs font-bold text-amber-200">Google Gemini API Key Needed</span>
+              <p class="text-[11px] text-amber-300/80 mt-0.5">Enter your free Gemini key in the settings above to unlock conversational AI. Displaying Classic Enology matches below:</p>
+            </div>
+            <button type="button" onclick="toggleGeminiKeySettings()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-bold rounded-lg shrink-0">
+              Set Key
+            </button>
+          </div>
+        `;
+        runClassicSommelierQuery(query, noKeyNotice);
+        return;
+      }
+
+      runClassicSommelierQuery(query);
+    }
+
+    async function runClassicSommelierQuery(query, prefixHtml = '') {
+      const resultsContainer = document.getElementById('sommelierResults');
 
       try {
         const res = await fetch(`/api/recommend?food=${encodeURIComponent(query)}`);
         if (res.ok) {
           const recs = await res.json();
-          renderSommelierResults(recs);
+          renderSommelierResults(recs, prefixHtml);
           return;
         }
       } catch (e) {}
 
-      // Fallback client-side matching
-      const peakReady = cellarBottles.filter(b => b.drinking_window && b.drinking_window.status.includes("Peak Window"));
-      const fallbackRecs = (peakReady.length ? peakReady : cellarBottles).slice(0, 3).map(b => ({
-        bottle: b,
-        drinking_status: b.drinking_window.status,
-        decant_advice: `Decant ${b.drinking_window.decant_hours}h`,
-        serving_temp: `${b.drinking_window.serving_temp_f}°F`,
-        rationale: b.drinking_window.rationale
-      }));
-      renderSommelierResults(fallbackRecs);
+      const qLower = query.toLowerCase();
+      const foodTargets = [];
+      const FOOD_PAIRING_MATRIX = {
+        "steak": ["Cabernet Sauvignon", "Bordeaux", "Super Tuscan", "Syrah", "Nebbiolo", "Barolo", "Brunello"],
+        "beef": ["Cabernet Sauvignon", "Bordeaux", "Super Tuscan", "Syrah", "Ribera del Duero"],
+        "ribeye": ["Cabernet Sauvignon", "Napa Valley", "Bordeaux", "Barolo", "Shiraz"],
+        "lamb": ["Bordeaux", "Rioja", "Rhône", "Syrah", "Brunello", "Cabernet Sauvignon"],
+        "duck": ["Pinot Noir", "Burgundy", "Côte-Rôtie", "Barolo", "Nebbiolo"],
+        "pork": ["Pinot Noir", "Rioja", "Riesling", "Chardonnay", "Beaujolais"],
+        "chicken": ["Chardonnay", "White Burgundy", "Pinot Noir", "Champagne", "Viognier"],
+        "fish": ["White Burgundy", "Chardonnay", "Chablis", "Sauvignon Blanc", "Champagne", "Pinot Noir"],
+        "salmon": ["Pinot Noir", "Burgundy", "Chardonnay", "Rosé"],
+        "oysters": ["Chablis", "Champagne", "Muscadet", "Sauvignon Blanc"],
+        "seafood": ["Chablis", "Riesling", "Champagne", "Sauvignon Blanc", "White Burgundy"],
+        "pasta": ["Sangiovese", "Chianti", "Brunello", "Barbera", "Nebbiolo", "Pinot Noir"],
+        "bistecca": ["Sangiovese", "Brunello", "Chianti", "Cabernet Sauvignon", "Super Tuscan"],
+        "truffle": ["Barolo", "Barbaresco", "Burgundy", "Nebbiolo", "Brunello"],
+        "cheese": ["Port", "Sauternes", "Bordeaux", "Champagne", "Riesling"],
+        "spicy": ["Riesling", "Gewürztraminer", "Off-dry", "Champagne"],
+        "dessert": ["Sauternes", "Port", "Tokaji", "Late Harvest"],
+        "celebrat": ["Champagne", "Cabernet Sauvignon", "Bordeaux", "Super Tuscan"]
+      };
+
+      for (const [key, targets] of Object.entries(FOOD_PAIRING_MATRIX)) {
+        if (qLower.includes(key)) {
+          foodTargets.push(...targets);
+        }
+      }
+
+      const scored = cellarBottles.map(b => {
+        let score = 0;
+        const dw = b.drinking_window || {};
+        const status = dw.status || '';
+
+        if (status.includes("Peak") || status.includes("Prime")) score += 50;
+        else if (status.includes("Approaching") || status.includes("Early")) score += 35;
+        else if (status.includes("Drink Soon") || status.includes("Late Peak")) score += 45;
+        else if (status.includes("Hold") || status.includes("Too Young")) score -= 25;
+
+        const desc = `${b.producer} ${b.wine_name || ''} ${b.varietal || ''} ${b.region || ''} ${b.sub_region || ''}`.toLowerCase();
+
+        if (foodTargets.length > 0) {
+          const matched = foodTargets.some(t => desc.includes(t.toLowerCase()));
+          if (matched) score += 60;
+        } else if (qLower) {
+          const tokens = qLower.split(/\s+/).filter(w => w.length > 2);
+          if (tokens.some(t => desc.includes(t))) score += 40;
+        }
+
+        if (qLower.includes("celebrat") || qLower.includes("prestige")) {
+          if (b.critic_score && b.critic_score >= 94) score += 40;
+          if (b.purchase_price && b.purchase_price >= 100) score += 30;
+        }
+
+        return { bottle: b, score };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+      const topCandidates = scored.slice(0, 3).map(s => {
+        const b = s.bottle;
+        const dw = b.drinking_window || {};
+        return {
+          bottle: b,
+          drinking_status: dw.status || 'Prime Peak Window',
+          decant_advice: dw.decant_hours ? `Decant ${dw.decant_hours}h` : 'Aeration: 30m',
+          serving_temp: dw.serving_temp_f ? `${dw.serving_temp_f}°F` : '62°F',
+          rationale: dw.rationale || `Matches ${query} profile with ideal maturity balance.`
+        };
+      });
+
+      renderSommelierResults(topCandidates, prefixHtml);
     }
 
-    function renderSommelierResults(recs) {
+    function renderSommelierResults(recs, prefixHtml = '') {
       const container = document.getElementById('sommelierResults');
       if (!recs || recs.length === 0) {
-        container.innerHTML = '<div class="text-xs text-yellow-400">No cellar bottles match this pairing. Try a different dish or style.</div>';
+        container.innerHTML = prefixHtml + '<div class="text-xs text-yellow-400">No cellar bottles match this pairing. Try a different dish or style.</div>';
         return;
       }
 
-      container.innerHTML = recs.map((r, i) => {
+      const cardsHtml = recs.map((r, i) => {
         const b = r.bottle;
-        const dw = b.drinking_window;
         return `
           <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-3.5 flex flex-col gap-2">
             <div class="flex items-center justify-between">
@@ -2864,6 +3233,8 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           </div>
         `;
       }).join('');
+
+      container.innerHTML = prefixHtml + cardsHtml;
     }
 
     // ==========================================
