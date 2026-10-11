@@ -69,17 +69,20 @@
         <button onclick="openModal('scanLabelModal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/40">
           <span>📸</span> Scan Label
         </button>
+        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-900/30">
+          <span>➕</span> Enter Wine
+        </button>
         <button onclick="openModal('recommendModal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all shadow-sm">
           <span>✨</span> Ask Sommelier
-        </button>
-        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-900/30">
-          <span>📝</span> Paste Wine List
         </button>
         <button onclick="openModal('auditModal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all">
           <span>📊</span> Cellar Audit
         </button>
-        <button onclick="clearCellar()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800/80 hover:bg-red-950 text-slate-400 hover:text-red-300 border border-slate-700/80 transition-all" title="Clear sample bottles to start with empty fridges">
-          <span>🧹</span> Empty Fridges
+        <button onclick="openHistoryModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition-all" title="Review opened bottles, star ratings, and tasting notes">
+          <span>📖</span> Tasting Log
+        </button>
+        <button onclick="openStorageModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
+          <span>🧊</span> Edit Storage
         </button>
       </div>
     </div>
@@ -166,12 +169,14 @@
         <button onclick="setFilter('urgent')" id="btnFilterUrgent" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 transition-all">
           Drink Soon ⚠️
         </button>
-        <button onclick="setFilter('basement')" id="btnFilterBasement" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
-          🧊 Basement Fridge
-        </button>
-        <button onclick="setFilter('upstairs')" id="btnFilterUpstairs" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
-          🧊 Upstairs Fridge
-        </button>
+        <span id="dynamicStorageFilterButtons" class="inline-flex items-center gap-2 flex-wrap">
+          <button onclick="setFilter('basement')" id="btnFilterBasement" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
+            🧊 Basement Fridge
+          </button>
+          <button onclick="setFilter('upstairs')" id="btnFilterUpstairs" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
+            🧊 Upstairs Fridge
+          </button>
+        </span>
       </div>
 
       <!-- Search & Wine Type Dropdown -->
@@ -434,7 +439,7 @@
                 <span class="text-[10px] text-slate-500">Pick where this bottle lives</span>
               </label>
               
-              <div class="grid grid-cols-2 gap-2.5">
+              <div id="scanFridgeButtonsContainer" class="grid grid-cols-2 gap-2.5">
                 <button type="button" onclick="setScanFridge('Basement Fridge')" id="btnFridgeBasement" class="p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all bg-rose-950/40 border-rose-600 text-rose-200">
                   <span class="text-base">🧊</span>
                   <span>Basement Fridge</span>
@@ -525,11 +530,12 @@
       </div>
 
       <!-- Mode Selector Tabs -->
-      <div class="flex border-b border-slate-800 gap-4">
-        <button id="tabScanTriggerBtn" onclick="closeModal('addBottleModal'); openModal('scanLabelModal');" class="pb-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300">📸 Scan Label</button>
-        <button id="tabBatchBtn" onclick="switchAddTab('batch')" class="pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500">📝 Paste List (Multi-line)</button>
-        <button id="tabVoiceBtn" onclick="switchAddTab('voice')" class="pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200">Single Line / Voice</button>
-        <button id="tabFormBtn" onclick="switchAddTab('form')" class="pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200">Structured Form</button>
+      <div class="flex border-b border-slate-800 gap-4 overflow-x-auto pb-0.5 custom-scrollbar">
+        <button id="tabScanTriggerBtn" onclick="closeModal('addBottleModal'); openModal('scanLabelModal');" class="pb-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 whitespace-nowrap">📸 Scan Label</button>
+        <button id="tabBatchBtn" onclick="switchAddTab('batch')" class="pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500 whitespace-nowrap">📝 Paste List</button>
+        <button id="tabCsvBtn" onclick="switchAddTab('csv')" class="pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap">📊 Spreadsheet (CSV / Excel)</button>
+        <button id="tabVoiceBtn" onclick="switchAddTab('voice')" class="pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap">Single Line / Voice</button>
+        <button id="tabFormBtn" onclick="switchAddTab('form')" class="pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap">Structured Form</button>
       </div>
 
       <!-- Tab 0: Batch Paste (Default) -->
@@ -555,6 +561,76 @@ Upstairs Fridge:
           <button onclick="submitBatch()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-rose-900/30">
             <span>✨</span> Import All Bottles
           </button>
+        </div>
+      </div>
+
+      <!-- Tab: Spreadsheet (CSV / Excel) Import & Export -->
+      <div id="tabCsv" class="hidden flex flex-col gap-4">
+        <!-- Export Database Banner -->
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-white">
+              <span>📤</span> Export Full Database
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5 truncate">
+              Download your complete cellar spreadsheet to edit in Excel / Google Sheets or transfer systems.
+            </p>
+          </div>
+          <button type="button" onclick="exportCellarDatabase()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm whitespace-nowrap flex-shrink-0">
+            <span>📥</span> Export CSV
+          </button>
+        </div>
+
+        <!-- Import Section -->
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <span class="text-xs font-bold text-white flex items-center gap-1"><span>📥</span> Import Spreadsheet</span>
+              <p class="text-[11px] text-slate-400">Upload or paste an edited CSV from Google Sheets, Excel, or CellarTracker</p>
+            </div>
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              <label class="text-[11px] text-slate-400">Mode:</label>
+              <select id="csvImportMode" class="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded px-2 py-1 outline-none">
+                <option value="merge">Merge & Add</option>
+                <option value="replace">Replace All (System Transfer)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dropzone -->
+          <div id="csvDropZone" class="border-2 border-dashed border-slate-700 hover:border-rose-500/80 rounded-xl p-4 text-center cursor-pointer bg-slate-950/40 transition flex flex-col items-center justify-center gap-1.5" onclick="document.getElementById('csvFileInput').click()" ondragover="event.preventDefault(); this.classList.add('border-rose-500')" ondragleave="this.classList.remove('border-rose-500')" ondrop="handleCsvFileDrop(event)">
+            <input type="file" id="csvFileInput" accept=".csv,.tsv,.txt" class="hidden" onchange="handleCsvFileSelected(event)">
+            <span class="text-2xl">📊</span>
+            <p class="text-xs font-semibold text-white">Click or drag & drop CSV spreadsheet here</p>
+            <p id="csvSelectedFileName" class="text-[11px] text-slate-500">Supports standard cellar spreadsheets, Excel, Google Sheets (.csv)</p>
+          </div>
+
+          <!-- Or Paste CSV Directly -->
+          <details class="text-xs border border-slate-800 rounded-lg p-2.5 bg-slate-900/60">
+            <summary class="cursor-pointer text-slate-400 hover:text-slate-200 font-medium select-none flex items-center justify-between">
+              <span>Or paste CSV spreadsheet text directly</span>
+              <span class="text-[10px] text-slate-500">Click to expand</span>
+            </summary>
+            <textarea id="csvPasteInput" rows="4" placeholder="producer,wine_name,vintage,varietal,quantity,location_rack,purchase_price
+Caymus,Cabernet Sauvignon,2018,Cabernet Sauvignon,2,Basement Fridge,95
+Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs font-mono text-white placeholder-slate-500 mt-2 outline-none focus:border-rose-500 custom-scrollbar" oninput="handleCsvPasteChanged()"></textarea>
+          </details>
+
+          <!-- Preview Area -->
+          <div id="csvPreviewBox" class="hidden flex flex-col gap-2 bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+            <div class="flex items-center justify-between">
+              <span id="csvPreviewSummary" class="text-xs font-bold text-emerald-400">0 bottles ready to import</span>
+              <span class="text-[10px] text-slate-500">Auto-detects columns & drinking windows</span>
+            </div>
+            <div id="csvPreviewList" class="text-[11px] text-slate-300 max-h-28 overflow-y-auto custom-scrollbar font-mono divide-y divide-slate-800/60"></div>
+          </div>
+
+          <div class="flex justify-between items-center pt-1">
+            <span class="text-[11px] text-slate-500">Preserves custom fridges, prices, scores & tasting notes</span>
+            <button type="button" id="btnExecuteCsvImport" onclick="executeCsvImport()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-950/40">
+              <span>✨</span> Import Spreadsheet
+            </button>
+          </div>
         </div>
       </div>
 
@@ -634,29 +710,93 @@ Upstairs Fridge:
     </div>
   </div>
 
-  <!-- MODAL: Mark Bottle Consumed -->
+  <!-- MODAL: Mark Bottle Consumed / Open Bottle -->
   <div id="consumeModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
       <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🥂</span> Log Bottle Consumption</h3>
+        <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🥂</span> Open Bottle / Log Tasting</h3>
         <button onclick="closeModal('consumeModal')" class="text-slate-400 hover:text-white">✕</button>
       </div>
-      <p id="consumeBottleName" class="text-xs font-semibold text-rose-300"></p>
-      <input type="hidden" id="consumeBottleId">
-      <div>
-        <label class="text-[11px] text-slate-400">Score / Rating (0-100 pts)</label>
-        <input type="number" id="consumeRating" placeholder="e.g. 96" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+      <div class="flex items-center justify-between gap-2">
+        <p id="consumeBottleName" class="text-xs font-semibold text-rose-300 truncate"></p>
+        <span id="consumeAgingStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">--</span>
       </div>
+      <input type="hidden" id="consumeBottleId">
+      <input type="hidden" id="consumeStarValue" value="0">
+      <input type="hidden" id="consumeAgingCurveStage" value="">
+
+      <!-- 1-5 Star Rating System -->
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <label class="text-[11px] text-slate-300 font-semibold uppercase tracking-wider">Your Rating (1–5 Stars)</label>
+          <button type="button" onclick="setStarRating(0)" class="text-[11px] text-slate-500 hover:text-slate-300 underline">Clear</button>
+        </div>
+        <div class="flex items-center gap-3">
+          <div id="starRatingContainer" class="flex items-center gap-1.5 text-2xl select-none">
+            <span class="star-item text-slate-600 hover:scale-125 transition-transform cursor-pointer" data-val="1" onclick="setStarRating(1)" onmouseover="hoverStarRating(1)" onmouseout="resetStarHover()">★</span>
+            <span class="star-item text-slate-600 hover:scale-125 transition-transform cursor-pointer" data-val="2" onclick="setStarRating(2)" onmouseover="hoverStarRating(2)" onmouseout="resetStarHover()">★</span>
+            <span class="star-item text-slate-600 hover:scale-125 transition-transform cursor-pointer" data-val="3" onclick="setStarRating(3)" onmouseover="hoverStarRating(3)" onmouseout="resetStarHover()">★</span>
+            <span class="star-item text-slate-600 hover:scale-125 transition-transform cursor-pointer" data-val="4" onclick="setStarRating(4)" onmouseover="hoverStarRating(4)" onmouseout="resetStarHover()">★</span>
+            <span class="star-item text-slate-600 hover:scale-125 transition-transform cursor-pointer" data-val="5" onclick="setStarRating(5)" onmouseover="hoverStarRating(5)" onmouseout="resetStarHover()">★</span>
+          </div>
+          <span id="starRatingLabel" class="text-xs text-slate-400 font-medium">Select stars</span>
+        </div>
+      </div>
+
       <div>
         <label class="text-[11px] text-slate-400">Tasting Notes & Impressions</label>
-        <textarea id="consumeNotes" rows="2" placeholder="Tannin resolution, acidity, tertiary aromas..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1"></textarea>
+        <textarea id="consumeNotes" rows="2" placeholder="Tannin resolution, fruit intensity, acidity, finish..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1"></textarea>
       </div>
       <div>
-        <label class="text-[11px] text-slate-400">Food Paired With</label>
-        <input type="text" id="consumePairing" placeholder="e.g. Duck Confit, Grilled Ribeye" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
+        <label class="text-[11px] text-slate-400">Food Paired With (Optional)</label>
+        <input type="text" id="consumePairing" placeholder="e.g. Grilled Ribeye, Roast Duck, Homemade Pizza" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1">
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button onclick="submitConsume()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold">Confirm Bottle Opened</button>
+        <button type="button" onclick="closeModal('consumeModal')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold">Cancel</button>
+        <button type="button" onclick="submitConsume()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-emerald-950/40">Confirm Bottle Opened</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Gift Wine Bottle -->
+  <div id="giftModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🎁</span> Gift Wine Bottle</h3>
+        <button onclick="closeModal('giftModal')" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <p id="giftBottleName" class="text-xs font-bold text-amber-300 truncate"></p>
+          <p id="giftBottleLocation" class="text-[11px] text-slate-400 mt-0.5 truncate"></p>
+        </div>
+        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-800 whitespace-nowrap">🎁 Gift / Removal</span>
+      </div>
+      <input type="hidden" id="giftBottleId">
+
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <label class="text-[11px] text-slate-300 font-semibold uppercase tracking-wider">Bottles to Gift</label>
+          <span id="giftBottleMaxQty" class="text-[11px] text-slate-400">In cellar: 1</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="number" id="giftQuantity" value="1" min="1" max="100" class="w-24 bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white outline-none focus:border-amber-500 font-semibold">
+          <span class="text-xs text-slate-400">bottle(s) to remove from storage</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-[11px] text-slate-300 font-semibold uppercase tracking-wider">Gift Situation & Recipient Notes</label>
+        <p class="text-[10px] text-slate-500 mb-1">Add notes for the occasion, recipient, or event (no rating or tasting notes required)</p>
+        <textarea id="giftSituationNotes" rows="3" placeholder="e.g. 40th birthday gift for Dave; Dinner party host bottle for Sarah & Tom; Holiday present for Dad..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-amber-500 custom-scrollbar"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('giftModal')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold">Cancel</button>
+        <button type="button" onclick="submitGift()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-amber-950/40 flex items-center gap-1.5">
+          <span>🎁</span> Confirm Gift & Remove Bottle
+        </button>
       </div>
     </div>
   </div>
@@ -677,19 +817,114 @@ Upstairs Fridge:
     </div>
   </div>
 
+  <!-- MODAL: Tasting Log & History -->
+  <div id="historyModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[88vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">📖</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Tasting Log & Consumption History</h3>
+            <p class="text-xs text-slate-400">Review all opened bottles, star ratings, and tasting notes</p>
+          </div>
+        </div>
+        <button onclick="closeModal('historyModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+      <div id="historyListContainer" class="flex flex-col gap-3">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Edit Storage Options -->
+  <div id="storageModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[88vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🧊</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Storage Locations & Options</h3>
+            <p class="text-xs text-slate-400">Add, rename, or reorganize your fridges and storage zones</p>
+          </div>
+        </div>
+        <button onclick="closeModal('storageModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Add New Storage Option -->
+      <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-4 flex flex-col gap-2.5">
+        <label class="text-xs font-semibold text-slate-300">Add New Storage Option</label>
+        <div class="flex gap-2">
+          <input type="text" id="newStorageInput" placeholder="e.g. Wine Cooler, Kitchen Fridge, Rack A, Bar Cabinet" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500" onkeydown="if(event.key==='Enter') addStorageZone()">
+          <button type="button" onclick="addStorageZone()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-md shadow-emerald-950/40 whitespace-nowrap">
+            <span>➕</span> Add Zone
+          </button>
+        </div>
+      </div>
+
+      <!-- Current Storage Options List -->
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Active Storage Zones</span>
+          <span id="storageZoneCountLabel" class="text-[11px] text-slate-500 font-medium"></span>
+        </div>
+        <div id="storageZonesContainer" class="flex flex-col gap-2">
+          <!-- Rendered dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Cellar Backup & Reset Section -->
+      <div class="border-t border-slate-800/80 pt-4 flex flex-col gap-3 text-xs text-slate-400">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="font-semibold text-slate-300">Export Cellar Database:</span>
+            <p class="text-[11px] text-slate-500">Download spreadsheet (CSV) for Excel, Google Sheets, or backup</p>
+          </div>
+          <button onclick="exportCellarDatabase()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 text-xs font-semibold transition flex items-center gap-1 shadow-sm">
+            <span>📥</span> Export CSV
+          </button>
+        </div>
+        <div class="flex items-center justify-between border-t border-slate-800/50 pt-2.5">
+          <div>
+            <span class="font-semibold text-slate-300">Empty All Storage:</span>
+            <p class="text-[11px] text-slate-500">Remove all bottles to start with fresh, empty inventory</p>
+          </div>
+          <button onclick="clearCellar()" class="px-3 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-900/60 text-xs font-semibold transition">
+            🧹 Clear All Bottles
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Javascript Application Logic -->
   <script>
     let cellarBottles = [];
+    let tastingHistory = [];
+    let storageZones = [];
     let currentFilter = 'all';
 
     // Sample fallback data if API is not yet running
     const FALLBACK_BOTTLES = [];
 
     async function loadData() {
-      const savedLocal = localStorage.getItem('wine_cellar_starter_v1');
+      // Sync tasting history from storage or backend
+      try {
+        const histRes = await fetch("/api/history");
+        if (histRes.ok) {
+          tastingHistory = await histRes.json();
+          localStorage.setItem('wine_cellar_tasting_history', JSON.stringify(tastingHistory));
+        } else {
+          tastingHistory = JSON.parse(localStorage.getItem('wine_cellar_tasting_history') || '[]');
+        }
+      } catch (e) {
+        tastingHistory = JSON.parse(localStorage.getItem('wine_cellar_tasting_history') || '[]');
+      }
+
+      const savedLocal = localStorage.getItem('wine_cellar_bottles_v1');
       if (savedLocal) {
         try {
           cellarBottles = JSON.parse(savedLocal);
+          initStorageZones();
           renderKPIs();
           applyFilters();
           return;
@@ -698,6 +933,7 @@ Upstairs Fridge:
 
       if (window.location.protocol === 'file:') {
         cellarBottles = FALLBACK_BOTTLES;
+        initStorageZones();
         renderKPIs();
         applyFilters();
         return;
@@ -707,13 +943,14 @@ Upstairs Fridge:
         const res = await fetch("/api/bottles");
         if (res.ok) {
           cellarBottles = await res.json();
-          try { localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles)); } catch (e) {}
+          try { localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles)); } catch (e) {}
         } else {
           cellarBottles = FALLBACK_BOTTLES;
         }
       } catch (e) {
         cellarBottles = FALLBACK_BOTTLES;
       }
+      initStorageZones();
       renderKPIs();
       applyFilters();
     }
@@ -783,6 +1020,7 @@ Upstairs Fridge:
         activeBtn.classList.add('bg-rose-600', 'text-white');
       }
       applyFilters();
+      if (typeof updateStorageUI === 'function') updateStorageUI();
     }
 
     function applyFilters() {
@@ -805,6 +1043,10 @@ Upstairs Fridge:
         if (currentFilter === 'urgent' && (!dw || (!st.includes('Drink Soon') && !st.includes('Past Peak')))) return false;
         if (currentFilter === 'basement' && !(rackLower.includes('basement') || rackLower.includes('rack a') || rackLower.includes('rack c'))) return false;
         if (currentFilter === 'upstairs' && !(rackLower.includes('upstairs') || rackLower.includes('rack b') || rackLower.includes('sparkling'))) return false;
+        if (currentFilter.startsWith('storage:')) {
+          const targetZone = currentFilter.replace('storage:', '').toLowerCase();
+          if (rackLower !== targetZone && !rackLower.includes(targetZone)) return false;
+        }
 
         // Type filter
         if (typeVal !== 'all' && !b.wine_type.toLowerCase().includes(typeVal)) return false;
@@ -827,7 +1069,7 @@ Upstairs Fridge:
       if (bottles.length === 0) {
         container.innerHTML = `
           <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs">
-            Your cellar is ready! Click 📸 Scan Label or 📝 Paste Wine List above to add your bottles.
+            No wines matching the current filter criteria.
           </div>
         `;
         return;
@@ -872,6 +1114,7 @@ Upstairs Fridge:
                     <h3 class="text-sm font-bold text-white">${vintage} ${escapeHtml(b.producer)}</h3>
                     ${b.wine_name ? `<span class="text-xs text-rose-300 font-medium">${escapeHtml(b.wine_name)}</span>` : ''}
                     ${statusBadge}
+                    ${b.user_rating ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/60 flex items-center gap-1 shadow-sm" title="Your Rating"><span>★</span> ${b.user_rating}/5</span>` : ''}
                   </div>
                   <p class="text-xs text-slate-400 mt-0.5">
                     ${escapeHtml(b.region)} ${b.sub_region ? '• ' + escapeHtml(b.sub_region) : ''} |
@@ -889,6 +1132,9 @@ Upstairs Fridge:
                 <div class="flex items-center gap-1.5">
                   <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-rose-900/60 hover:text-rose-200 border border-slate-700 transition" title="Mark as consumed / Open bottle">
                     🥂 Open
+                  </button>
+                  <button onclick="openGiftModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-amber-900/60 hover:text-amber-200 text-slate-300 border border-slate-700 transition" title="Gift bottle (remove from cellar without opening)">
+                    🎁 Gift
                   </button>
                   <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-red-900/60 hover:text-red-200 text-slate-400 border border-slate-700 transition" title="Remove / Delete from cellar">
                     🗑
@@ -1098,22 +1344,27 @@ Upstairs Fridge:
 
     function switchAddTab(tab) {
       document.getElementById('tabBatch').classList.add('hidden');
+      if (document.getElementById('tabCsv')) document.getElementById('tabCsv').classList.add('hidden');
       document.getElementById('tabVoice').classList.add('hidden');
       document.getElementById('tabForm').classList.add('hidden');
 
-      document.getElementById('tabBatchBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200";
-      document.getElementById('tabVoiceBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200";
-      document.getElementById('tabFormBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200";
+      document.getElementById('tabBatchBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap";
+      if (document.getElementById('tabCsvBtn')) document.getElementById('tabCsvBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap";
+      document.getElementById('tabVoiceBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap";
+      document.getElementById('tabFormBtn').className = "pb-2 text-xs font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap";
 
       if (tab === 'batch') {
         document.getElementById('tabBatch').classList.remove('hidden');
-        document.getElementById('tabBatchBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500";
+        document.getElementById('tabBatchBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500 whitespace-nowrap";
+      } else if (tab === 'csv') {
+        if (document.getElementById('tabCsv')) document.getElementById('tabCsv').classList.remove('hidden');
+        if (document.getElementById('tabCsvBtn')) document.getElementById('tabCsvBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500 whitespace-nowrap";
       } else if (tab === 'voice') {
         document.getElementById('tabVoice').classList.remove('hidden');
-        document.getElementById('tabVoiceBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500";
+        document.getElementById('tabVoiceBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500 whitespace-nowrap";
       } else {
         document.getElementById('tabForm').classList.remove('hidden');
-        document.getElementById('tabFormBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500";
+        document.getElementById('tabFormBtn').className = "pb-2 text-xs font-bold text-rose-400 border-b-2 border-rose-500 whitespace-nowrap";
       }
     }
 
@@ -1144,6 +1395,240 @@ Upstairs Fridge:
       }
     }
 
+    // ==========================================
+    // 🧊 STORAGE MANAGEMENT & CUSTOM LOCATIONS
+    // ==========================================
+    function initStorageZones() {
+      try {
+        const saved = localStorage.getItem('wine_cellar_storage_zones');
+        if (saved) {
+          storageZones = JSON.parse(saved);
+        } else {
+          storageZones = ["Basement Fridge", "Upstairs Fridge"];
+        }
+      } catch (e) {
+        storageZones = ["Basement Fridge", "Upstairs Fridge"];
+      }
+
+      // Automatically include any existing location from cellar bottles
+      cellarBottles.forEach(b => {
+        if (b.location_rack && !storageZones.some(z => z.toLowerCase() === b.location_rack.toLowerCase())) {
+          storageZones.push(b.location_rack);
+        }
+      });
+
+      try {
+        localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
+      } catch (e) {}
+
+      updateStorageUI();
+    }
+
+    function updateStorageUI() {
+      // 1. Dynamic storage filter pills
+      const filterCont = document.getElementById('dynamicStorageFilterButtons');
+      if (filterCont) {
+        filterCont.innerHTML = storageZones.map(zone => {
+          const isFilterActive = currentFilter === ('storage:' + zone.toLowerCase()) ||
+            (currentFilter === 'basement' && zone.toLowerCase().includes('basement')) ||
+            (currentFilter === 'upstairs' && zone.toLowerCase().includes('upstairs'));
+          return `
+            <button onclick="setStorageFilter('${escapeHtml(zone)}')" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${isFilterActive ? 'bg-rose-600 text-white font-semibold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}">
+              🧊 ${escapeHtml(zone)}
+            </button>
+          `;
+        }).join('');
+      }
+
+      // 2. Batch import default fridge dropdown
+      const batchSelect = document.getElementById('batchDefaultFridge');
+      if (batchSelect) {
+        const curVal = batchSelect.value;
+        batchSelect.innerHTML = storageZones.map(z => `<option value="${escapeHtml(z)}">Default: ${escapeHtml(z)}</option>`).join('');
+        if (storageZones.includes(curVal)) {
+          batchSelect.value = curVal;
+        } else if (storageZones.length > 0) {
+          batchSelect.value = storageZones[0];
+        }
+      }
+
+      // 3. Scan label target fridge buttons
+      const scanFridgeCont = document.getElementById('scanFridgeButtonsContainer');
+      if (scanFridgeCont) {
+        scanFridgeCont.innerHTML = storageZones.map(z => {
+          const isSelected = scanCurrentTargetFridge === z;
+          return `
+            <button type="button" onclick="setScanFridge('${escapeHtml(z)}')" class="p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all ${isSelected ? 'bg-rose-950/40 border-rose-600 text-rose-200' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'}">
+              <span class="text-base">🧊</span>
+              <span class="truncate max-w-full">${escapeHtml(z)}</span>
+            </button>
+          `;
+        }).join('');
+      }
+    }
+
+    function setStorageFilter(zone) {
+      const filterKey = 'storage:' + zone.toLowerCase();
+      if (currentFilter === filterKey) {
+        setFilter('all');
+      } else {
+        currentFilter = filterKey;
+        document.querySelectorAll('.filter-pill').forEach(btn => {
+          btn.classList.remove('bg-rose-600', 'text-white');
+          btn.classList.add('bg-slate-800', 'text-slate-300');
+        });
+        applyFilters();
+        updateStorageUI();
+      }
+    }
+
+    function openStorageModal() {
+      renderStorageModal();
+      openModal('storageModal');
+    }
+
+    function renderStorageModal() {
+      const countLabel = document.getElementById('storageZoneCountLabel');
+      if (countLabel) countLabel.textContent = `${storageZones.length} option${storageZones.length === 1 ? '' : 's'}`;
+
+      const container = document.getElementById('storageZonesContainer');
+      if (!container) return;
+
+      if (storageZones.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-xs text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800">
+            No storage locations defined. Add one above.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = storageZones.map(zone => {
+        const matchingBottles = cellarBottles.filter(b => (b.location_rack || '').toLowerCase() === zone.toLowerCase());
+        const bottleQty = matchingBottles.reduce((acc, b) => acc + (b.quantity || 0), 0);
+        const uniqueWines = matchingBottles.length;
+
+        return `
+          <div class="bg-slate-950/70 border border-slate-800 hover:border-slate-700 rounded-xl p-3.5 flex items-center justify-between gap-3 transition">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-xl">🧊</span>
+              <div class="min-w-0">
+                <h4 class="text-xs font-bold text-white truncate">${escapeHtml(zone)}</h4>
+                <span class="text-[11px] text-slate-400 font-medium">
+                  ${bottleQty} bottle${bottleQty === 1 ? '' : 's'} (${uniqueWines} wine${uniqueWines === 1 ? '' : 's'})
+                </span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              <button onclick="promptRenameStorage('${escapeHtml(zone)}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition flex items-center gap-1" title="Rename this storage location">
+                <span>✏️</span> Rename
+              </button>
+              <button onclick="deleteStorageZone('${escapeHtml(zone)}')" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-red-950 text-slate-400 hover:text-red-300 text-xs font-medium border border-slate-700 transition" title="Delete storage option">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function addStorageZone() {
+      const input = document.getElementById('newStorageInput');
+      const name = input ? input.value.trim() : '';
+      if (!name) return;
+
+      if (storageZones.some(z => z.toLowerCase() === name.toLowerCase())) {
+        alert("A storage location with this name already exists.");
+        return;
+      }
+
+      storageZones.push(name);
+      localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
+      if (input) input.value = '';
+
+      updateStorageUI();
+      renderStorageModal();
+    }
+
+    async function promptRenameStorage(oldName) {
+      const newName = prompt(`Enter new name for storage location "${oldName}":`, oldName);
+      if (!newName || !newName.trim() || newName.trim() === oldName) return;
+
+      const trimmedNew = newName.trim();
+      if (storageZones.some(z => z.toLowerCase() === trimmedNew.toLowerCase())) {
+        alert("A storage location with that name already exists.");
+        return;
+      }
+
+      // Update in storageZones list
+      const idx = storageZones.findIndex(z => z.toLowerCase() === oldName.toLowerCase());
+      if (idx !== -1) storageZones[idx] = trimmedNew;
+      localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
+
+      // Update in cellarBottles
+      let updatedCount = 0;
+      cellarBottles.forEach(b => {
+        if ((b.location_rack || '').toLowerCase() === oldName.toLowerCase()) {
+          b.location_rack = trimmedNew;
+          updatedCount += (b.quantity || 1);
+        }
+      });
+      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+
+      // Send to server
+      try {
+        await fetch("/api/rename-location", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ old_location: oldName, new_location: trimmedNew })
+        });
+      } catch (e) {}
+
+      if (scanCurrentTargetFridge.toLowerCase() === oldName.toLowerCase()) {
+        scanCurrentTargetFridge = trimmedNew;
+      }
+
+      updateStorageUI();
+      renderKPIs();
+      applyFilters();
+      renderStorageModal();
+      alert(`✔ Renamed "${oldName}" to "${trimmedNew}" across your cellar! (${updatedCount} bottles updated)`);
+    }
+
+    async function deleteStorageZone(zoneName) {
+      const matchingBottles = cellarBottles.filter(b => (b.location_rack || '').toLowerCase() === zoneName.toLowerCase());
+      if (matchingBottles.length > 0) {
+        const bottleCount = matchingBottles.reduce((acc, b) => acc + (b.quantity || 0), 0);
+        if (!confirm(`"${zoneName}" currently contains ${bottleCount} bottle(s). Removing it will move these bottles to "Unassigned". Proceed?`)) {
+          return;
+        }
+        matchingBottles.forEach(b => { b.location_rack = "Unassigned"; });
+        if (!storageZones.includes("Unassigned")) storageZones.push("Unassigned");
+        try {
+          await fetch("/api/rename-location", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ old_location: zoneName, new_location: "Unassigned" })
+          });
+        } catch (e) {}
+      }
+
+      storageZones = storageZones.filter(z => z.toLowerCase() !== zoneName.toLowerCase());
+      localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
+      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+
+      if (scanCurrentTargetFridge.toLowerCase() === zoneName.toLowerCase()) {
+        scanCurrentTargetFridge = storageZones[0] || 'Unassigned';
+      }
+
+      updateStorageUI();
+      renderKPIs();
+      applyFilters();
+      renderStorageModal();
+    }
+
     async function clearCellar() {
       if (!confirm("Are you sure you want to clear the cellar and start fresh with empty fridges?")) {
         return;
@@ -1152,7 +1637,7 @@ Upstairs Fridge:
         await fetch("/api/clear", { method: "POST" });
       } catch (e) {}
       cellarBottles = [];
-      try { localStorage.removeItem('wine_cellar_starter_v1'); } catch (e) {}
+      try { localStorage.removeItem('wine_cellar_bottles_v1'); } catch (e) {}
       renderKPIs();
       applyFilters();
       alert("✔ Fridges cleared! Ready for your bottles.");
@@ -1244,7 +1729,7 @@ Upstairs Fridge:
         addedCount++;
       });
 
-      try { localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles)); } catch (e) {}
+      try { localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles)); } catch (e) {}
       renderKPIs();
       applyFilters();
       closeModal('addBottleModal');
@@ -1289,9 +1774,498 @@ Upstairs Fridge:
       }
     }
 
+    // ========================================================
+    // 📊 SPREADSHEET (CSV / EXCEL) IMPORT & EXPORT ENGINE
+    // ========================================================
+    function exportCellarDatabase() {
+      if (!cellarBottles || cellarBottles.length === 0) {
+        alert("Your cellar is currently empty. Add bottles first before exporting.");
+        return;
+      }
+
+      const headers = [
+        "id", "producer", "wine_name", "vintage", "varietal", "region", "sub_region", "country",
+        "wine_type", "format", "quantity", "location_rack", "location_bin",
+        "purchase_price", "critic_score", "user_rating", "personal_notes",
+        "drinking_status", "peak_start", "peak_end", "window_start", "window_end",
+        "decant_hours", "serving_temp_f"
+      ];
+
+      function escapeCsv(val) {
+        if (val === null || val === undefined) return '';
+        const str = String(val);
+        if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      }
+
+      const rows = [headers.join(',')];
+
+      cellarBottles.forEach(b => {
+        const dw = b.drinking_window || {};
+        const row = [
+          escapeCsv(b.id || ''),
+          escapeCsv(b.producer || ''),
+          escapeCsv(b.wine_name || ''),
+          escapeCsv(b.vintage || 'NV'),
+          escapeCsv(b.varietal || ''),
+          escapeCsv(b.region || ''),
+          escapeCsv(b.sub_region || ''),
+          escapeCsv(b.country || 'United States'),
+          escapeCsv(b.wine_type || 'Red'),
+          escapeCsv(b.format || 'Standard (750ml)'),
+          escapeCsv(b.quantity ?? 1),
+          escapeCsv(b.location_rack || 'Basement Fridge'),
+          escapeCsv(b.location_bin || 'Shelf 1'),
+          escapeCsv(b.purchase_price ?? ''),
+          escapeCsv(b.critic_score ?? ''),
+          escapeCsv(b.user_rating ?? ''),
+          escapeCsv(b.personal_notes || ''),
+          escapeCsv(dw.status || ''),
+          escapeCsv(dw.peak_start ?? ''),
+          escapeCsv(dw.peak_end ?? ''),
+          escapeCsv(dw.window_start ?? ''),
+          escapeCsv(dw.window_end ?? ''),
+          escapeCsv(dw.decant_hours ?? ''),
+          escapeCsv(dw.serving_temp_f ?? '')
+        ];
+        rows.push(row.join(','));
+      });
+
+      const csvContent = "\uFEFF" + rows.join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const today = new Date().toISOString().split('T')[0];
+      link.setAttribute("href", url);
+      link.setAttribute("download", `wine_cellar_inventory_${today}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function handleCsvFileSelected(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      readCsvFile(file);
+    }
+
+    function handleCsvFileDrop(event) {
+      event.preventDefault();
+      const dropZone = document.getElementById('csvDropZone');
+      if (dropZone) dropZone.classList.remove('border-rose-500');
+
+      if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+        const file = event.dataTransfer.files[0];
+        readCsvFile(file);
+      }
+    }
+
+    function readCsvFile(file) {
+      const nameEl = document.getElementById('csvSelectedFileName');
+      if (nameEl) nameEl.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const input = document.getElementById('csvPasteInput');
+        if (input) input.value = text;
+        updateCsvPreview();
+      };
+      reader.readAsText(file);
+    }
+
+    function handleCsvPasteChanged() {
+      updateCsvPreview();
+    }
+
+    function parseCsvString(text) {
+      const lines = [];
+      let row = [""];
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i + 1];
+
+        if (c === '"') {
+          if (inQuotes && next === '"') {
+            row[row.length - 1] += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === ',' && !inQuotes) {
+          row.push("");
+        } else if ((c === '\r' || c === '\n') && !inQuotes) {
+          if (c === '\r' && next === '\n') i++;
+          if (row.length > 1 || (row.length === 1 && row[0].trim() !== "")) {
+            lines.push(row);
+          }
+          row = [""];
+        } else {
+          row[row.length - 1] += c;
+        }
+      }
+      if (row.length > 1 || (row.length === 1 && row[0].trim() !== "")) {
+        lines.push(row);
+      }
+      return lines;
+    }
+
+    function mapCsvRowsToBottles(rows) {
+      if (!rows || rows.length < 2) return [];
+
+      const rawHeaders = rows[0].map(h => (h || '').trim().toLowerCase().replace(/[\s_-]+/g, ''));
+      const headerIndex = {};
+
+      const aliasMap = {
+        producer: ['producer', 'winery', 'maker', 'brand', 'estate'],
+        wine_name: ['winename', 'wine', 'name', 'cuvee', 'designation', 'label'],
+        vintage: ['vintage', 'year', 'vint'],
+        varietal: ['varietal', 'variety', 'grape', 'blend'],
+        region: ['region', 'appellation', 'area'],
+        sub_region: ['subregion', 'vineyard', 'ava'],
+        country: ['country'],
+        wine_type: ['winetype', 'type', 'color'],
+        format: ['format', 'size', 'bottlesize'],
+        quantity: ['quantity', 'qty', 'count', 'bottles', 'bottlecount'],
+        location_rack: ['locationrack', 'fridge', 'storage', 'rack', 'storagelocation', 'location'],
+        location_bin: ['locationbin', 'shelf', 'bin', 'binlocation'],
+        purchase_price: ['purchaseprice', 'price', 'cost', 'paid', 'valuation'],
+        critic_score: ['criticscore', 'score', 'points'],
+        user_rating: ['userrating', 'rating', 'stars', 'mystars'],
+        personal_notes: ['personalnotes', 'notes', 'comments', 'sku', 'tastingnotes'],
+        window_start: ['windowstart', 'drinkfrom'],
+        peak_start: ['peakstart'],
+        peak_end: ['peakend'],
+        window_end: ['windowend', 'drinkby'],
+        drinking_status: ['drinkingstatus', 'status', 'currentstatus'],
+        decant_hours: ['decanthours', 'decant'],
+        serving_temp_f: ['servingtempf', 'servingtemp', 'temp']
+      };
+
+      Object.keys(aliasMap).forEach(stdKey => {
+        const aliases = aliasMap[stdKey];
+        for (let i = 0; i < rawHeaders.length; i++) {
+          if (aliases.includes(rawHeaders[i])) {
+            headerIndex[stdKey] = i;
+            break;
+          }
+        }
+      });
+
+      const bottles = [];
+      const currentYear = 2026;
+
+      for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (row.length === 0 || (row.length === 1 && !row[0].trim())) continue;
+
+        function getVal(key) {
+          const idx = headerIndex[key];
+          if (idx !== undefined && idx < row.length) {
+            return (row[idx] || '').trim();
+          }
+          return '';
+        }
+
+        const producer = getVal('producer') || 'Unknown Producer';
+        const wineName = getVal('wine_name');
+        const vintRaw = getVal('vintage');
+        const vintage = (vintRaw && !isNaN(parseInt(vintRaw))) ? parseInt(vintRaw) : null;
+        const varietal = getVal('varietal') || 'Red Blend';
+        const region = getVal('region') || 'California';
+        const subRegion = getVal('sub_region');
+        const country = getVal('country') || 'United States';
+
+        let wineType = getVal('wine_type') || 'Red';
+        if (!['Red', 'White', 'Sparkling', 'Rosé', 'Dessert', 'Fortified'].includes(wineType)) {
+          const lower = wineType.toLowerCase();
+          if (lower.includes('white') || lower.includes('chardonnay') || lower.includes('sauvignon blanc')) wineType = 'White';
+          else if (lower.includes('sparkling') || lower.includes('champagne') || lower.includes('prosecco')) wineType = 'Sparkling';
+          else if (lower.includes('rose') || lower.includes('rosé')) wineType = 'Rosé';
+          else wineType = 'Red';
+        }
+
+        const format = getVal('format') || 'Standard (750ml)';
+        const qtyRaw = getVal('quantity');
+        const quantity = (qtyRaw && !isNaN(parseInt(qtyRaw))) ? Math.max(1, parseInt(qtyRaw)) : 1;
+        const rack = getVal('location_rack') || 'Basement Fridge';
+        const binLoc = getVal('location_bin') || 'Shelf 1';
+
+        const priceRaw = getVal('purchase_price').replace(/[$,]/g, '');
+        const purchasePrice = (priceRaw && !isNaN(parseFloat(priceRaw))) ? parseFloat(priceRaw) : null;
+
+        const criticRaw = getVal('critic_score');
+        const criticScore = (criticRaw && !isNaN(parseInt(criticRaw))) ? parseInt(criticRaw) : null;
+
+        const ratingRaw = getVal('user_rating');
+        const userRating = (ratingRaw && !isNaN(parseFloat(ratingRaw))) ? parseFloat(ratingRaw) : null;
+
+        const notes = getVal('personal_notes');
+
+        // Drinking window estimation / reading
+        let dw = null;
+        const peakStartRaw = getVal('peak_start');
+        const peakEndRaw = getVal('peak_end');
+        const statusRaw = getVal('drinking_status');
+
+        if (peakStartRaw && peakEndRaw) {
+          const pStart = parseInt(peakStartRaw);
+          const pEnd = parseInt(peakEndRaw);
+          const wStart = parseInt(getVal('window_start')) || pStart - 2;
+          const wEnd = parseInt(getVal('window_end')) || pEnd + 5;
+          let status = statusRaw;
+          if (!status) {
+            if (currentYear < pStart) status = (pStart - currentYear <= 2) ? 'Approaching Peak' : 'Hold (Too Young)';
+            else if (currentYear <= pEnd) status = 'In Peak Window';
+            else if (currentYear <= wEnd) status = 'Drink Soon / Late Peak';
+            else status = 'Past Peak';
+          }
+          dw = {
+            window_start: wStart,
+            peak_start: pStart,
+            peak_end: pEnd,
+            window_end: wEnd,
+            status: status,
+            progress_pct: Math.min(100, Math.max(0, Math.round(((currentYear - wStart) / (wEnd - wStart || 1)) * 100))),
+            decant_hours: parseFloat(getVal('decant_hours')) || (wineType === 'Red' ? 1.5 : 0.5),
+            serving_temp_f: parseInt(getVal('serving_temp_f')) || (wineType === 'Red' ? 64 : 48),
+            serving_temp_c: Math.round(((parseInt(getVal('serving_temp_f')) || 64) - 32) * 5 / 9),
+            aging_tier: `${varietal} Aging Window`,
+            rationale: `Imported drinking window (Peak: ${pStart}–${pEnd}).`
+          };
+        } else if (vintage) {
+          const v = vintage;
+          const start = v + 4;
+          const pStart = v + 7;
+          const pEnd = v + 18;
+          const wEnd = v + 25;
+          let st = "In Peak Window";
+          if (currentYear < start) st = "Hold (Too Young)";
+          else if (currentYear < pStart) st = "Approaching Peak";
+          else if (currentYear <= pEnd) st = "In Peak Window";
+          else if (currentYear <= wEnd) st = "Drink Soon (Late Peak)";
+          else st = "Past Peak (Decline)";
+
+          dw = {
+            window_start: start,
+            peak_start: pStart,
+            peak_end: pEnd,
+            window_end: wEnd,
+            status: st,
+            progress_pct: Math.min(100, Math.max(0, Math.round(((currentYear - start) / (wEnd - start || 1)) * 100))),
+            decant_hours: wineType === 'Red' ? 1.5 : 0.5,
+            serving_temp_f: wineType === 'Red' ? 64 : 48,
+            serving_temp_c: Math.round(((wineType === 'Red' ? 64 : 48) - 32) * 5 / 9),
+            aging_tier: `${varietal} Aging Tier`,
+            rationale: `Calculated window for ${vintage} ${varietal} (Peak: ${pStart}–${pEnd}).`
+          };
+        }
+
+        bottles.push({
+          id: Date.now() + r + Math.floor(Math.random() * 1000),
+          producer,
+          wine_name: wineName,
+          vintage,
+          varietal,
+          region,
+          sub_region: subRegion,
+          country,
+          wine_type: wineType,
+          format,
+          quantity,
+          location_rack: rack,
+          location_bin: binLoc,
+          purchase_price: purchasePrice,
+          critic_score: criticScore,
+          user_rating: userRating,
+          personal_notes: notes,
+          drinking_window: dw
+        });
+      }
+
+      return bottles;
+    }
+
+    function updateCsvPreview() {
+      const input = document.getElementById('csvPasteInput');
+      const text = input ? input.value.trim() : '';
+      const previewBox = document.getElementById('csvPreviewBox');
+      const summaryEl = document.getElementById('csvPreviewSummary');
+      const listEl = document.getElementById('csvPreviewList');
+
+      if (!text) {
+        if (previewBox) previewBox.classList.add('hidden');
+        return;
+      }
+
+      const rows = parseCsvString(text);
+      if (rows.length < 2) {
+        if (previewBox) previewBox.classList.add('hidden');
+        return;
+      }
+
+      const bottles = mapCsvRowsToBottles(rows);
+      if (bottles.length === 0) {
+        if (previewBox) previewBox.classList.add('hidden');
+        return;
+      }
+
+      const totalQty = bottles.reduce((acc, b) => acc + (b.quantity || 1), 0);
+      if (summaryEl) summaryEl.textContent = `${bottles.length} wines (${totalQty} bottles) detected ready to import`;
+
+      if (listEl) {
+        listEl.innerHTML = bottles.slice(0, 5).map((b, idx) => `
+          <div class="py-1 flex items-center justify-between text-[10px]">
+            <span class="truncate max-w-[280px]">
+              <strong class="text-white">${idx + 1}.</strong> ${b.vintage || 'NV'} ${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')} (${b.quantity} btl)
+            </span>
+            <span class="text-slate-400 whitespace-nowrap ml-2">🧊 ${escapeHtml(b.location_rack || 'Basement Fridge')}</span>
+          </div>
+        `).join('') + (bottles.length > 5 ? `<div class="pt-1 text-[10px] text-slate-500 italic">+ ${bottles.length - 5} more wines in spreadsheet</div>` : '');
+      }
+
+      if (previewBox) previewBox.classList.remove('hidden');
+    }
+
+    async function executeCsvImport() {
+      const input = document.getElementById('csvPasteInput');
+      const text = input ? input.value.trim() : '';
+      if (!text) {
+        alert("Please select a CSV file or paste your spreadsheet text first.");
+        return;
+      }
+
+      const rows = parseCsvString(text);
+      if (rows.length < 2) {
+        alert("The spreadsheet must contain a header row and at least one wine row.");
+        return;
+      }
+
+      const newBottles = mapCsvRowsToBottles(rows);
+      if (newBottles.length === 0) {
+        alert("Could not detect any valid wine rows in the spreadsheet. Please verify the column headers.");
+        return;
+      }
+
+      const mode = document.getElementById('csvImportMode') ? document.getElementById('csvImportMode').value : 'merge';
+
+      if (mode === 'replace') {
+        if (!confirm(`⚠ FULL SYSTEM TRANSFER / REPLACE:\nThis will replace your current collection (${cellarBottles.length} wines) with the ${newBottles.length} wines from this spreadsheet. Proceed?`)) {
+          return;
+        }
+        cellarBottles = newBottles;
+      } else {
+        cellarBottles = [...cellarBottles, ...newBottles];
+      }
+
+      // Add any new storage zones from the spreadsheet
+      newBottles.forEach(b => {
+        if (b.location_rack && !storageZones.some(z => z.toLowerCase() === b.location_rack.toLowerCase())) {
+          storageZones.push(b.location_rack);
+        }
+      });
+      localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
+
+      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+
+      // Sync with backend if available
+      try {
+        await fetch("/api/import-csv", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ csv_text: text, mode: mode })
+        });
+      } catch (e) {}
+
+      closeModal('addBottleModal');
+      updateStorageUI();
+      renderKPIs();
+      applyFilters();
+
+      const totalQty = newBottles.reduce((acc, b) => acc + (b.quantity || 1), 0);
+      alert(`✔ Successfully imported ${newBottles.length} wines (${totalQty} bottles) into your cellar!`);
+    }
+
+    const STAR_DESCRIPTIONS = {
+      0: "Select stars (optional)",
+      1: "★☆☆☆☆ Poor / Disappointing (1/5)",
+      2: "★★☆☆☆ Fair / Drinkable (2/5)",
+      3: "★★★☆☆ Good / Enjoyable (3/5)",
+      4: "★★★★☆ Very Good / Outstanding (4/5)",
+      5: "★★★★★ Exceptional / Extraordinary (5/5)"
+    };
+
+    function setStarRating(val) {
+      const starInput = document.getElementById('consumeStarValue');
+      if (starInput) starInput.value = val;
+      updateStarDisplay(val);
+      const label = document.getElementById('starRatingLabel');
+      if (label) label.textContent = STAR_DESCRIPTIONS[val] || "Select stars";
+    }
+
+    function hoverStarRating(val) {
+      updateStarDisplay(val);
+      const label = document.getElementById('starRatingLabel');
+      if (label) label.textContent = STAR_DESCRIPTIONS[val] || "Select stars";
+    }
+
+    function resetStarHover() {
+      const starInput = document.getElementById('consumeStarValue');
+      const val = starInput ? parseInt(starInput.value) || 0 : 0;
+      updateStarDisplay(val);
+      const label = document.getElementById('starRatingLabel');
+      if (label) label.textContent = STAR_DESCRIPTIONS[val] || "Select stars (optional)";
+    }
+
+    function updateStarDisplay(val) {
+      const stars = document.querySelectorAll('#starRatingContainer .star-item');
+      stars.forEach(star => {
+        const starVal = parseInt(star.getAttribute('data-val'));
+        if (starVal <= val) {
+          star.classList.remove('text-slate-600');
+          star.classList.add('text-amber-400');
+        } else {
+          star.classList.remove('text-amber-400');
+          star.classList.add('text-slate-600');
+        }
+      });
+    }
+
+    function getAgingBadgeClass(stage) {
+      if (!stage) return "bg-slate-800 text-slate-300 border border-slate-700";
+      if (stage.includes("Approaching")) return "bg-cyan-950 text-cyan-300 border border-cyan-800";
+      if (stage.includes("In Peak Window") || stage.includes("Peak")) return "bg-emerald-950 text-emerald-300 border border-emerald-800";
+      if (stage.includes("Drink Soon") || stage.includes("Late Peak")) return "bg-amber-950 text-amber-300 border border-amber-800";
+      if (stage.includes("Past Peak")) return "bg-red-950 text-red-300 border border-red-800";
+      if (stage.includes("Too Young") || stage.includes("Hold")) return "bg-indigo-950 text-indigo-300 border border-indigo-800";
+      return "bg-slate-800 text-slate-300 border border-slate-700";
+    }
+
     function openConsumeModal(id, name) {
       document.getElementById('consumeBottleId').value = id;
       document.getElementById('consumeBottleName').textContent = name;
+      const target = cellarBottles.find(b => b.id == id);
+      setStarRating(target?.user_rating || 0);
+      document.getElementById('consumeNotes').value = '';
+      document.getElementById('consumePairing').value = '';
+
+      // Determine aging curve stage at the moment of opening
+      const dw = target ? target.drinking_window : null;
+      const curveStage = dw ? `${dw.status} (Peak: ${dw.peak_start}–${dw.peak_end})` : "Standard Aging Window";
+      document.getElementById('consumeAgingCurveStage').value = curveStage;
+      const badgeEl = document.getElementById('consumeAgingStatusBadge');
+      if (badgeEl) {
+        badgeEl.textContent = curveStage;
+        badgeEl.className = `text-[10px] font-semibold px-2 py-0.5 rounded-full ${getAgingBadgeClass(curveStage)} whitespace-nowrap`;
+      }
+
       openModal('consumeModal');
     }
 
@@ -1309,16 +2283,20 @@ Upstairs Fridge:
         // Offline bookmark resilience
       }
       cellarBottles = cellarBottles.filter(b => b.id !== id);
-      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
       renderKPIs();
       applyFilters();
     }
 
     async function submitConsume() {
       const bId = document.getElementById('consumeBottleId').value;
-      const rating = document.getElementById('consumeRating').value;
-      const notes = document.getElementById('consumeNotes').value;
-      const pairing = document.getElementById('consumePairing').value;
+      const starInput = document.getElementById('consumeStarValue');
+      const starVal = starInput && parseFloat(starInput.value) > 0 ? parseFloat(starInput.value) : null;
+      const notes = document.getElementById('consumeNotes').value.trim();
+      const pairing = document.getElementById('consumePairing').value.trim();
+      const target = cellarBottles.find(b => b.id == bId);
+      const dw = target ? target.drinking_window : null;
+      const curveStage = document.getElementById('consumeAgingCurveStage').value || (dw ? `${dw.status} (Peak: ${dw.peak_start}–${dw.peak_end})` : "Standard Aging Window");
 
       try {
         await fetch("/api/consume", {
@@ -1327,20 +2305,226 @@ Upstairs Fridge:
           body: JSON.stringify({
             bottle_id: parseInt(bId),
             count: 1,
-            rating: rating ? parseFloat(rating) : null,
+            rating: starVal,
             notes,
-            pairing
+            pairing,
+            aging_curve_stage: curveStage
           })
         });
       } catch (e) {}
 
       closeModal('consumeModal');
-      // Decrement locally
-      const target = cellarBottles.find(b => b.id == bId);
-      if (target && target.quantity > 0) target.quantity -= 1;
+
+      // Decrement locally and record rating
+      if (target) {
+        if (target.quantity > 0) target.quantity -= 1;
+        if (starVal) target.user_rating = starVal;
+        if (target.quantity <= 0) {
+          cellarBottles = cellarBottles.filter(b => b.id != bId);
+        }
+      }
+      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+
+      // Append to tasting journal history with aging curve stage
+      const historyEntry = {
+        id: Date.now(),
+        bottle_id: parseInt(bId),
+        wine_display_name: target ? `${target.vintage || 'NV'} ${target.producer} ${target.wine_name || ''}`.trim() : (document.getElementById('consumeBottleName').textContent || 'Wine'),
+        date_opened: new Date().toISOString().split('T')[0],
+        rating: starVal,
+        tasting_notes: notes,
+        pairing_notes: pairing,
+        bottles_consumed: 1,
+        aging_curve_stage: curveStage,
+        action_type: "opened"
+      };
+      tastingHistory.unshift(historyEntry);
+      localStorage.setItem('wine_cellar_starter_history', JSON.stringify(tastingHistory));
+      localStorage.setItem('wine_cellar_tasting_history', JSON.stringify(tastingHistory));
+
       renderKPIs();
       applyFilters();
-      alert("🥂 Cheers! Consumption and tasting notes recorded.");
+      if (typeof updateStorageUI === 'function') updateStorageUI();
+      alert(`🥂 Cheers! Bottle opened${starVal ? ' and ' + starVal + '★ rating' : ''} recorded. Review anytime under 📖 Tasting Log.`);
+    }
+
+    function openGiftModal(id, name) {
+      document.getElementById('giftBottleId').value = id;
+      document.getElementById('giftBottleName').textContent = name;
+      const target = cellarBottles.find(b => b.id == id);
+      const qty = target ? (target.quantity || 1) : 1;
+      const loc = target ? `${target.location_rack || 'Cellar'}${target.location_bin ? ' (' + target.location_bin + ')' : ''}` : '';
+
+      document.getElementById('giftBottleLocation').textContent = loc ? `Location: ${loc}` : '';
+      document.getElementById('giftBottleMaxQty').textContent = `In cellar: ${qty} btl`;
+
+      const qtyInput = document.getElementById('giftQuantity');
+      qtyInput.value = 1;
+      qtyInput.max = qty;
+
+      document.getElementById('giftSituationNotes').value = '';
+      openModal('giftModal');
+    }
+
+    async function submitGift() {
+      const bId = document.getElementById('giftBottleId').value;
+      const countInput = document.getElementById('giftQuantity');
+      const count = countInput ? Math.max(1, parseInt(countInput.value) || 1) : 1;
+      const situationNotes = document.getElementById('giftSituationNotes').value.trim();
+      const target = cellarBottles.find(b => b.id == bId);
+      const wineName = target ? `${target.vintage || 'NV'} ${target.producer} ${target.wine_name || ''}`.trim() : (document.getElementById('giftBottleName').textContent || 'Wine');
+      const dw = target ? target.drinking_window : null;
+      const curveStage = dw ? `${dw.status} (Peak: ${dw.peak_start}–${dw.peak_end})` : "Standard Aging Window";
+
+      try {
+        await fetch("/api/gift", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bottle_id: parseInt(bId),
+            count: count,
+            notes: situationNotes
+          })
+        });
+      } catch (e) {}
+
+      closeModal('giftModal');
+
+      // Decrement or remove locally
+      if (target) {
+        target.quantity = Math.max(0, (target.quantity || 0) - count);
+        if (target.quantity <= 0) {
+          cellarBottles = cellarBottles.filter(b => b.id != bId);
+        }
+      }
+      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+
+      // Append to cellar history log
+      const historyEntry = {
+        id: Date.now(),
+        bottle_id: parseInt(bId),
+        wine_display_name: wineName,
+        date_opened: new Date().toISOString().split('T')[0],
+        rating: null,
+        tasting_notes: situationNotes,
+        pairing_notes: "",
+        bottles_consumed: count,
+        aging_curve_stage: curveStage,
+        action_type: "gift"
+      };
+      tastingHistory.unshift(historyEntry);
+      localStorage.setItem('wine_cellar_starter_history', JSON.stringify(tastingHistory));
+      localStorage.setItem('wine_cellar_tasting_history', JSON.stringify(tastingHistory));
+
+      renderKPIs();
+      applyFilters();
+      if (typeof updateStorageUI === 'function') updateStorageUI();
+      alert(`🎁 Successfully gifted ${count} bottle(s) of ${wineName}! Removed from storage.`);
+    }
+
+    function openHistoryModal() {
+      renderHistoryList();
+      openModal('historyModal');
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      if (!tastingHistory || tastingHistory.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 bg-slate-950/40 border border-slate-800 rounded-xl flex flex-col items-center gap-3">
+            <span class="text-4xl">🍷</span>
+            <p class="text-sm font-semibold text-white">No Bottles Opened or Gifted Yet</p>
+            <p class="text-xs text-slate-400 max-w-sm">
+              When you open a bottle (<strong>🥂 Open</strong>) or gift one (<strong>🎁 Gift</strong>), your personal notes, occasion details, and ratings will be archived here.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = tastingHistory.map(rec => {
+        const curveHtml = rec.aging_curve_stage
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${getAgingBadgeClass(rec.aging_curve_stage)} flex items-center gap-1 shadow-sm">
+               <span>⏳</span> ${escapeHtml(rec.aging_curve_stage)}
+             </span>`
+          : '';
+
+        if (rec.action_type === 'gift') {
+          return `
+            <div class="bg-slate-950/70 border border-amber-900/40 hover:border-amber-700/60 rounded-xl p-4 flex flex-col gap-2.5 transition">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span>🎁</span> ${escapeHtml(rec.wine_display_name || rec.wine || 'Wine')}
+                  </h4>
+                  <div class="flex items-center gap-2 mt-1 flex-wrap">
+                    <span class="text-[11px] text-slate-400">
+                      Gifted: <strong class="text-slate-300">${rec.date_opened || rec.date || 'Recently'}</strong>
+                    </span>
+                    <span class="text-[11px] text-amber-400 font-medium">(${rec.bottles_consumed || 1} btl removed)</span>
+                    ${curveHtml}
+                  </div>
+                </div>
+                <div>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-700/60 flex items-center gap-1 shadow-sm">
+                    <span>🎁</span> Gifted
+                  </span>
+                </div>
+              </div>
+
+              ${rec.tasting_notes ? `
+                <div class="bg-amber-950/20 border border-amber-900/30 rounded-lg p-3 text-xs text-amber-200/90 leading-relaxed">
+                  <div class="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider mb-0.5">Gift Situation / Notes:</div>
+                  "${escapeHtml(rec.tasting_notes)}"
+                </div>
+              ` : `
+                <div class="text-[11px] text-slate-500 italic">No situation notes specified</div>
+              `}
+            </div>
+          `;
+        }
+
+        const starsHtml = rec.rating
+          ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-700/60 flex items-center gap-1 shadow-sm">
+               <span>★</span> ${rec.rating}/5
+             </span>`
+          : `<span class="text-[11px] text-slate-500 italic">Unrated</span>`;
+
+        return `
+          <div class="bg-slate-950/70 border border-slate-800 hover:border-slate-700 rounded-xl p-4 flex flex-col gap-2.5 transition">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                  <span>🥂</span> ${escapeHtml(rec.wine_display_name || rec.wine || 'Wine')}
+                </h4>
+                <div class="flex items-center gap-2 mt-1 flex-wrap">
+                  <span class="text-[11px] text-slate-400">
+                    Opened: <strong class="text-slate-300">${rec.date_opened || rec.date || 'Recently'}</strong>
+                  </span>
+                  ${curveHtml}
+                </div>
+              </div>
+              <div>${starsHtml}</div>
+            </div>
+
+            ${rec.tasting_notes ? `
+              <div class="bg-slate-900/80 border border-slate-800/80 rounded-lg p-3 text-xs text-slate-200 italic leading-relaxed">
+                "${escapeHtml(rec.tasting_notes)}"
+              </div>
+            ` : ''}
+
+            ${rec.pairing_notes ? `
+              <div class="text-xs text-rose-300 flex items-center gap-1.5 font-medium">
+                <span>🍽️ Food Pairing:</span> <span class="text-slate-200">${escapeHtml(rec.pairing_notes)}</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
     }
 
     // Sommelier Query Functions
@@ -1857,18 +3041,12 @@ Upstairs Fridge:
     }
 
     function updateScanFridgeButtons() {
-      const btnBasement = document.getElementById('btnFridgeBasement');
-      const btnUpstairs = document.getElementById('btnFridgeUpstairs');
+      if (typeof updateStorageUI === 'function') {
+        updateStorageUI();
+      }
       const confirmText = document.getElementById('btnConfirmScanAddText');
-
-      if (scanCurrentTargetFridge === 'Basement Fridge') {
-        btnBasement.className = "p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all bg-rose-950/40 border-rose-600 text-rose-200 ring-2 ring-rose-500/30";
-        btnUpstairs.className = "p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200";
-        confirmText.textContent = "Confirm & Add to Basement Fridge";
-      } else {
-        btnUpstairs.className = "p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all bg-rose-950/40 border-rose-600 text-rose-200 ring-2 ring-rose-500/30";
-        btnBasement.className = "p-2.5 rounded-lg border text-xs font-semibold flex flex-col items-center gap-1 transition-all bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200";
-        confirmText.textContent = "Confirm & Add to Upstairs Fridge";
+      if (confirmText) {
+        confirmText.textContent = `Confirm & Add to ${scanCurrentTargetFridge}`;
       }
     }
 
@@ -1919,7 +3097,7 @@ Upstairs Fridge:
       if (!savedOnServer) {
         // Local state save
         cellarBottles.push(finalBottle);
-        try { localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles)); } catch (e) {}
+        try { localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles)); } catch (e) {}
         renderKPIs();
         applyFilters();
       }
