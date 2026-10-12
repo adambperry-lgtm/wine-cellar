@@ -297,7 +297,7 @@
             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-indigo-400 hover:underline">Get Free Gemini Key ↗</a>
           </div>
           <div class="flex gap-2">
-            <input type="password" id="geminiApiKeyInput" oninput="handleGeminiKeyInput(this.value)" placeholder="AIzaSy..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white px-2.5 py-1.5 outline-none focus:border-indigo-500">
+            <input type="password" id="geminiApiKeyInput" oninput="handleGeminiKeyInput(this.value)" placeholder="Enter Gemini API key..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white px-2.5 py-1.5 outline-none focus:border-indigo-500">
             <button type="button" id="btnTestGeminiKey" onclick="testGeminiKeyConnection()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-sm">
               <span>🔌</span> Test
             </button>
@@ -3004,24 +3004,35 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
         // 2. Direct browser test if on static GitHub Pages
         if (!testResult) {
-          try {
-            const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: "ping" }] }],
-                generationConfig: { maxOutputTokens: 2 }
-              })
-            });
-            if (gRes.ok) {
-              testResult = { valid: true, message: "Connected successfully to Google Gemini 2.0 Flash." };
-            } else {
-              const errJson = await gRes.json().catch(() => ({}));
-              const msg = errJson.error?.message || `HTTP ${gRes.status}`;
-              testResult = { valid: false, error: msg };
+          const testModels = ['gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-flash-lite-latest'];
+          let testErr = "Direct network connection failed";
+          for (const m of testModels) {
+            try {
+              const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: "ping" }] }],
+                  generationConfig: { maxOutputTokens: 2 }
+                })
+              });
+              if (gRes.ok) {
+                testResult = { valid: true, message: `Connected successfully to Google Gemini (${m}).` };
+                break;
+              } else {
+                const errJson = await gRes.json().catch(() => ({}));
+                testErr = errJson.error?.message || `HTTP ${gRes.status}`;
+                if (gRes.status === 404 || gRes.status === 503 || gRes.status === 429) {
+                  continue;
+                }
+                break;
+              }
+            } catch (e) {
+              testErr = e.message || 'Direct network connection failed';
             }
-          } catch (e) {
-            testResult = { valid: false, error: e.message || 'Direct network connection failed' };
+          }
+          if (!testResult) {
+            testResult = { valid: false, error: testErr };
           }
         }
 
@@ -3588,50 +3599,46 @@ INSTRUCTIONS:
 USER QUERY: "${query}"`;
             }
 
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 15000);
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
-            const gRes = await fetch(geminiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.4, maxOutputTokens: 1300 }
-              }),
-              signal: controller.signal
-            });
-            clearTimeout(timer);
+            const candidateModels = ['gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-flash-lite-latest'];
+            let directCallErr = "";
+            for (const currentModel of candidateModels) {
+              try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 15000);
+                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
+                const gRes = await fetch(geminiUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.4, maxOutputTokens: 1300 }
+                  }),
+                  signal: controller.signal
+                });
+                clearTimeout(timer);
 
-            if (gRes.ok) {
-              const gData = await gRes.json();
-              const text = gData.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (text) geminiResponse = text;
-            } else {
-              const errData = await gRes.json().catch(() => ({}));
-              if (errData.error?.message) geminiError = errData.error.message;
-
-              // Fallback to gemini-1.5-flash
-              const fbController = new AbortController();
-              const fbTimer = setTimeout(() => fbController.abort(), 15000);
-              const fbUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
-              const fbRes = await fetch(fbUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: [{ parts: [{ text: prompt }] }],
-                  generationConfig: { temperature: 0.4, maxOutputTokens: 1300 }
-                }),
-                signal: fbController.signal
-              });
-              clearTimeout(fbTimer);
-              if (fbRes.ok) {
-                const fbData = await fbRes.json();
-                const text = fbData.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (text) geminiResponse = text;
-              } else {
-                const fbErrData = await fbRes.json().catch(() => ({}));
-                if (fbErrData.error?.message) geminiError = fbErrData.error.message;
+                if (gRes.ok) {
+                  const gData = await gRes.json();
+                  const text = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (text) {
+                    geminiResponse = text;
+                    break;
+                  }
+                } else {
+                  const errData = await gRes.json().catch(() => ({}));
+                  const msg = errData.error?.message || `HTTP ${gRes.status}`;
+                  directCallErr = msg;
+                  if (gRes.status === 404 || gRes.status === 503 || gRes.status === 429) {
+                    continue;
+                  }
+                  break;
+                }
+              } catch (e) {
+                directCallErr = e.message;
               }
+            }
+            if (!geminiResponse && directCallErr) {
+              geminiError = directCallErr;
             }
           } catch (e) {
             if (!geminiError) geminiError = e.message;
@@ -3645,7 +3652,7 @@ USER QUERY: "${query}"`;
               <div class="flex items-center justify-between border-b border-indigo-900/50 pb-2.5">
                 <div class="flex items-center gap-2">
                   <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
-                    ✨ GOOGLE GEMINI 2.0
+                    ✨ GOOGLE GEMINI AI
                   </span>
                   <span class="text-xs font-bold text-white">${headerBadge}</span>
                 </div>
