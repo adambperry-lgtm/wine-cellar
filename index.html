@@ -3231,9 +3231,25 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     }
 
     let sommelierIntent = 'open'; // 'open' or 'buy'
+    let sommelierChatHistory = [];
+    let sommelierIsThinking = false;
+
+    function resetSommelierChat() {
+      sommelierChatHistory = [];
+      sommelierIsThinking = false;
+      const resultsContainer = document.getElementById('sommelierResults');
+      if (resultsContainer) resultsContainer.innerHTML = '';
+      const input = document.getElementById('foodQueryInput');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+    }
 
     function setSommelierIntent(intent) {
       sommelierIntent = intent;
+      sommelierChatHistory = [];
+      sommelierIsThinking = false;
       const tabOpen = document.getElementById('tabSommOpen');
       const tabBuy = document.getElementById('tabSommBuy');
       const shortcutsOpen = document.getElementById('shortcutsOpenSection');
@@ -3254,7 +3270,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         if (shortcutsBuy) shortcutsBuy.classList.remove('hidden');
         if (modalIcon) modalIcon.textContent = "🛒";
         if (modalTitle) modalTitle.textContent = "Ask Sommelier: What Should I Buy to Complement Cellar?";
-        if (modalSubtitle) modalSubtitle.textContent = "Acquisition advisor recommends benchmark wines to purchase based on dining goals & cellar gaps. Filtered for delivery to New Jersey (NJ).";
+        if (modalSubtitle) modalSubtitle.textContent = "Interactive acquisition advisor recommends benchmark wines & critiques alternative bottles you find. Filtered for delivery to New Jersey (NJ).";
         if (inputLabel) inputLabel.textContent = "What would you like to acquire or pair?";
         if (inputEl) inputEl.placeholder = "e.g. I'd like to get some wine that is ready to drink now and serve with a ribeye...";
         if (btnEl) btnEl.textContent = "Recommend Purchases";
@@ -3517,6 +3533,394 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       return scored.slice(0, 4).map(x => x.item);
     }
 
+    function getInteractiveFollowUpBarHtml() {
+      return `
+        <div class="bg-slate-900/95 border border-indigo-800/50 rounded-xl p-3.5 flex flex-col gap-2.5 mt-1 shadow-lg">
+          <div class="flex items-center justify-between flex-wrap gap-1">
+            <label class="text-xs font-bold text-indigo-200 flex items-center gap-1.5">
+              <span>💬</span> Direct the Sommelier or Inquire About Alternative Choices:
+            </label>
+            <button type="button" onclick="resetSommelierChat()" class="text-[11px] text-slate-400 hover:text-rose-300 underline transition">
+              🔄 Start Fresh
+            </button>
+          </div>
+
+          <!-- Follow-up input row -->
+          <div class="flex gap-2">
+            <input type="text" id="sommelierFollowUpInput" onkeydown="if(event.key==='Enter') sendSommelierFollowUp()" placeholder="Give directions (e.g. 'under $50', 'Italian Barolo') or ask: 'I found 2018 Faust for $65, how is it?'" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white px-3 py-2 outline-none focus:border-indigo-500 shadow-inner">
+            <button id="btnSendSommelierFollowUp" onclick="sendSommelierFollowUp()" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold shadow-md shrink-0 flex items-center gap-1.5 transition">
+              <span>Send</span> <span>➤</span>
+            </button>
+          </div>
+
+          <!-- Quick Direction suggestion chips -->
+          <div class="flex flex-col gap-1.5 pt-1.5 border-t border-slate-800">
+            <span class="text-[10px] font-semibold text-slate-400">Quick Directions & Alternative Scenarios:</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="sendSommelierPresetDirection('Can you recommend exceptional benchmark alternatives priced under $50 that are ready to drink now and ship to NJ?')" class="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-indigo-900/40 text-slate-300 hover:text-indigo-200 border border-slate-700 transition">
+                💰 Under $50 Alternatives
+              </button>
+              <button type="button" onclick="sendSommelierPresetDirection('What benchmark Italian alternatives (such as Barolo, Barbaresco, or Brunello di Montalcino) would you recommend instead that complement this meal and my cellar?')" class="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-indigo-900/40 text-slate-300 hover:text-indigo-200 border border-slate-700 transition">
+                🇮🇹 Italian (Barolo / Brunello)
+              </button>
+              <button type="button" onclick="sendSommelierPresetDirection('What mature Spanish Rioja Gran Reserva alternatives are currently drinking at prime peak and deliver maximum complexity?')" class="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-indigo-900/40 text-slate-300 hover:text-indigo-200 border border-slate-700 transition">
+                🇪🇸 Mature Spanish Rioja
+              </button>
+              <button type="button" onclick="sendSommelierPresetDirection('What benchmark crisp white wine alternatives (e.g. premier cru Chablis, white Burgundy, or Sancerre) would pair with this dining goal?')" class="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800/90 hover:bg-indigo-900/40 text-slate-300 hover:text-indigo-200 border border-slate-700 transition">
+                🥂 White Wine Alternative
+              </button>
+              <button type="button" onclick="promptShopBottleFeedback()" class="px-2.5 py-1 text-[11px] rounded-lg bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 hover:text-white border border-indigo-700/60 transition font-medium flex items-center gap-1">
+                <span>🔍</span> Feedback on a Bottle I Found at the Shop
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function promptShopBottleFeedback() {
+      const input = document.getElementById('sommelierFollowUpInput');
+      if (input) {
+        input.value = "I found [Producer, Wine & Vintage] at my local shop for $[Price]. How does it compare to your recommendation, is it ready to drink now, and will it pair well?";
+        input.focus();
+        input.setSelectionRange(8, 33);
+      }
+    }
+
+    function sendSommelierPresetDirection(presetText) {
+      sendSommelierFollowUp(presetText);
+    }
+
+    function generateClassicFollowUpAdvice(query) {
+      const q = (query || '').toLowerCase();
+      if (q.includes("50") || q.includes("cheap") || q.includes("value") || q.includes("budget") || q.includes("everyday")) {
+        return `### Classic Enology Recommendation: Value Benchmarks under $50\\n\\nFor authentic cellar defenders delivering superb price-to-quality:\\n\\n* **2019 Viña Ardanza Reserva (La Rioja Alta)** (~$42) — Exceptional classic Rioja with cedar and dark cherries, drinking at peak.\\n* **2021 Produttori del Barbaresco** (~$48) — Pure Piedmontese Nebbiolo with tar, roses, and structure.\\n\\n[🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+Vina+Ardanza+Reserva+wine+ship+to+NJ)`;
+      } else if (q.includes("ital") || q.includes("barolo") || q.includes("brunello") || q.includes("barbaresco")) {
+        return `### Classic Enology Recommendation: Italian Benchmarks\\n\\nItalian benchmark reds feature bracing acidity and noble tannins that harmonize with rich meats:\\n\\n* **Produttori del Barbaresco** (~$55, target 2017-2019) — Elegant red cherries, spice, and structure.\\n* **Altesino Brunello di Montalcino** (~$75, target 2016-2018) — Sangiovese power, leather, and firm structure.\\n\\n[🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+Produttori+del+Barbaresco+wine+ship+to+NJ)`;
+      } else if (q.includes("rioja") || q.includes("spanish") || q.includes("spain") || q.includes("tempranillo")) {
+        return `### Classic Enology Recommendation: Mature Spanish Rioja\\n\\n* **La Rioja Alta Gran Reserva 904** (2015/2016, ~$85) — 10 years cellar-aged at release, silky and complex.\\n* **R. López de Heredia Viña Tondonia Reserva** (2011/2012, ~$65) — Benchmark classicism.\\n\\n[🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+La+Rioja+Alta+Gran+Reserva+904+wine+ship+to+NJ)`;
+      } else if (q.includes("white") || q.includes("chablis") || q.includes("seafood") || q.includes("sancerre")) {
+        return `### Classic Enology Recommendation: Benchmark Crisp Whites\\n\\n* **William Fèvre Chablis Domaine** (~$45) — Pristine Kimmeridgian limestone minerality.\\n* **Domaine Huet Le Haut-Lieu Vouvray Sec** (~$45) — Pure Chenin Blanc with honeyed quince and razor acidity.\\n\\n[🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+William+Fevre+Chablis+Domaine+wine+ship+to+NJ)`;
+      } else {
+        return `### Master Sommelier Appraisal\\n\\nTo evaluate specific retail bottles, individual winery vintages, or compare pricing directly with your authentic cellar inventory in real time, enable **Google Gemini AI** above using your free API key!`;
+      }
+    }
+
+    async function callGeminiSommelierDirectApi(query, history) {
+      const inStock = cellarBottles.filter(b => (b.quantity || 1) > 0);
+      const cellarLines = inStock.map(b => {
+        const dw = b.drinking_window || {};
+        return `- [ID ${b.id}] ${b.vintage || 'NV'} ${b.producer} '${b.wine_name || ''}' (${b.varietal}, ${b.region}) | Qty: ${b.quantity} | Status: ${dw.status || 'Approaching Peak'} | Decant: ${dw.decant_hours || 0}h | Serve: ${dw.serving_temp_f || 60}°F | Location: ${b.location_rack || 'Cellar'} ${b.location_bin || ''}${b.critic_score ? ' | Score: ' + b.critic_score : ''}${b.personal_notes ? ' | Notes: ' + b.personal_notes : ''}`;
+      }).join('\n');
+
+      const hasHistory = Boolean(history && history.length > 0);
+      const historyTranscript = (history || []).map(t => `${t.role === 'user' ? 'Collector' : 'Master Sommelier'}: ${t.content}`).join('\n\n');
+
+      let prompt = "";
+      if (sommelierIntent === 'buy') {
+        if (hasHistory) {
+          prompt = `You are a Master Sommelier acting as the interactive private cellar acquisition advisor for a wine collector located in New Jersey (NJ).
+The collector is having an ongoing conversation with you regarding wines to PURCHASE to complement their collection or dining needs.
+
+COLLECTOR'S CURRENT CELLAR INVENTORY:
+${cellarLines}
+
+CONVERSATION TRANSCRIPT SO FAR:
+${historyTranscript}
+
+COLLECTOR'S LATEST FOLLOW-UP DIRECTIONS / ALTERNATIVE INQUIRY:
+"${query}"
+
+INSTRUCTIONS FOR MASTER SOMMELIER:
+1. DIRECT EVALUATION & FEEDBACK:
+   - If the collector is asking for feedback on specific alternative bottles they found (e.g. at a local store, online, or in a retail flyer), thoroughly evaluate each bottle:
+     * Appraise the producer's reputation, vintage pedigree, flavor profile, and drinking window.
+     * Compare it directly against your earlier recommendations and the dining/cellar goal.
+     * Deliver a clear verdict: "Top Pick / Buy Now", "Solid Alternative", or "Skip / Pass" with precise enological reasoning.
+2. NEW CRITERIA & DIRECTIONS:
+   - If the collector is providing follow-up directions (e.g. adjust price tier such as "<$50", change region like Barolo/Brunello/Rioja, request white or sparkling alternatives, or adjust style):
+     * Recommend 2 to 3 SPECIFIC real-world benchmark alternative wines to PURCHASE fulfilling their revised criteria.
+3. NJ RETAIL & SHIPPING REQUIREMENT:
+   - Every wine recommended or endorsed must be available at retail in New Jersey (NJ) or shippable to NJ addresses (e.g. distributed through leading NJ merchants like Gary's Wine, Buy-Rite, Total Wine NJ, Wine Library, Saratoga Wine, Wine.com, or direct winery DTC shipping to NJ addresses).
+   - For any newly recommended purchases, include:
+     * **Wine & Producer**: Specific estate and cuvée
+     * **Target Vintage(s)**: Current drinking sweet spot
+     * **Est. Price**: Estimated market price
+     * **NJ Availability**: Confirmed retail / shipping to NJ
+     * **Sommelier Critique & Comparison**: How it fits the dining plan and cellar
+     * **Service Guidance**: Decant time and serving temperature
+     * **Where to Buy Link**: [🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+PRODUCER+WINE+wine+ship+to+NJ)
+4. TONE & FORMAT:
+   - Use an authoritative, engaging, polished Master Sommelier tone. Use clean Markdown headings, bold text, and bullet points. Be punchy, conversational, and directly answer their latest question.`;
+        } else {
+          prompt = `You are a Master Sommelier acting as the private cellar acquisition advisor for a wine collector located in New Jersey (NJ).
+The collector wants recommendations for wines to PURCHASE to complement their collection.
+
+COLLECTOR'S CURRENT CELLAR INVENTORY:
+${cellarLines}
+
+USER'S ACQUISITION REQUEST:
+"${query}"
+
+INSTRUCTIONS:
+1. Provide a brief 1-2 sentence Master Sommelier assessment of the collector's current cellar profile.
+2. Recommend 3 SPECIFIC real-world benchmark wines to PURCHASE that fulfill the user's request and complement their collection.
+   CRITICAL REQUIREMENT: Every recommended wine must be widely available to purchase at retail in New Jersey (NJ) or legally shippable to a New Jersey address (e.g. distributed through leading NJ merchants like Gary's Wine, Buy-Rite, Total Wine NJ, Wine Library, Saratoga Wine, Wine.com, or direct winery DTC shipping to NJ addresses). Do not recommend allocated or obscure bottles that cannot be shipped to NJ.
+3. For each recommended purchase, clearly specify:
+   - **Wine & Producer**: Specific estate and cuvée (e.g. *La Rioja Alta Gran Reserva 904*, *Château Léoville Barton*, *Produttori del Barbaresco*)
+   - **Target Vintage(s) to Seek Out**: Specific vintage(s) currently drinking at peak
+   - **Price Tier / Est. Market Price**: Estimated retail price (e.g. ~$45, ~$85, ~$140)
+   - **NJ Availability**: Confirmed retail / shipping availability in New Jersey
+   - **Why It Complements the Cellar & Dining Goal**: Explain pairings and cellar balance
+   - **Service Guidance**: Decant duration and ideal serving temperature
+   - **Where to Buy**: Provide a direct Google search link formatted as: [🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+PRODUCER+WINE+wine+ship+to+NJ)
+4. Conclude with 1-2 practical buying tips for New Jersey wine collectors.
+5. Format with polished Markdown headings, bold text, and bullet points in an inspiring, authoritative sommelier tone. Be punchy and concise.`;
+        }
+      } else {
+        if (hasHistory) {
+          prompt = `You are a Master Sommelier acting as the private cellar sommelier for a private collector.
+Your recommendations MUST be grounded strictly in the collector's actual cellar bottles below.
+Do NOT invent bottles that are not in this cellar list.
+
+CURRENT CELLAR INVENTORY:
+${cellarLines}
+
+CONVERSATION TRANSCRIPT SO FAR:
+${historyTranscript}
+
+COLLECTOR'S LATEST FOLLOW-UP QUESTION / DIRECTION:
+"${query}"
+
+INSTRUCTIONS:
+1. Respond directly to the collector's follow-up or critique regarding what to open from their cellar.
+2. If they ask for alternatives, different styles, different price points, or have questions about decanting/pairing, evaluate bottles strictly from their cellar inventory.
+3. For any recommended bottle, specify full name, vintage, cellar location, pairing harmony, and service guidance (decant duration and temperature).
+4. Use a polished, master sommelier tone with clean Markdown.`;
+        } else {
+          prompt = `You are a Master Sommelier acting as private cellar advisor.
+Your recommendations MUST be grounded strictly in the collector's actual cellar bottles below. Do NOT invent bottles.
+
+CURRENT CELLAR INVENTORY:
+${cellarLines}
+
+INSTRUCTIONS:
+1. Recommend 1 to 3 specific bottles from the cellar for: "${query}".
+2. PRIORITIZE bottles currently in "In Peak Window", "Approaching Peak", or "Drink Soon".
+3. For each recommendation, provide:
+   - Full Name, Vintage, and Cellar Location
+   - Why its acid, tannins, and flavors harmonize with the dish/occasion
+   - Service guidance: Exact decanting duration and ideal serving temperature (°F)
+4. Use a polished, evocative master sommelier voice with clear markdown headings and bullet points.
+
+USER QUERY: "${query}"`;
+        }
+      }
+
+      const candidateModels = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash'];
+      let directCallErr = "";
+      for (const currentModel of candidateModels) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 45000);
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
+          const gRes = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.4, maxOutputTokens: 1300 }
+            }),
+            signal: controller.signal
+          });
+          clearTimeout(timer);
+
+          if (gRes.ok) {
+            const gData = await gRes.json();
+            const text = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              return { success: true, advice: text };
+            }
+          } else {
+            const errData = await gRes.json().catch(() => ({}));
+            const msg = errData.error?.message || `HTTP ${gRes.status}`;
+            directCallErr = msg;
+            if (gRes.status === 404 || gRes.status === 503 || gRes.status === 429) {
+              continue;
+            }
+            break;
+          }
+        } catch (e) {
+          directCallErr = e.message;
+        }
+      }
+      return { success: false, error: directCallErr || "Unable to reach Gemini API." };
+    }
+
+    async function callGeminiSommelierEngine(query, history) {
+      let geminiResponse = null;
+      let geminiError = null;
+
+      // 1. Try local Python server endpoint (with 45-second timeout)
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 45000);
+        const res = await fetch('/api/gemini/sommelier', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: query,
+            api_key: userGeminiKey || undefined,
+            mode: sommelierIntent,
+            history: history || []
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.advice) {
+            geminiResponse = data.advice;
+          } else if (data.error) {
+            geminiError = data.error;
+          }
+        }
+      } catch (e) {
+        geminiError = e.message;
+      }
+
+      // 2. Direct browser REST API call if running on GitHub Pages / client
+      if (!geminiResponse && userGeminiKey) {
+        const directResult = await callGeminiSommelierDirectApi(query, history);
+        if (directResult.success) {
+          geminiResponse = directResult.advice;
+        } else if (directResult.error) {
+          geminiError = directResult.error;
+        }
+      }
+
+      if (geminiResponse) {
+        return { success: true, advice: geminiResponse };
+      }
+      return { success: false, error: geminiError || "Google Gemini AI was unavailable or reached quota." };
+    }
+
+    function renderSommelierChatThread(loading = false, errorMsg = null) {
+      const container = document.getElementById('sommelierResults');
+      if (!container) return;
+
+      const turnsHtml = sommelierChatHistory.map((turn, idx) => {
+        if (turn.role === 'user') {
+          return `
+            <div class="bg-slate-800/85 border border-slate-700/80 rounded-xl p-3.5 flex items-start gap-3 shadow-sm">
+              <div class="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-sm shrink-0">👤</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold text-indigo-300 uppercase tracking-wider">Your Inquiry / Directions</span>
+                  <span class="text-[10px] text-slate-500 font-mono">Turn ${Math.floor(idx / 2) + 1}</span>
+                </div>
+                <div class="text-xs text-white font-medium mt-0.5 whitespace-pre-wrap">${escapeHtml(turn.content)}</div>
+              </div>
+            </div>
+          `;
+        } else {
+          const headerTitle = sommelierIntent === 'buy' ? 'CELLAR ACQUISITION ADVISOR' : 'PRIVATE CELLAR SOMMELIER';
+          return `
+            <div class="bg-slate-950/95 border border-indigo-700/50 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-xl">
+              <div class="flex items-center justify-between border-b border-indigo-900/50 pb-2.5 flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
+                    ✨ GOOGLE GEMINI AI
+                  </span>
+                  <span class="text-xs font-bold text-white">${headerTitle}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-800/80 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Available in / Ships to NJ
+                  </span>
+                </div>
+              </div>
+              <div class="prose prose-invert max-w-none text-xs leading-relaxed text-slate-200">
+                ${formatMarkdownText(turn.content)}
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+
+      let loadingHtml = '';
+      if (loading) {
+        const loadingTitle = sommelierIntent === 'buy' ? 'Consulting Google Gemini AI Acquisition Advisor...' : 'Consulting Google Gemini AI Sommelier...';
+        loadingHtml = `
+          <div class="bg-slate-950/80 border border-indigo-900/60 rounded-xl p-4 flex items-center gap-3">
+            <span class="text-xl animate-spin">✨</span>
+            <div>
+              <span class="text-xs font-bold text-indigo-300">${loadingTitle}</span>
+              <p class="text-[11px] text-slate-400">Evaluating your follow-up directions, alternative choices, and NJ delivery availability...</p>
+            </div>
+          </div>
+        `;
+      }
+
+      let errorHtml = '';
+      if (errorMsg) {
+        errorHtml = `
+          <div class="bg-rose-950/40 border border-rose-800/80 rounded-xl p-3 flex flex-col gap-1 text-xs text-rose-300">
+            <span class="font-bold flex items-center gap-1"><span>⚠️</span> Sommelier Notice:</span>
+            <span class="text-[11px]">${escapeHtml(errorMsg)}</span>
+          </div>
+        `;
+      }
+
+      let interactiveBarHtml = '';
+      if (!loading && sommelierChatHistory.length > 0) {
+        interactiveBarHtml = getInteractiveFollowUpBarHtml();
+      }
+
+      container.innerHTML = `<div class="flex flex-col gap-3">${turnsHtml}${loadingHtml}${errorHtml}${interactiveBarHtml}</div>`;
+      if (loading || sommelierChatHistory.length > 0) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    async function sendSommelierFollowUp(explicitText = null) {
+      if (sommelierIsThinking) return;
+      const inputEl = document.getElementById('sommelierFollowUpInput');
+      const query = (explicitText !== null ? explicitText : (inputEl ? inputEl.value : '')).trim();
+      if (!query) return;
+
+      if (inputEl) inputEl.value = '';
+
+      sommelierChatHistory.push({ role: 'user', content: query });
+      sommelierIsThinking = true;
+      renderSommelierChatThread(true);
+
+      if (sommelierMode === 'gemini') {
+        const priorHistory = sommelierChatHistory.slice(0, -1);
+        const result = await callGeminiSommelierEngine(query, priorHistory);
+        sommelierIsThinking = false;
+        if (result.success && result.advice) {
+          sommelierChatHistory.push({ role: 'assistant', content: result.advice });
+          renderSommelierChatThread(false);
+          setTimeout(() => {
+            const inp = document.getElementById('sommelierFollowUpInput');
+            if (inp) inp.focus();
+          }, 50);
+        } else {
+          renderSommelierChatThread(false, result.error);
+        }
+      } else {
+        sommelierIsThinking = false;
+        const classicAdvice = generateClassicFollowUpAdvice(query);
+        sommelierChatHistory.push({ role: 'assistant', content: classicAdvice });
+        renderSommelierChatThread(false);
+        setTimeout(() => {
+          const inp = document.getElementById('sommelierFollowUpInput');
+          if (inp) inp.focus();
+        }, 50);
+      }
+    }
+
     async function runSommelierQuery() {
       const query = document.getElementById('foodQueryInput').value.trim();
       const resultsContainer = document.getElementById('sommelierResults');
@@ -3549,167 +3953,23 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           return;
         }
 
-        const loadingTitle = sommelierIntent === 'buy' ? 'Consulting Google Gemini AI Acquisition Advisor...' : 'Consulting Google Gemini AI Sommelier...';
-        const loadingDesc = sommelierIntent === 'buy' ? 'Analyzing cellar collection profile to recommend wines to purchase' : 'Grounded in your authentic cellar inventory & drinking windows';
-        resultsContainer.innerHTML = `
-          <div class="bg-slate-950/80 border border-indigo-900/60 rounded-xl p-4 flex items-center gap-3">
-            <span class="text-xl animate-spin">✨</span>
-            <div>
-              <span class="text-xs font-bold text-indigo-300">${loadingTitle}</span>
-              <p class="text-[11px] text-slate-400">${loadingDesc}</p>
-            </div>
-          </div>
-        `;
-        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        sommelierChatHistory = [{ role: 'user', content: query }];
+        sommelierIsThinking = true;
+        renderSommelierChatThread(true);
 
-        let geminiResponse = null;
-        let geminiError = null;
-
-        // 1. Try local Python server endpoint (with 45-second timeout)
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 45000);
-          const res = await fetch('/api/gemini/sommelier', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: query, api_key: userGeminiKey || undefined, mode: sommelierIntent }),
-            signal: controller.signal
-          });
-          clearTimeout(timer);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success && data.advice) {
-              geminiResponse = data.advice;
-            } else if (data.error) {
-              geminiError = data.error;
-            }
-          }
-        } catch (e) {
-          geminiError = e.message;
-        }
-
-        // 2. Direct browser REST API call if running on GitHub Pages
-        if (!geminiResponse && userGeminiKey) {
-          try {
-            const inStock = cellarBottles.filter(b => (b.quantity || 1) > 0);
-            const cellarLines = inStock.map(b => {
-              const dw = b.drinking_window || {};
-              return `- [ID ${b.id}] ${b.vintage || 'NV'} ${b.producer} '${b.wine_name || ''}' (${b.varietal}, ${b.region}) | Qty: ${b.quantity} | Status: ${dw.status || 'Approaching Peak'} | Decant: ${dw.decant_hours || 0}h | Serve: ${dw.serving_temp_f || 60}°F | Location: ${b.location_rack || 'Cellar'} ${b.location_bin || ''}${b.critic_score ? ' | Score: ' + b.critic_score : ''}${b.personal_notes ? ' | Notes: ' + b.personal_notes : ''}`;
-            }).join('\n');
-
-            let prompt = "";
-            if (sommelierIntent === 'buy') {
-              prompt = `You are a Master Sommelier acting as the private cellar acquisition advisor for a wine collector located in New Jersey (NJ).
-The collector wants recommendations for wines to PURCHASE to complement their collection.
-
-COLLECTOR'S CURRENT CELLAR INVENTORY:
-${cellarLines}
-
-USER'S ACQUISITION REQUEST:
-"${query}"
-
-INSTRUCTIONS:
-1. Provide a brief 1-2 sentence Master Sommelier assessment of the collector's current cellar profile.
-2. Recommend 3 SPECIFIC real-world benchmark wines to PURCHASE that fulfill the user's request and complement their collection.
-   CRITICAL REQUIREMENT: Every recommended wine must be widely available to purchase at retail in New Jersey (NJ) or legally shippable to a New Jersey address (e.g. distributed through leading NJ merchants like Gary's Wine, Buy-Rite, Total Wine NJ, Wine Library, Saratoga Wine, Wine.com, or direct winery DTC shipping to NJ addresses). Do not recommend allocated or obscure bottles that cannot be shipped to NJ.
-3. For each recommended purchase, clearly specify:
-   - **Wine & Producer**: Specific estate and cuvée (e.g. *La Rioja Alta Gran Reserva 904*, *Château Léoville Barton*, *Produttori del Barbaresco*)
-   - **Target Vintage(s) to Seek Out**: Specific vintage(s) currently drinking at peak
-   - **Price Tier / Est. Market Price**: Estimated retail price (e.g. ~$45, ~$85, ~$140)
-   - **NJ Availability**: Confirmed retail / shipping availability in New Jersey
-   - **Why It Complements the Cellar & Dining Goal**: Explain pairings and cellar balance
-   - **Service Guidance**: Decant duration and ideal serving temperature
-   - **Where to Buy**: Provide a direct Google search link formatted as: [🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+PRODUCER+WINE+wine+ship+to+NJ)
-4. Conclude with 1-2 practical buying tips for New Jersey wine collectors.
-5. Format with polished Markdown headings, bold text, and bullet points in an inspiring, authoritative sommelier tone. Be punchy and concise.`;
-            } else {
-              prompt = `You are a Master Sommelier acting as private cellar advisor.
-Your recommendations MUST be grounded strictly in the collector's actual cellar bottles below. Do NOT invent bottles.
-
-CURRENT CELLAR INVENTORY:
-${cellarLines}
-
-INSTRUCTIONS:
-1. Recommend 1 to 3 specific bottles from the cellar for: "${query}".
-2. PRIORITIZE bottles currently in "In Peak Window", "Approaching Peak", or "Drink Soon".
-3. For each recommendation, provide:
-   - Full Name, Vintage, and Cellar Location
-   - Why its acid, tannins, and flavors harmonize with the dish/occasion
-   - Service guidance: Exact decanting duration and ideal serving temperature (°F)
-4. Use a polished, evocative master sommelier voice with clear markdown headings and bullet points.
-
-USER QUERY: "${query}"`;
-            }
-
-            const candidateModels = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash'];
-            let directCallErr = "";
-            for (const currentModel of candidateModels) {
-              try {
-                const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), 45000);
-                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
-                const gRes = await fetch(geminiUrl, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.4, maxOutputTokens: 1300 }
-                  }),
-                  signal: controller.signal
-                });
-                clearTimeout(timer);
-
-                if (gRes.ok) {
-                  const gData = await gRes.json();
-                  const text = gData.candidates?.[0]?.content?.parts?.[0]?.text;
-                  if (text) {
-                    geminiResponse = text;
-                    break;
-                  }
-                } else {
-                  const errData = await gRes.json().catch(() => ({}));
-                  const msg = errData.error?.message || `HTTP ${gRes.status}`;
-                  directCallErr = msg;
-                  if (gRes.status === 404 || gRes.status === 503 || gRes.status === 429) {
-                    continue;
-                  }
-                  break;
-                }
-              } catch (e) {
-                directCallErr = e.message;
-              }
-            }
-            if (!geminiResponse && directCallErr) {
-              geminiError = directCallErr;
-            }
-          } catch (e) {
-            if (!geminiError) geminiError = e.message;
-          }
-        }
-
-        if (geminiResponse) {
-          const headerBadge = sommelierIntent === 'buy' ? '🛒 CELLAR ACQUISITION ADVISOR' : '✨ PRIVATE SOMMELIER CONSULTATION';
-          resultsContainer.innerHTML = `
-            <div class="bg-slate-950/90 border border-indigo-700/50 rounded-2xl p-5 flex flex-col gap-3 shadow-xl">
-              <div class="flex items-center justify-between border-b border-indigo-900/50 pb-2.5">
-                <div class="flex items-center gap-2">
-                  <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
-                    ✨ GOOGLE GEMINI AI
-                  </span>
-                  <span class="text-xs font-bold text-white">${headerBadge}</span>
-                </div>
-                <span class="text-[11px] text-indigo-300 font-medium">${sommelierIntent === 'buy' ? 'Complement Collection' : 'Grounded in Cellar'}</span>
-              </div>
-              <div class="prose prose-invert max-w-none">
-                ${formatMarkdownText(geminiResponse)}
-              </div>
-            </div>
-          `;
-          resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const result = await callGeminiSommelierEngine(query, []);
+        sommelierIsThinking = false;
+        if (result.success && result.advice) {
+          sommelierChatHistory.push({ role: 'assistant', content: result.advice });
+          renderSommelierChatThread(false);
+          setTimeout(() => {
+            const inp = document.getElementById('sommelierFollowUpInput');
+            if (inp) inp.focus();
+          }, 50);
           return;
         }
 
-        const noticeMsg = geminiError ? escapeHtml(geminiError) : "Google Gemini AI was unavailable or reached quota.";
+        const noticeMsg = result.error ? escapeHtml(result.error) : "Google Gemini AI was unavailable or reached quota.";
         const fallbackNotice = `
           <div class="bg-amber-950/40 border border-amber-800/80 rounded-xl p-3.5 flex flex-col gap-1.5 mb-3 shadow-md">
             <div class="flex items-center justify-between">
@@ -3829,7 +4089,8 @@ USER QUERY: "${query}"`;
         `;
       }).join('');
 
-      container.innerHTML = prefixHtml + `<div class="flex flex-col gap-3">${cardsHtml}</div>`;
+      const interactiveBarHtml = getInteractiveFollowUpBarHtml();
+      container.innerHTML = prefixHtml + `<div class="flex flex-col gap-3">${cardsHtml}${interactiveBarHtml}</div>`;
       container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -4001,7 +4262,8 @@ USER QUERY: "${query}"`;
         `;
       }).join('');
 
-      container.innerHTML = prefixHtml + cardsHtml;
+      const interactiveBarHtml = getInteractiveFollowUpBarHtml();
+      container.innerHTML = prefixHtml + cardsHtml + interactiveBarHtml;
       container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
