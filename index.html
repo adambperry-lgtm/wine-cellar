@@ -1057,6 +1057,10 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             <label class="text-[11px] text-slate-400 block mb-1">Critic Note / Quote (optional)</label>
             <textarea id="newCriticReview" rows="2" placeholder="e.g. Aromas of cedar, fresh tobacco, hazelnut and dark currants. Firm and elegant." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 outline-none"></textarea>
           </div>
+          <div>
+            <label class="text-[11px] text-slate-400 block mb-1">Source Document URL (optional)</label>
+            <input type="url" id="newCriticUrl" placeholder="https://..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 outline-none">
+          </div>
           <button type="button" onclick="saveNewCriticScore()" class="self-end px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow">
             Save Critic Score
           </button>
@@ -1389,10 +1393,24 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
     }
 
+    function getCriticSourceUrl(r, b) {
+      if (r && (r.source_url || r.url)) {
+        return r.source_url || r.url;
+      }
+      const producer = (b ? b.producer : '') || '';
+      const wineName = (b ? (b.wine_name || '') : '') || '';
+      const vintage = (b && b.vintage) ? String(b.vintage) : '';
+      const source = (r ? (r.source || r.code || '') : 'Wine Critic').trim();
+      const score = (r ? (r.score || '') : (b && b.critic_score ? b.critic_score : ''));
+      const terms = `${producer} ${wineName} ${vintage}`.trim();
+      const query = `${source} ${terms} ${score} points tasting note review`.trim();
+      return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    }
+
     function getCriticBadgesHtml(b) {
       const reviews = b.critic_reviews || [];
       if (reviews.length > 0) {
-        return reviews.map(r => {
+        const badges = reviews.map(r => {
           const code = r.code || r.source.slice(0, 2).toUpperCase();
           const score = r.score;
           let colorClasses = "bg-amber-950/70 text-amber-300 border-amber-700/60";
@@ -1403,18 +1421,34 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           else if (code === "WS") colorClasses = "bg-blue-950/80 text-blue-300 border-blue-600/70";
           else if (code === "WE") colorClasses = "bg-indigo-950/80 text-indigo-300 border-indigo-600/70";
 
-          const tooltip = escapeHtml(`${r.source}: ${score} pts${r.reviewer ? ' (' + r.reviewer + ')' : ''}${r.review ? ' — "' + r.review + '"' : ''}`);
+          const sourceUrl = getCriticSourceUrl(r, b);
+          const tooltip = escapeHtml(`${r.source}: ${score} pts${r.reviewer ? ' (' + r.reviewer + ')' : ''}${r.review ? ' — "' + r.review + '"' : ''} • Click to open source document`);
           return `
-            <button type="button" onclick="openCriticModal(${b.id})" class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorClasses} flex items-center gap-1 hover:brightness-125 transition cursor-pointer" title="${tooltip}">
-              <span>🏆</span> ${code} <strong class="text-white">${score}</strong>
-            </button>
+            <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorClasses} flex items-center gap-1 hover:brightness-125 hover:underline transition cursor-pointer shadow-sm group" title="${tooltip}">
+              <span>🏆</span> ${code} <strong class="text-white">${score}</strong> <span class="text-[9px] opacity-70 group-hover:opacity-100 font-normal">↗</span>
+            </a>
           `;
         }).join('');
-      } else if (b.critic_score) {
+
         return `
-          <button type="button" onclick="openCriticModal(${b.id})" class="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-950/60 text-amber-300 border-amber-700/50 flex items-center gap-1 hover:brightness-125 transition cursor-pointer" title="Critic Score">
-            <span>🏆</span> Score <strong class="text-white">${b.critic_score}</strong>
-          </button>
+          <div class="flex items-center gap-1 flex-wrap">
+            ${badges}
+            <button type="button" onclick="openCriticModal(${b.id})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition" title="View all reviewer tasting notes & quotes">
+              📝 Notes (${reviews.length})
+            </button>
+          </div>
+        `;
+      } else if (b.critic_score) {
+        const sourceUrl = getCriticSourceUrl(null, b);
+        return `
+          <div class="flex items-center gap-1">
+            <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-950/60 text-amber-300 border-amber-700/50 flex items-center gap-1 hover:brightness-125 hover:underline transition cursor-pointer shadow-sm group" title="Consensus Critic Score • Click to open source document">
+              <span>🏆</span> Score <strong class="text-white">${b.critic_score}</strong> <span class="text-[9px] opacity-70 group-hover:opacity-100 font-normal">↗</span>
+            </a>
+            <button type="button" onclick="openCriticModal(${b.id})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition" title="View or add critic scores">
+              📝 Details
+            </button>
+          </div>
         `;
       }
       return '';
@@ -1432,7 +1466,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       const container = document.getElementById('criticReviewsContainer');
 
       if (titleEl) titleEl.textContent = `${b.vintage || 'NV'} ${b.producer} ${b.wine_name || ''}`;
-      if (subEl) subEl.textContent = `${b.varietal || 'Wine'} • ${b.region || ''} • Public Critic Scores`;
+      if (subEl) subEl.textContent = `${b.varietal || 'Wine'} • ${b.region || ''} • Public Critic Scores & Source Documents`;
 
       const reviews = b.critic_reviews || [];
       if (container) {
@@ -1443,15 +1477,16 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             </div>
           `;
         } else if (reviews.length === 0 && b.critic_score) {
+          const consensusUrl = getCriticSourceUrl(null, b);
           container.innerHTML = `
             <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <span class="text-xs font-bold text-white">Professional Consensus Score</span>
-                <p class="text-[11px] text-slate-400">Consensus wine critic rating</p>
+                <p class="text-[11px] text-slate-400">Consensus wine critic rating across publications</p>
               </div>
-              <span class="px-3 py-1 bg-amber-950/80 text-amber-300 border border-amber-700/60 font-bold text-sm rounded-lg">
-                ${b.critic_score} pts
-              </span>
+              <a href="${consensusUrl}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-amber-950/80 hover:bg-amber-900 text-amber-300 hover:text-white border border-amber-700/60 font-bold text-sm rounded-lg flex items-center gap-1.5 transition shadow-sm" title="View critic consensus source document">
+                <span>🏆</span> ${b.critic_score} pts <span class="text-xs">↗</span>
+              </a>
             </div>
           `;
         } else {
@@ -1464,29 +1499,33 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             else if (r.code === "WS") badgeBg = "bg-blue-950/80 text-blue-300 border-blue-600/70";
             else if (r.code === "WE") badgeBg = "bg-indigo-950/80 text-indigo-300 border-indigo-600/70";
 
+            const sourceUrl = getCriticSourceUrl(r, b);
             return `
-              <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 flex flex-col gap-2">
+              <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 flex flex-col gap-2.5 shadow-sm">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
                     <span class="px-2 py-0.5 rounded text-xs font-bold border ${badgeBg}">${r.code || 'CRITIC'}</span>
                     <span class="text-xs font-bold text-white">${escapeHtml(r.source)}</span>
                     ${r.reviewer ? `<span class="text-[11px] text-slate-400 font-medium">(${escapeHtml(r.reviewer)})</span>` : ''}
                   </div>
-                  <span class="text-sm font-extrabold text-white bg-slate-800 border border-slate-700 px-2.5 py-0.5 rounded-lg shadow-sm">
+                  <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="text-sm font-extrabold text-white bg-slate-800 hover:bg-slate-700 hover:text-emerald-300 border border-slate-700 px-2.5 py-0.5 rounded-lg shadow-sm flex items-center gap-1 transition" title="Open ${escapeHtml(r.source)} source document">
                     ${r.score} <span class="text-[10px] text-slate-400 font-normal">pts</span>
-                  </span>
+                    <span class="text-[10px] text-emerald-400 font-bold">↗</span>
+                  </a>
                 </div>
                 ${r.review ? `
                   <p class="text-xs text-slate-300 italic leading-relaxed pl-2 border-l-2 border-slate-700">
                     "${escapeHtml(r.review)}"
                   </p>
                 ` : ''}
-                ${r.drinking_window ? `
-                  <div class="text-[10px] text-slate-400 flex items-center gap-1 pt-1">
-                    <span>⏳ Recommended window:</span>
-                    <strong class="text-emerald-400">${escapeHtml(r.drinking_window)}</strong>
+                <div class="flex items-center justify-between pt-1.5 border-t border-slate-800/80">
+                  <div class="text-[10px] text-slate-400 flex items-center gap-1">
+                    ${r.drinking_window ? `<span>⏳ Recommended window: <strong class="text-emerald-400">${escapeHtml(r.drinking_window)}</strong></span>` : ''}
                   </div>
-                ` : ''}
+                  <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-700/70 text-emerald-300 hover:text-white text-[11px] font-bold transition shadow-sm">
+                    <span>📄</span> Open Source Document (${r.code || 'Review'}) ↗
+                  </a>
+                </div>
               </div>
             `;
           }).join('');
@@ -1504,6 +1543,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       const source = document.getElementById('newCriticSource').value;
       const scoreRaw = document.getElementById('newCriticScore').value;
       const review = document.getElementById('newCriticReview').value.trim();
+      const customUrl = document.getElementById('newCriticUrl') ? document.getElementById('newCriticUrl').value.trim() : '';
 
       if (!scoreRaw || isNaN(parseInt(scoreRaw))) {
         alert("Please enter a valid score (50-100).");
@@ -1527,6 +1567,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         code,
         score,
         review,
+        source_url: customUrl || undefined,
         reviewer: source,
         date: new Date().getFullYear().toString()
       });
@@ -1549,6 +1590,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       // Reset inputs
       document.getElementById('newCriticScore').value = '';
       document.getElementById('newCriticReview').value = '';
+      if (document.getElementById('newCriticUrl')) document.getElementById('newCriticUrl').value = '';
 
       openCriticModal(b.id);
       applyFilters();
@@ -3943,7 +3985,10 @@ USER QUERY: "${query}"`;
               <span class="text-xs font-bold text-rose-300">#${i + 1} Best Cellar Match: ${b.vintage || 'NV'} ${escapeHtml(b.producer)}</span>
               ${getStatusBadgeHtml(r.drinking_status)}
             </div>
-            <p class="text-xs text-slate-200 font-semibold">${escapeHtml(b.wine_name || b.varietal)} • ${escapeHtml(b.region)}</p>
+            <div class="flex items-center justify-between flex-wrap gap-1">
+              <p class="text-xs text-slate-200 font-semibold">${escapeHtml(b.wine_name || b.varietal)} • ${escapeHtml(b.region)}</p>
+              ${getCriticBadgesHtml(b)}
+            </div>
             <div class="flex items-center gap-4 text-[11px] text-slate-400">
               <span>📍 ${b.location_rack} ${b.location_bin || ''}</span>
               <span>⏱️ ${r.decant_advice}</span>
