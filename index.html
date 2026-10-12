@@ -3004,7 +3004,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
         // 2. Direct browser test if on static GitHub Pages
         if (!testResult) {
-          const testModels = ['gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-flash-lite-latest'];
+          const testModels = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash'];
           let testErr = "Direct network connection failed";
           for (const m of testModels) {
             try {
@@ -3523,10 +3523,10 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         let geminiResponse = null;
         let geminiError = null;
 
-        // 1. Try local Python server endpoint (with 15-second timeout)
+        // 1. Try local Python server endpoint (with 45-second timeout)
         try {
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 15000);
+          const timer = setTimeout(() => controller.abort(), 45000);
           const res = await fetch('/api/gemini/sommelier', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3568,8 +3568,8 @@ USER'S ACQUISITION REQUEST:
 
 INSTRUCTIONS:
 1. Provide a brief 1-2 sentence Master Sommelier assessment of the collector's current cellar profile.
-2. Recommend 3 to 5 SPECIFIC real-world wines to PURCHASE that fulfill the user's request and complement their collection.
-   CRITICAL REQUIREMENT: Every recommended wine must be widely available to purchase at retail in New Jersey (NJ) or legally shippable to a New Jersey address (e.g. distributed through leading NJ merchants like Gary's Wine & Marketplace, Buy-Rite, Total Wine NJ, Saratoga Wine, Wine.com, or direct winery DTC shipping to NJ addresses). Do not recommend allocated or obscure bottles that cannot be shipped to NJ.
+2. Recommend 3 SPECIFIC real-world benchmark wines to PURCHASE that fulfill the user's request and complement their collection.
+   CRITICAL REQUIREMENT: Every recommended wine must be widely available to purchase at retail in New Jersey (NJ) or legally shippable to a New Jersey address (e.g. distributed through leading NJ merchants like Gary's Wine, Buy-Rite, Total Wine NJ, Wine Library, Saratoga Wine, Wine.com, or direct winery DTC shipping to NJ addresses). Do not recommend allocated or obscure bottles that cannot be shipped to NJ.
 3. For each recommended purchase, clearly specify:
    - **Wine & Producer**: Specific estate and cuvée (e.g. *La Rioja Alta Gran Reserva 904*, *Château Léoville Barton*, *Produttori del Barbaresco*)
    - **Target Vintage(s) to Seek Out**: Specific vintage(s) currently drinking at peak
@@ -3579,7 +3579,7 @@ INSTRUCTIONS:
    - **Service Guidance**: Decant duration and ideal serving temperature
    - **Where to Buy**: Provide a direct Google search link formatted as: [🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+PRODUCER+WINE+wine+ship+to+NJ)
 4. Conclude with 1-2 practical buying tips for New Jersey wine collectors.
-5. Format with polished Markdown headings, bold text, and bullet points in an inspiring, authoritative sommelier tone.`;
+5. Format with polished Markdown headings, bold text, and bullet points in an inspiring, authoritative sommelier tone. Be punchy and concise.`;
             } else {
               prompt = `You are a Master Sommelier acting as private cellar advisor.
 Your recommendations MUST be grounded strictly in the collector's actual cellar bottles below. Do NOT invent bottles.
@@ -3599,12 +3599,12 @@ INSTRUCTIONS:
 USER QUERY: "${query}"`;
             }
 
-            const candidateModels = ['gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-flash-lite-latest'];
+            const candidateModels = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash'];
             let directCallErr = "";
             for (const currentModel of candidateModels) {
               try {
                 const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), 15000);
+                const timer = setTimeout(() => controller.abort(), 45000);
                 const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
                 const gRes = await fetch(geminiUrl, {
                   method: 'POST',
