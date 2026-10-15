@@ -708,12 +708,17 @@ class TestMultiUserAuthenticationAndIsolation(unittest.TestCase):
         self.assertEqual(cathy_entry["favorite_varietal"], "Cabernet Sauvignon")
         self.assertEqual(cathy_entry["tasting_count"], 1)
 
-        # Verify activity feed has events
+        # Verify wine totals
+        self.assertIn("wine_totals", report)
+        self.assertIn("by_type", report["wine_totals"])
+        self.assertIn("top_varietals", report["wine_totals"])
+
+        # Verify activity feed has high-level events without exposing bottle specifics
         self.assertGreaterEqual(len(report["recent_activity"]), 1)
         tasting_event = next((ev for ev in report["recent_activity"] if ev["type"] == "bottle_tasted"), None)
         self.assertIsNotNone(tasting_event)
         self.assertEqual(tasting_event["user_name"], "Cathy")
-        self.assertEqual(tasting_event["score_or_rating"], "99.0")
+        self.assertIn("tasting note", tasting_event["title"].lower())
 
 
 

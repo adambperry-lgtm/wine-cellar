@@ -419,33 +419,61 @@ class WineDatabase:
                     "favorite_varietal": fav_varietal
                 })
 
-            # Activity feed: recent bottles added
-            recent_bottles = conn.execute("""
-                SELECT b.id, b.producer, b.wine_name, b.vintage, b.varietal, b.created_at, b.user_id, u.name as user_name, u.email as user_email
+            # Network Wine Totals by Wine Type (Red, White, Sparkling, etc.)
+            type_distribution = conn.execute("""
+                SELECT wine_type, SUM(quantity) as total_qty, SUM(COALESCE(purchase_price, 0) * quantity) as total_val
+                FROM bottles
+                WHERE quantity > 0
+                GROUP BY wine_type
+                ORDER BY total_qty DESC
+            """).fetchall()
+            network_wine_types = [
+                {
+                    "type": r["wine_type"] or "Other",
+                    "bottles": r["total_qty"] or 0,
+                    "value": round(r["total_val"] or 0.0, 2)
+                }
+                for r in type_distribution
+            ]
+
+            # Network Wine Totals by Varietal (Top varietals across entire network)
+            varietal_distribution = conn.execute("""
+                SELECT varietal, SUM(quantity) as total_qty
+                FROM bottles
+                WHERE quantity > 0 AND varietal IS NOT NULL AND varietal != ''
+                GROUP BY varietal
+                ORDER BY total_qty DESC
+                LIMIT 8
+            """).fetchall()
+            network_varietals = [
+                {"varietal": r["varietal"], "bottles": r["total_qty"]}
+                for r in varietal_distribution
+            ]
+
+            # High-level activity feed without revealing individual wine bottle names
+            recent_additions = conn.execute("""
+                SELECT b.quantity, b.created_at, b.user_id, u.name as user_name, u.email as user_email
                 FROM bottles b
                 JOIN users u ON b.user_id = u.id
                 ORDER BY b.id DESC LIMIT 15
             """).fetchall()
 
-            # Activity feed: recent tastings from consumption_log
             recent_tastings = conn.execute("""
-                SELECT c.id, c.wine_display_name, c.date_opened, c.rating, c.tasting_notes, c.user_id, u.name as user_name, u.email as user_email
+                SELECT c.date_opened, c.user_id, u.name as user_name, u.email as user_email
                 FROM consumption_log c
                 JOIN users u ON c.user_id = u.id
                 ORDER BY c.id DESC LIMIT 15
             """).fetchall()
 
             events = []
-            for b in recent_bottles:
-                v_str = f"{b['vintage']} " if b['vintage'] else ""
+            for b in recent_additions:
+                qty = b["quantity"] or 1
+                bottle_label = "bottle" if qty == 1 else "bottles"
                 events.append({
                     "type": "bottle_added",
                     "user_id": b["user_id"],
                     "user_name": b["user_name"] or b["user_email"].split("@")[0].title(),
-                    "title": f"Added {v_str}{b['producer']} {b['wine_name'] or ''}".strip(),
-                    "subtitle": b["varietal"] or "Fine Wine",
-                    "score_or_rating": None,
-                    "note": None,
+                    "title": f"Added {qty} {bottle_label} to cellar inventory",
                     "timestamp": b["created_at"]
                 })
 
@@ -454,10 +482,7 @@ class WineDatabase:
                     "type": "bottle_tasted",
                     "user_id": t["user_id"],
                     "user_name": t["user_name"] or t["user_email"].split("@")[0].title(),
-                    "title": f"Opened {t['wine_display_name']}",
-                    "subtitle": "Cellar Tasting",
-                    "score_or_rating": f"{t['rating']:.1f}" if t["rating"] is not None else None,
-                    "note": t["tasting_notes"] or "",
+                    "title": "Logged a wine tasting note & rating",
                     "timestamp": t["date_opened"]
                 })
 
@@ -476,7 +501,11 @@ class WineDatabase:
                     "database_size_bytes": db_size,
                 },
                 "users": users_data,
-                "recent_activity": events[:20],
+                "wine_totals": {
+                    "by_type": network_wine_types,
+                    "top_varietals": network_varietals
+                },
+                "recent_activity": events[:15],
                 "generated_at": datetime.now().isoformat()
             }
 

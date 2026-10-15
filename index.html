@@ -1339,7 +1339,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         <div class="flex flex-col gap-2.5">
           <div class="flex items-center justify-between">
             <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🍷</span> Registered Collectors Directory
+              <span>🍷</span> Registered Collectors & Cellar Totals
             </h4>
             <span id="adminUserCountLabel" class="text-[11px] text-slate-500">Loading...</span>
           </div>
@@ -1350,11 +1350,11 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
                   <tr>
                     <th class="px-4 py-2.5">Collector</th>
                     <th class="px-3 py-2.5">Auth Type</th>
-                    <th class="px-3 py-2.5 text-right">Bottles</th>
+                    <th class="px-3 py-2.5 text-right">Total Bottles</th>
                     <th class="px-3 py-2.5 text-right">Cellar Value</th>
-                    <th class="px-3 py-2.5">Favorite Varietal</th>
-                    <th class="px-3 py-2.5">Last Active / Login</th>
-                    <th class="px-3 py-2.5 text-center">Action</th>
+                    <th class="px-3 py-2.5">Top Varietal</th>
+                    <th class="px-3 py-2.5 text-center">Tastings</th>
+                    <th class="px-3 py-2.5">Last Active</th>
                   </tr>
                 </thead>
                 <tbody id="adminUsersTableBody" class="divide-y divide-slate-800/60 font-medium">
@@ -1367,15 +1367,38 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           </div>
         </div>
 
-        <!-- Recent Activity Feed -->
+        <!-- Network Wine Totals by Style & Varietal -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- By Wine Type / Style -->
+          <div class="flex flex-col gap-2 bg-slate-950/60 border border-slate-800 rounded-xl p-3.5">
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>🍾</span> Network Wine Totals by Style
+            </h4>
+            <div id="adminWineTypesContainer" class="flex flex-col gap-1.5 mt-1">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Top Varietals in Network -->
+          <div class="flex flex-col gap-2 bg-slate-950/60 border border-slate-800 rounded-xl p-3.5">
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>🍇</span> Top Varietals in Network
+            </h4>
+            <div id="adminVarietalsContainer" class="flex flex-wrap gap-2 mt-1">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- High-Level Cellar Activity -->
         <div class="flex flex-col gap-2.5">
           <div class="flex items-center justify-between">
             <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>⚡</span> Real-Time Cellar Activity Feed
+              <span>⚡</span> Recent Network Activity
             </h4>
-            <span class="text-[11px] text-slate-500">Latest bottle additions & tastings</span>
+            <span class="text-[11px] text-slate-500">Inventory updates & tasting activity</span>
           </div>
-          <div id="adminActivityFeed" class="flex flex-col gap-2 max-h-72 overflow-y-auto custom-scrollbar p-1">
+          <div id="adminActivityFeed" class="flex flex-col gap-2 max-h-56 overflow-y-auto custom-scrollbar p-1">
             <!-- Dynamic feed items -->
           </div>
         </div>
@@ -1974,7 +1997,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         document.getElementById('adminUserCountLabel').textContent = `${(data.users || []).length} Cellars Active`;
         document.getElementById('adminLastUpdated').textContent = 'Last synced: ' + new Date().toLocaleTimeString();
 
-        // Render Users Table
+        // Render Users Table (Users & Wine Totals only - NO individual bottles)
         if (!data.users || data.users.length === 0) {
           usersTbody.innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-slate-500">No users found</td></tr>';
         } else {
@@ -1983,8 +2006,8 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             const authBadge = isGoogle 
               ? '<span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-800 font-semibold"><span>G</span> Google</span>'
               : '<span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-semibold"><span>🔑</span> Password</span>';
-            const lastActive = u.last_login 
-              ? new Date(u.last_login).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) 
+            const lastActive = u.last_active 
+              ? new Date(u.last_active).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) 
               : (u.created_at ? new Date(u.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : 'Never');
             const totalVal = '$' + Math.round(u.total_value || 0).toLocaleString();
             const avatar = u.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(u.email || u.name)}`;
@@ -2005,50 +2028,78 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
                   </div>
                 </td>
                 <td class="px-3 py-3">${authBadge}</td>
-                <td class="px-3 py-3 text-right font-bold text-emerald-400">${u.bottle_count ?? 0}</td>
+                <td class="px-3 py-3 text-right font-bold text-emerald-400">${u.bottle_count ?? 0} bottles</td>
                 <td class="px-3 py-3 text-right font-semibold text-slate-200">${totalVal}</td>
                 <td class="px-3 py-3 text-slate-300">${escapeHtml(u.favorite_varietal || 'N/A')}</td>
+                <td class="px-3 py-3 text-center text-amber-300 font-semibold">${u.tasting_count ?? 0}</td>
                 <td class="px-3 py-3 text-[11px] text-slate-400">${lastActive}</td>
-                <td class="px-3 py-3 text-center">
-                  ${!isCurrent ? `
-                    <button onclick="switchAccount(${u.id}); closeModal('adminModal');" class="px-2.5 py-1 text-[11px] font-semibold rounded bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-white border border-slate-700 transition">
-                      View Cellar
-                    </button>
-                  ` : `
-                    <span class="text-[11px] text-emerald-400 font-semibold">Active</span>
-                  `}
-                </td>
               </tr>
             `;
           }).join('');
         }
 
-        // Render Recent Activity Feed
+        // Render Network Wine Totals by Style
+        const typesContainer = document.getElementById('adminWineTypesContainer');
+        if (typesContainer) {
+          const types = (data.wine_totals && data.wine_totals.by_type) || [];
+          const totalB = s.total_bottles || 1;
+          if (types.length === 0) {
+            typesContainer.innerHTML = '<div class="text-xs text-slate-500 py-1">No bottles recorded.</div>';
+          } else {
+            typesContainer.innerHTML = types.map(t => {
+              const pct = Math.round((t.bottles / totalB) * 100);
+              return `
+                <div class="flex items-center justify-between text-xs py-1 border-b border-slate-800/60 last:border-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-slate-200">${escapeHtml(t.type)}</span>
+                    <span class="text-[10px] text-slate-500">(${pct}%)</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="font-bold text-emerald-400">${t.bottles} bottles</span>
+                    <span class="text-slate-400 text-[11px]">$${Math.round(t.value || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+
+        // Render Top Varietals in Network
+        const varietalsContainer = document.getElementById('adminVarietalsContainer');
+        if (varietalsContainer) {
+          const varietals = (data.wine_totals && data.wine_totals.top_varietals) || [];
+          if (varietals.length === 0) {
+            varietalsContainer.innerHTML = '<div class="text-xs text-slate-500 py-1">No varietals recorded.</div>';
+          } else {
+            varietalsContainer.innerHTML = varietals.map(v => `
+              <div class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
+                <span class="text-slate-200 font-medium">${escapeHtml(v.varietal)}</span>
+                <span class="px-1.5 py-0.2 rounded bg-indigo-950 text-indigo-300 font-bold text-[10px] border border-indigo-800">${v.bottles}</span>
+              </div>
+            `).join('');
+          }
+        }
+
+        // Render High-Level Activity Feed (NO individual bottle names)
         if (!data.recent_activity || data.recent_activity.length === 0) {
-          feedContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs bg-slate-950/40 rounded-xl border border-slate-800">No recent activity logged yet.</div>';
+          feedContainer.innerHTML = '<div class="p-3 text-center text-slate-500 text-xs bg-slate-950/40 rounded-xl border border-slate-800">No recent activity logged yet.</div>';
         } else {
           feedContainer.innerHTML = data.recent_activity.map(act => {
             const isBottle = act.type === 'bottle_added';
-            const icon = isBottle ? '🍾' : '🍷';
-            const iconBg = isBottle ? 'bg-emerald-950 text-emerald-400 border-emerald-800/80' : 'bg-amber-950 text-amber-400 border-amber-800/80';
+            const icon = isBottle ? '📦' : '🍷';
+            const iconBg = isBottle ? 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60' : 'bg-amber-950/80 text-amber-400 border-amber-800/60';
             const dateStr = act.timestamp ? new Date(act.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
             return `
-              <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/50 border border-slate-800/80 hover:border-slate-700 transition">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 border ${iconBg}">
+              <div class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/50 border border-slate-800/80">
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0 border ${iconBg}">
                   ${icon}
                 </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-bold text-white truncate">${escapeHtml(act.title)}</span>
-                    <span class="text-[10px] text-slate-500 shrink-0 font-mono">${dateStr}</span>
-                  </div>
-                  <p class="text-[11px] text-slate-400 mt-0.5 truncate">${escapeHtml(act.subtitle || '')}</p>
-                  <div class="flex items-center gap-2 mt-1 text-[10px]">
-                    <span class="text-slate-500">by</span>
+                <div class="flex-1 min-w-0 flex items-center justify-between gap-2">
+                  <div class="truncate text-xs">
                     <span class="font-semibold text-rose-300">${escapeHtml(act.user_name || 'Collector')}</span>
-                    ${act.score_or_rating ? `<span class="px-1.5 py-0.2 rounded bg-slate-800 text-amber-300 font-bold border border-slate-700">★ ${act.score_or_rating}</span>` : ''}
-                    ${act.note ? `<span class="text-slate-400 italic truncate max-w-[200px] sm:max-w-xs">"${escapeHtml(act.note)}"</span>` : ''}
+                    <span class="text-slate-300 ml-1.5">${escapeHtml(act.title)}</span>
                   </div>
+                  <span class="text-[10px] text-slate-500 shrink-0 font-mono">${dateStr}</span>
                 </div>
               </div>
             `;
