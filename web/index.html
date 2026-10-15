@@ -1102,6 +1102,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           Close
         </button>
       </div>
+    </div>
+  </div>
+
   <!-- MODAL: Multi-User Login & Account Manager -->
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
@@ -2505,14 +2508,16 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     }
 
     async function loginWithDemoGoogle() {
-      const email = prompt("Enter your Google / Gmail account for instant Google sign-in:", currentUser.email || "sommelier.enthusiast@gmail.com");
-      if (!email) return;
-      const name = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const defaultPromptEmail = (currentUser && currentUser.email && !currentUser.email.includes("cellarmaster")) ? currentUser.email : "";
+      const email = prompt("Enter your Google / Gmail account for instant sign-in:", defaultPromptEmail);
+      if (!email || !email.trim()) return;
+      const cleanEmail = email.trim().toLowerCase();
+      const name = cleanEmail.split('@')[0].replace(/[\._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       try {
         const res = await fetch('/api/auth/google', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credential: `demo:${email}:${name}`, email, name })
+          body: JSON.stringify({ credential: `demo:${cleanEmail}:${name}`, email: cleanEmail, name })
         });
         const data = await res.json();
         if (res.ok && data.success) {
@@ -2611,6 +2616,8 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       updateUserHeaderUI();
       await loadData();
       await renderAuditReport();
+      openAuthModal('login');
+      showAuthFeedback("Signed out. Please sign in or create an account to access your personal cellar.", false);
     }
 
     // ==========================================
