@@ -98,6 +98,11 @@ def prepare_distribution_files(base_dir: Optional[str] = None) -> str:
     with open(github_index_path, "w", encoding="utf-8") as f:
         f.write(blank_content)
 
+    # Also keep repository root index.html synchronized for GitHub Pages
+    root_index_path = os.path.join(base_dir, "index.html")
+    with open(root_index_path, "w", encoding="utf-8") as f:
+        f.write(blank_content)
+
     return blank_content
 
 
@@ -109,7 +114,10 @@ def publish_to_github(
     target_path: str = "index.html",
     base_dir: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Pushes the prepared web application directly to GitHub Pages."""
+    """Pushes the prepared web application and complete repository to GitHub (for GitHub Pages & Railway)."""
+    if not base_dir:
+        base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
     token = get_github_token()
     if not token:
         return {
@@ -124,7 +132,34 @@ def publish_to_github(
     except Exception as e:
         return {"success": False, "error": f"Failed to prepare HTML for publish: {e}"}
 
-    # 2. Get current file sha on GitHub
+    # 2. Try pushing full repository via git if git repo is initialized
+    git_dir = os.path.join(base_dir, ".git")
+    if os.path.exists(git_dir):
+        try:
+            import subprocess
+            remote_url = f"https://x-access-token:{token}@github.com/{owner}/{repo}.git"
+            subprocess.run(["git", "config", "user.name", owner], cwd=base_dir, check=False)
+            subprocess.run(["git", "config", "user.email", f"{owner}@users.noreply.github.com"], cwd=base_dir, check=False)
+            subprocess.run(["git", "remote", "set-url", "origin", remote_url], cwd=base_dir, check=False)
+            subprocess.run(["git", "add", "."], cwd=base_dir, check=False)
+            subprocess.run(["git", "commit", "-m", commit_message], cwd=base_dir, capture_output=True, text=True)
+            push_res = subprocess.run(["git", "push", "origin", branch], cwd=base_dir, capture_output=True, text=True)
+            if push_res.returncode == 0:
+                rev_res = subprocess.run(["git", "rev-parse", "HEAD"], cwd=base_dir, capture_output=True, text=True)
+                commit_sha = rev_res.stdout.strip() if rev_res.returncode == 0 else "latest"
+                return {
+                    "success": True,
+                    "commit_sha": commit_sha,
+                    "repo": f"{owner}/{repo}",
+                    "branch": branch,
+                    "pages_url": GITHUB_PAGES_URL,
+                    "railway_ready": True,
+                    "message": commit_message
+                }
+        except Exception:
+            pass
+
+    # 3. Fallback: REST API update for index.html
     api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{target_path}"
     headers = {
         "Authorization": f"token {token}",

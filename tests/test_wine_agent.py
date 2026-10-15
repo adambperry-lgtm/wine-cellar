@@ -506,7 +506,47 @@ class TestWineDatabaseAndAgent(unittest.TestCase):
             self.assertTrue(r["source_url"].startswith("http"))
             self.assertIn("Stonestreet", r["source_url"])
 
+    def test_railway_cloud_deployment_configs(self):
+        import json
+        base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        
+        # 1. Procfile check
+        procfile_path = os.path.join(base_dir, "Procfile")
+        self.assertTrue(os.path.exists(procfile_path))
+        with open(procfile_path, "r", encoding="utf-8") as f:
+            proc_content = f.read()
+            self.assertIn("web: python3 -m wine_agent.server", proc_content)
+
+        # 2. railway.json check
+        railway_json_path = os.path.join(base_dir, "railway.json")
+        self.assertTrue(os.path.exists(railway_json_path))
+        with open(railway_json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            self.assertIn("deploy", data)
+            self.assertEqual(data["deploy"].get("healthcheckPath"), "/api/bottles")
+
+        # 3. Dockerfile check
+        dockerfile_path = os.path.join(base_dir, "Dockerfile")
+        self.assertTrue(os.path.exists(dockerfile_path))
+        with open(dockerfile_path, "r", encoding="utf-8") as f:
+            docker_content = f.read()
+            self.assertIn("EXPOSE 8000", docker_content)
+            self.assertIn("wine_agent.server", docker_content)
+
+        # 4. CELLAR_DB_PATH resolution test
+        from wine_agent.database import get_default_db_path
+        old_custom = os.environ.get("CELLAR_DB_PATH")
+        try:
+            os.environ["CELLAR_DB_PATH"] = "/tmp/test_railway_cellar.db"
+            self.assertEqual(get_default_db_path(), "/tmp/test_railway_cellar.db")
+        finally:
+            if old_custom:
+                os.environ["CELLAR_DB_PATH"] = old_custom
+            else:
+                os.environ.pop("CELLAR_DB_PATH", None)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
