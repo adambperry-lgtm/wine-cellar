@@ -136,7 +136,7 @@
 
             <!-- Menu Navigation Links -->
             <div class="py-1 px-1">
-              <button onclick="openModal('adminModal'); toggleUserDropdown();" class="w-full text-left px-3 py-2 text-indigo-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
+              <button id="adminActivityDropdownBtn" onclick="openModal('adminModal'); toggleUserDropdown();" class="hidden w-full text-left px-3 py-2 text-indigo-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
                 <span>👥</span> Cellar Network Activity
               </button>
               <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg flex items-center gap-2 transition">
@@ -176,7 +176,7 @@
         <button onclick="openStorageModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
           <span>🧊</span> Edit Storage
         </button>
-        <button onclick="openModal('adminModal')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-950/70 hover:bg-indigo-900/90 text-indigo-200 border border-indigo-700/60 transition-all shadow-sm" title="View users, bottle counts, and network cellar activity">
+        <button id="adminActivityHeaderBtn" onclick="openModal('adminModal')" class="hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-950/70 hover:bg-indigo-900/90 text-indigo-200 border border-indigo-700/60 transition-all shadow-sm" title="View users, bottle counts, and network cellar activity">
           <span>👥</span> Network Activity
         </button>
         <button onclick="exportCellarDatabase()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
@@ -1926,6 +1926,15 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
     // Modal Control Functions
     async function openModal(id) {
+      if (id === 'adminModal') {
+        const ADMIN_EMAILS = ['adambperry@gmail.com', 'cellarmaster@cellar.local'];
+        const userEmail = (currentUser && currentUser.email ? currentUser.email : '').toLowerCase().trim();
+        const isAdmin = ADMIN_EMAILS.includes(userEmail) || (currentUser && currentUser.id === 1);
+        if (!isAdmin) {
+          alert('Network Activity is restricted to the cellar administrator.');
+          return;
+        }
+      }
       document.getElementById(id).classList.remove('hidden');
       if (id === 'auditModal') {
         await renderAuditReport();
