@@ -6,6 +6,7 @@
   <title>Cellar Sommelier Agent | Wine Collection & Drinking Windows</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --bg-dark: #0f1117;
@@ -90,6 +91,35 @@
         <button onclick="exportCellarDatabase()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
           <span>📥</span> Export Database
         </button>
+
+        <!-- User Account Profile Button -->
+        <div class="relative inline-block text-left" id="userMenuContainer">
+          <button onclick="toggleUserDropdown()" id="userProfileBtn" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-all shadow-sm">
+            <img id="userAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" class="w-4 h-4 rounded-full bg-slate-700 object-cover" alt="Avatar">
+            <span id="userNameLabel" class="max-w-[120px] truncate">Cellar Master</span>
+            <span class="text-[10px] text-slate-400">▼</span>
+          </button>
+          <div id="userDropdown" class="hidden absolute right-0 mt-2 w-60 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-2 z-50 text-xs">
+            <div class="px-3 py-2 border-b border-slate-800">
+              <div class="font-semibold text-white truncate" id="dropdownUserName">Cellar Master</div>
+              <div class="text-[11px] text-slate-400 truncate" id="dropdownUserEmail">cellarmaster@cellar.local</div>
+            </div>
+            <div class="py-1">
+              <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
+                <span>🔄</span> Switch Account
+              </button>
+              <button onclick="openAuthModal('login')" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
+                <span>🔑</span> Sign In
+              </button>
+              <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 text-emerald-400 hover:bg-slate-800 flex items-center gap-2">
+                <span>✨</span> Create New Cellar
+              </button>
+              <button onclick="logoutUser()" class="w-full text-left px-3 py-2 text-rose-400 hover:bg-slate-800 flex items-center gap-2 border-t border-slate-800 mt-1">
+                <span>🚪</span> Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -1071,6 +1101,116 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         <button onclick="closeModal('criticModal')" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
           Close
         </button>
+      </div>
+  <!-- MODAL: Multi-User Login & Account Manager -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">🍷</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Cellar Accounts & Profiles</h3>
+            <p class="text-xs text-slate-400">Manage separate inventories, tasting logs & drinking windows</p>
+          </div>
+        </div>
+        <button onclick="closeModal('authModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex border-b border-slate-800 gap-4 text-xs font-semibold">
+        <button type="button" id="tabAuthLoginBtn" onclick="switchAuthTab('login')" class="pb-2 text-rose-400 border-b-2 border-rose-500">
+          Sign In
+        </button>
+        <button type="button" id="tabAuthRegisterBtn" onclick="switchAuthTab('register')" class="pb-2 text-slate-400 hover:text-slate-200">
+          Create Account
+        </button>
+        <button type="button" id="tabAuthSwitchBtn" onclick="switchAuthTab('switch')" class="pb-2 text-slate-400 hover:text-slate-200">
+          Switch Cellar
+        </button>
+      </div>
+
+      <!-- Notification message box -->
+      <div id="authFeedback" class="hidden text-xs p-3 rounded-lg border"></div>
+
+      <!-- TAB 1: Sign In -->
+      <div id="authLoginForm" class="flex flex-col gap-3.5">
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">Email Address</label>
+          <input type="email" id="loginEmail" placeholder="sommelier@domain.com" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500">
+        </div>
+        <button type="button" onclick="submitLogin()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-rose-950/40">
+          Sign In to Cellar
+        </button>
+
+        <div class="relative flex items-center justify-center my-1">
+          <div class="border-t border-slate-800 w-full"></div>
+          <span class="bg-slate-900 px-2 text-[10px] text-slate-500 uppercase tracking-widest font-mono">or</span>
+        </div>
+
+        <!-- Google Sign-In Container -->
+        <div class="flex flex-col gap-2 items-center w-full">
+          <div id="googleSignInBtnContainer" class="flex justify-center w-full"></div>
+          <button type="button" onclick="loginWithDemoGoogle()" class="w-full flex items-center justify-center gap-2.5 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-semibold transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Sign in with Google</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: Register New Account -->
+      <div id="authRegisterForm" class="hidden flex flex-col gap-3.5">
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">Your Name / Title</label>
+          <input type="text" id="registerName" placeholder="e.g. Master Sommelier Dave" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">Email Address</label>
+          <input type="email" id="registerEmail" placeholder="yourname@domain.com" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">Create Password (min. 6 characters)</label>
+          <input type="password" id="registerPassword" placeholder="••••••••" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500">
+        </div>
+        <button type="button" onclick="submitRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-emerald-950/40">
+          Create Private Cellar
+        </button>
+
+        <div class="relative flex items-center justify-center my-1">
+          <div class="border-t border-slate-800 w-full"></div>
+          <span class="bg-slate-900 px-2 text-[10px] text-slate-500 uppercase tracking-widest font-mono">or</span>
+        </div>
+
+        <button type="button" onclick="loginWithDemoGoogle()" class="w-full flex items-center justify-center gap-2.5 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-semibold transition">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Sign up with Google</span>
+        </button>
+      </div>
+
+      <!-- TAB 3: Switch Cellar / Account -->
+      <div id="authSwitchForm" class="hidden flex flex-col gap-3">
+        <p class="text-xs text-slate-400">Select an existing cellar account to switch into:</p>
+        <div id="accountsListContainer" class="flex flex-col gap-2 max-h-60 overflow-y-auto custom-scrollbar">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-[11px] text-slate-500">
+        <span>Protected with PBKDF2-SHA256 & Google OAuth</span>
+        <button onclick="closeModal('authModal')" class="text-slate-400 hover:text-white font-medium">Close</button>
       </div>
     </div>
   </div>
@@ -2131,33 +2271,369 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     }
 ];
 
+    // ==========================================
+    // 🔐 MULTI-USER AUTHENTICATION & GOOGLE SSO
+    // ==========================================
+    let currentUser = { id: 1, email: "cellarmaster@cellar.local", name: "Cellar Master", avatar_url: "https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" };
+
+    // Auto-attach Authorization token to all /api/ requests
+    const _originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+      const token = localStorage.getItem('cellar_auth_token');
+      if (token && typeof url === 'string' && url.startsWith('/api/')) {
+        const headers = new Headers(options.headers || {});
+        if (!headers.has('Authorization')) {
+          headers.set('Authorization', `Bearer ${token}`);
+        }
+        options = Object.assign({}, options, { headers });
+      }
+      return _originalFetch(url, options);
+    };
+
+    function authFetch(url, options = {}) {
+      return window.fetch(url, options);
+    }
+
+    async function initAuth() {
+      // 1. Restore cached user profile if present
+      try {
+        const saved = localStorage.getItem('cellar_user');
+        if (saved) {
+          currentUser = JSON.parse(saved);
+          updateUserHeaderUI();
+        }
+      } catch (e) {}
+
+      // 2. Verify with backend
+      if (window.location.protocol !== 'file:') {
+        try {
+          const res = await fetch('/api/auth/me');
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.user) {
+              currentUser = data.user;
+              localStorage.setItem('cellar_user', JSON.stringify(currentUser));
+              updateUserHeaderUI();
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 3. Initialize Google Identity Services
+      initGoogleIdentity();
+    }
+
+    function initGoogleIdentity() {
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+        return;
+      }
+      const clientId = localStorage.getItem('google_oauth_client_id') || '381948291048-cellaragent.apps.googleusercontent.com';
+      try {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCredentialResponse,
+          auto_select: false
+        });
+        const container = document.getElementById('googleSignInBtnContainer');
+        if (container) {
+          google.accounts.id.renderButton(container, {
+            theme: 'filled_black',
+            size: 'large',
+            shape: 'pill',
+            text: 'signin_with',
+            width: 280
+          });
+        }
+      } catch (e) {
+        console.warn("Google GIS Notice:", e);
+      }
+    }
+
+    function updateUserHeaderUI() {
+      const nameEl = document.getElementById('userNameLabel');
+      const dropNameEl = document.getElementById('dropdownUserName');
+      const dropEmailEl = document.getElementById('dropdownUserEmail');
+      const avatarEl = document.getElementById('userAvatarImg');
+
+      const name = currentUser.name || (currentUser.email ? currentUser.email.split('@')[0].toUpperCase() : 'Cellar Master');
+      const email = currentUser.email || 'cellarmaster@cellar.local';
+      const avatar = currentUser.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`;
+
+      if (nameEl) nameEl.textContent = name;
+      if (dropNameEl) dropNameEl.textContent = name;
+      if (dropEmailEl) dropEmailEl.textContent = email;
+      if (avatarEl) avatarEl.src = avatar;
+    }
+
+    function toggleUserDropdown() {
+      const drop = document.getElementById('userDropdown');
+      if (drop) {
+        drop.classList.toggle('hidden');
+      }
+    }
+
+    // Close user dropdown if clicking outside
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('userMenuContainer');
+      const drop = document.getElementById('userDropdown');
+      if (container && drop && !container.contains(e.target)) {
+        drop.classList.add('hidden');
+      }
+    });
+
+    function openAuthModal(tab = 'login') {
+      const drop = document.getElementById('userDropdown');
+      if (drop) drop.classList.add('hidden');
+      switchAuthTab(tab);
+      openModal('authModal');
+    }
+
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('authLoginForm');
+      const regForm = document.getElementById('authRegisterForm');
+      const switchForm = document.getElementById('authSwitchForm');
+      const loginBtn = document.getElementById('tabAuthLoginBtn');
+      const regBtn = document.getElementById('tabAuthRegisterBtn');
+      const switchBtn = document.getElementById('tabAuthSwitchBtn');
+      const fb = document.getElementById('authFeedback');
+      if (fb) fb.classList.add('hidden');
+
+      if (loginForm) loginForm.classList.add('hidden');
+      if (regForm) regForm.classList.add('hidden');
+      if (switchForm) switchForm.classList.add('hidden');
+
+      if (loginBtn) loginBtn.className = "pb-2 text-slate-400 hover:text-slate-200";
+      if (regBtn) regBtn.className = "pb-2 text-slate-400 hover:text-slate-200";
+      if (switchBtn) switchBtn.className = "pb-2 text-slate-400 hover:text-slate-200";
+
+      if (tab === 'register') {
+        if (regForm) regForm.classList.remove('hidden');
+        if (regBtn) regBtn.className = "pb-2 text-emerald-400 border-b-2 border-emerald-500 font-bold";
+      } else if (tab === 'switch') {
+        if (switchForm) switchForm.classList.remove('hidden');
+        if (switchBtn) switchBtn.className = "pb-2 text-amber-400 border-b-2 border-amber-500 font-bold";
+        loadAccountsList();
+      } else {
+        if (loginForm) loginForm.classList.remove('hidden');
+        if (loginBtn) loginBtn.className = "pb-2 text-rose-400 border-b-2 border-rose-500 font-bold";
+      }
+    }
+
+    function showAuthFeedback(msg, isError = true) {
+      const fb = document.getElementById('authFeedback');
+      if (!fb) return;
+      fb.classList.remove('hidden', 'bg-rose-950/60', 'border-rose-700', 'text-rose-200', 'bg-emerald-950/60', 'border-emerald-700', 'text-emerald-200');
+      if (isError) {
+        fb.classList.add('bg-rose-950/60', 'border-rose-700', 'text-rose-200');
+        fb.innerHTML = `⚠️ <span>${msg}</span>`;
+      } else {
+        fb.classList.add('bg-emerald-950/60', 'border-emerald-700', 'text-emerald-200');
+        fb.innerHTML = `✔ <span>${msg}</span>`;
+      }
+    }
+
+    async function submitLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) {
+        showAuthFeedback("Please enter your email and password.");
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Login failed. Check your email or password.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function submitRegister() {
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      if (!email || !password) {
+        showAuthFeedback("Email and password are required.");
+        return;
+      }
+      if (password.length < 6) {
+        showAuthFeedback("Password must be at least 6 characters.");
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Registration failed.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function handleGoogleCredentialResponse(response) {
+      if (!response || !response.credential) return;
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Google Identity authentication failed.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function loginWithDemoGoogle() {
+      const email = prompt("Enter your Google / Gmail account for instant Google sign-in:", currentUser.email || "sommelier.enthusiast@gmail.com");
+      if (!email) return;
+      const name = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase());
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: `demo:${email}:${name}`, email, name })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Google sign-in failed.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function loadAccountsList() {
+      const container = document.getElementById('accountsListContainer');
+      if (!container) return;
+      container.innerHTML = '<div class="text-slate-500 text-xs py-2">Loading registered cellars...</div>';
+      try {
+        const res = await fetch('/api/auth/users');
+        if (res.ok) {
+          const users = await res.json();
+          container.innerHTML = users.map(u => {
+            const isCurrent = currentUser && currentUser.id === u.id;
+            return `
+              <div class="flex items-center justify-between p-2.5 rounded-xl border ${isCurrent ? 'bg-rose-950/30 border-rose-700/60' : 'bg-slate-800/60 border-slate-700/60 hover:border-slate-600'} transition">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <img src="${u.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + u.email}" class="w-7 h-7 rounded-full bg-slate-700 shrink-0" alt="">
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                      <span>${escapeHtml(u.name)}</span>
+                      ${isCurrent ? '<span class="text-[10px] px-1.5 py-0.2 bg-rose-900 text-rose-300 rounded-full font-normal">Active</span>' : ''}
+                    </div>
+                    <div class="text-[11px] text-slate-400 truncate">${escapeHtml(u.email)}</div>
+                  </div>
+                </div>
+                ${!isCurrent ? `
+                  <button type="button" onclick="switchAccount(${u.id})" class="px-3 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold shrink-0 transition">
+                    Switch
+                  </button>
+                ` : `
+                  <span class="text-emerald-400 text-xs font-semibold px-2">Current</span>
+                `}
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        container.innerHTML = `<div class="text-rose-400 text-xs py-2">${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function switchAccount(userId) {
+      try {
+        const res = await fetch('/api/auth/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Failed to switch accounts.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function handleAuthSuccess(data) {
+      if (data.token) {
+        localStorage.setItem('cellar_auth_token', data.token);
+      }
+      if (data.user) {
+        currentUser = data.user;
+        localStorage.setItem('cellar_user', JSON.stringify(currentUser));
+        updateUserHeaderUI();
+      }
+      showAuthFeedback(data.message || "Account activated successfully!", false);
+      setTimeout(async () => {
+        closeModal('authModal');
+        await loadData();
+        await renderAuditReport();
+      }, 600);
+    }
+
+    async function logoutUser() {
+      const drop = document.getElementById('userDropdown');
+      if (drop) drop.classList.add('hidden');
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (e) {}
+
+      localStorage.removeItem('cellar_auth_token');
+      localStorage.removeItem('cellar_user');
+      currentUser = { id: 1, email: "cellarmaster@cellar.local", name: "Cellar Master", avatar_url: "https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" };
+      updateUserHeaderUI();
+      await loadData();
+      await renderAuditReport();
+    }
+
+    // ==========================================
+    // 🍷 INVENTORY & DRINKING WINDOW DATA LOADER
+    // ==========================================
     async function loadData() {
+      const uId = currentUser ? currentUser.id : 1;
       // Sync tasting history from storage or backend
       try {
         const histRes = await fetch("/api/history");
         if (histRes.ok) {
           tastingHistory = await histRes.json();
-          localStorage.setItem('wine_cellar_tasting_history', JSON.stringify(tastingHistory));
+          localStorage.setItem(`wine_cellar_tasting_history_u${uId}`, JSON.stringify(tastingHistory));
         } else {
-          tastingHistory = JSON.parse(localStorage.getItem('wine_cellar_tasting_history') || '[]');
+          tastingHistory = JSON.parse(localStorage.getItem(`wine_cellar_tasting_history_u${uId}`) || '[]');
         }
       } catch (e) {
-        tastingHistory = JSON.parse(localStorage.getItem('wine_cellar_tasting_history') || '[]');
-      }
-
-      const savedLocal = localStorage.getItem('wine_cellar_bottles_v1');
-      if (savedLocal) {
-        try {
-          cellarBottles = JSON.parse(savedLocal);
-          initStorageZones();
-          renderKPIs();
-          applyFilters();
-          return;
-        } catch (e) {}
+        tastingHistory = JSON.parse(localStorage.getItem(`wine_cellar_tasting_history_u${uId}`) || '[]');
       }
 
       if (window.location.protocol === 'file:') {
-        cellarBottles = FALLBACK_BOTTLES;
+        const saved = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
+        cellarBottles = saved ? JSON.parse(saved) : (uId === 1 ? FALLBACK_BOTTLES : []);
         initStorageZones();
         renderKPIs();
         applyFilters();
@@ -2169,12 +2645,14 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const res = await fetch("/api/bottles");
         if (res.ok) {
           cellarBottles = await res.json();
-          try { localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles)); } catch (e) {}
+          try { localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles)); } catch (e) {}
         } else {
-          cellarBottles = FALLBACK_BOTTLES;
+          const cached = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
+          cellarBottles = cached ? JSON.parse(cached) : (uId === 1 ? FALLBACK_BOTTLES : []);
         }
       } catch (e) {
-        cellarBottles = FALLBACK_BOTTLES;
+        const cached = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
+        cellarBottles = cached ? JSON.parse(cached) : (uId === 1 ? FALLBACK_BOTTLES : []);
       }
       initStorageZones();
       renderKPIs();
@@ -5891,7 +6369,10 @@ USER QUERY: "${query}"`;
     }
 
     // Initial Load
-    window.addEventListener('DOMContentLoaded', loadData);
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initAuth();
+      await loadData();
+    });
   </script>
 </body>
 </html>

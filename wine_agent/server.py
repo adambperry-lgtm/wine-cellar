@@ -6,10 +6,10 @@ import json
 import urllib.parse
 import os
 from pathlib import Path
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, List
 from wine_agent.database import WineDatabase
 from wine_agent.agent import SommelierAgent
-from wine_agent.models import WineBottle, WineType, BottleFormat
+from wine_agent.models import WineBottle, WineType, BottleFormat, UserProfile
 
 
 WEB_DIR = Path(__file__).parent.parent / "web"
@@ -28,7 +28,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
         self.wfile.write(body)
 
@@ -36,20 +36,90 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
+
+    def _get_authenticated_user_strict(self) -> Optional[UserProfile]:
+        """Extracts strictly authenticated user from session token without falling back to default."""
+        token = None
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+
+        if not token and "Cookie" in self.headers:
+            cookie_header = self.headers.get("Cookie", "")
+            for part in cookie_header.split(";"):
+                if "=" in part:
+                    k, v = part.strip().split("=", 1)
+                    if k == "cellar_session":
+                        token = v
+                        break
+
+        if token:
+            return self.agent.db.get_user_from_session(token)
+        return None
+
+    def _get_current_user(self, params: Optional[Dict[str, List[str]]] = None) -> UserProfile:
+        """Extracts current authenticated user, defaulting to User 1 (Cellar Master) if unauthenticated."""
+        token = None
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+
+        if not token and "Cookie" in self.headers:
+            cookie_header = self.headers.get("Cookie", "")
+            for part in cookie_header.split(";"):
+                if "=" in part:
+                    k, v = part.strip().split("=", 1)
+                    if k == "cellar_session":
+                        token = v
+                        break
+
+        if not token and params and "auth_token" in params:
+            token = params["auth_token"][0]
+
+        if token:
+            user = self.agent.db.get_user_from_session(token)
+            if user:
+                return user
+
+        # Fallback to User 1 (Cellar Master) for backward compatibility
+        default_user = self.agent.db.get_user_by_id(1)
+        if default_user:
+            return default_user
+        # If DB was just initialized and user 1 lookup failed
+        users = self.agent.db.list_users()
+        return users[0] if users else UserProfile(id=1, email="cellarmaster@cellar.local", name="Cellar Master")
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         params = urllib.parse.parse_qs(parsed.query)
 
+        # ==================== Auth Routes ====================
+        if path == "/api/auth/me":
+            strict_user = self._get_authenticated_user_strict()
+            effective_user = strict_user or self.agent.db.get_user_by_id(1)
+            self._send_json({
+                "authenticated": strict_user is not None,
+                "user": effective_user.to_dict() if effective_user else None
+            })
+            return
+
+        elif path == "/api/auth/users":
+            users = self.agent.db.list_users()
+            self._send_json([u.to_dict() for u in users])
+            return
+
+        # ==================== Cellar API Routes ====================
+        current_user = self._get_current_user(params)
+
         if path == "/api/bottles":
-            bottles = self.agent.db.list_bottles(only_in_stock=False)
+            bottles = self.agent.db.list_bottles(only_in_stock=False, user_id=current_user.id)
             self._send_json([b.to_dict() for b in bottles])
+
         elif path == "/api/stats":
-            stats = self.agent.audit_cellar()
-            # serialize any bottle objects in audit
+            stats = self.agent.audit_cellar(user_id=current_user.id)
             serialized = {
                 "stats": stats["stats"],
                 "readiness_index_pct": stats["readiness_index_pct"],
@@ -59,14 +129,16 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "hold_bottles": [b.to_dict() for b in stats["hold_bottles"]]
             }
             self._send_json(serialized)
+
         elif path == "/api/history":
-            history = self.agent.db.get_consumption_history()
+            history = self.agent.db.get_consumption_history(user_id=current_user.id)
             self._send_json([r.to_dict() for r in history])
+
         elif path == "/api/recommend":
             food = params.get("food", [None])[0]
             style = params.get("style", [None])[0]
             celeb = params.get("celebratory", ["false"])[0].lower() == "true"
-            recs = self.agent.recommend_bottle(food=food, style=style, celebratory=celeb)
+            recs = self.agent.recommend_bottle(food=food, style=style, celebratory=celeb, user_id=current_user.id)
             ser_recs = []
             for r in recs:
                 ser_recs.append({
@@ -78,6 +150,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "rationale": r["rationale"]
                 })
             self._send_json(ser_recs)
+
         elif path == "/api/public-ratings":
             from wine_agent.critic_ratings import get_public_critic_ratings
             producer = params.get("producer", [""])[0]
@@ -87,10 +160,12 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             varietal = params.get("varietal", [""])[0]
             reviews = get_public_critic_ratings(producer, wine, vintage, varietal)
             self._send_json({"producer": producer, "wine": wine, "vintage": vintage, "reviews": reviews})
+
         elif path == "/api/recommend-purchases":
             query = params.get("query", [""])[0]
             purchases = self.agent.recommend_purchases(query=query)
             self._send_json(purchases)
+
         elif path == "/api/gemini/status":
             from wine_agent.gemini_sommelier import get_gemini_api_key, DEFAULT_GEMINI_MODEL
             key = get_gemini_api_key()
@@ -100,15 +175,17 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "masked_key": f"{key[:4]}...{key[-4:]}" if key and len(key) > 8 else None,
                 "api_key": key if key else None
             })
+
         elif path == "/api/gemini/test-key":
             from wine_agent.gemini_sommelier import validate_gemini_api_key
             key = params.get("key", [None])[0]
             res = validate_gemini_api_key(key)
             self._send_json(res)
+
         elif path == "/api/export-csv":
             import io
             import csv
-            bottles = self.agent.db.list_bottles(only_in_stock=False)
+            bottles = self.agent.db.list_bottles(only_in_stock=False, user_id=current_user.id)
             output = io.StringIO()
             fieldnames = [
                 "id", "producer", "wine_name", "vintage", "varietal", "region", "sub_region", "country",
@@ -149,11 +226,12 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             csv_bytes = ("\ufeff" + output.getvalue()).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/csv; charset=utf-8")
-            self.send_header("Content-Disposition", 'attachment; filename="wine_cellar_inventory.csv"')
+            self.send_header("Content-Disposition", f'attachment; filename="cellar_inventory_{current_user.name.lower().replace(" ", "_")}.csv"')
             self.send_header("Content-Length", str(len(csv_bytes)))
             self.end_headers()
             self.wfile.write(csv_bytes)
             return
+
         elif path == "/" or not path.startswith("/api"):
             # Serve index.html or static files
             if path == "/":
@@ -172,12 +250,108 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             payload = {}
 
+        # ==================== Authentication Endpoints ====================
+        if path == "/api/auth/register":
+            email = payload.get("email", "").strip()
+            password = payload.get("password", "")
+            name = payload.get("name", "").strip()
+            if not email or "@" not in email:
+                self._send_json({"error": "A valid email address is required"}, status=400)
+                return
+            if not password or len(password) < 6:
+                self._send_json({"error": "Password must be at least 6 characters long"}, status=400)
+                return
+            if self.agent.db.get_user_by_email(email):
+                self._send_json({"error": "An account with this email address already exists"}, status=400)
+                return
+            user = self.agent.db.create_user(email=email, password=password, name=name)
+            if not user:
+                self._send_json({"error": "Failed to create account"}, status=500)
+                return
+            token = self.agent.db.create_session(user.id)
+            self._send_json({
+                "success": True,
+                "token": token,
+                "user": user.to_dict(),
+                "message": f"Welcome to your private wine cellar, {user.name}!"
+            })
+            return
+
+        elif path == "/api/auth/login":
+            email = payload.get("email", "").strip()
+            password = payload.get("password", "")
+            if not email or not password:
+                self._send_json({"error": "Email and password are required"}, status=400)
+                return
+            user = self.agent.db.authenticate_user(email, password)
+            if not user:
+                self._send_json({"error": "Invalid email or password"}, status=401)
+                return
+            token = self.agent.db.create_session(user.id)
+            self._send_json({
+                "success": True,
+                "token": token,
+                "user": user.to_dict(),
+                "message": f"Welcome back, {user.name}!"
+            })
+            return
+
+        elif path == "/api/auth/google":
+            credential = payload.get("credential") or payload.get("id_token") or payload.get("token")
+            if not credential:
+                demo_email = payload.get("email", "sommelier.demo@gmail.com")
+                demo_name = payload.get("name", "Google Sommelier")
+                credential = f"demo:{demo_email}:{demo_name}"
+            user = self.agent.db.authenticate_or_create_google_user(credential)
+            if not user:
+                self._send_json({"error": "Failed to verify Google Identity credential"}, status=401)
+                return
+            token = self.agent.db.create_session(user.id)
+            self._send_json({
+                "success": True,
+                "token": token,
+                "user": user.to_dict(),
+                "message": f"Signed in with Google as {user.name}!"
+            })
+            return
+
+        elif path == "/api/auth/logout":
+            token = None
+            auth_header = self.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                token = auth_header[7:].strip()
+            if token:
+                self.agent.db.delete_session(token)
+            self._send_json({"success": True, "message": "Logged out successfully"})
+            return
+
+        elif path == "/api/auth/switch":
+            target_id = payload.get("user_id")
+            if not target_id:
+                self._send_json({"error": "user_id is required"}, status=400)
+                return
+            user = self.agent.db.get_user_by_id(int(target_id))
+            if not user:
+                self._send_json({"error": "User account not found"}, status=404)
+                return
+            token = self.agent.db.create_session(user.id)
+            self._send_json({
+                "success": True,
+                "token": token,
+                "user": user.to_dict(),
+                "message": f"Switched active account to {user.name}"
+            })
+            return
+
+        # ==================== User-Scoped Cellar Actions ====================
+        current_user = self._get_current_user()
+
         if path == "/api/parse":
             text = payload.get("text", "")
             if not text:
                 self._send_json({"error": "text field is required"}, status=400)
                 return
-            bottle = self.agent.add_from_text(text)
+            bottle = self.agent.add_from_text(text, user_id=current_user.id)
             self._send_json({"success": True, "bottle": bottle.to_dict()})
 
         elif path == "/api/scan-label":
@@ -189,9 +363,10 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             from wine_agent.natural_language import parse_wine_label
             bottle = parse_wine_label(text, default_fridge=fridge)
+            bottle.user_id = current_user.id
             if save_immediately:
-                b_id = self.agent.db.add_bottle(bottle)
-                saved = self.agent.db.get_bottle(b_id)
+                b_id = self.agent.db.add_bottle(bottle, user_id=current_user.id)
+                saved = self.agent.db.get_bottle(b_id, user_id=current_user.id)
                 self._send_json({"success": True, "bottle": (saved or bottle).to_dict(), "saved": True})
             else:
                 self._send_json({"success": True, "bottle": bottle.to_dict(), "saved": False})
@@ -213,10 +388,11 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                     location_bin=payload.get("location_bin", ""),
                     purchase_price=float(payload["purchase_price"]) if payload.get("purchase_price") else None,
                     critic_score=int(payload["critic_score"]) if payload.get("critic_score") else None,
-                    personal_notes=payload.get("personal_notes", "")
+                    personal_notes=payload.get("personal_notes", ""),
+                    user_id=current_user.id
                 )
-                b_id = self.agent.db.add_bottle(b)
-                saved = self.agent.db.get_bottle(b_id)
+                b_id = self.agent.db.add_bottle(b, user_id=current_user.id)
+                saved = self.agent.db.get_bottle(b_id, user_id=current_user.id)
                 self._send_json({"success": True, "bottle": saved.to_dict() if saved else b.to_dict()})
             except Exception as e:
                 self._send_json({"error": str(e)}, status=400)
@@ -228,7 +404,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             notes = payload.get("notes", "")
             pairing = payload.get("pairing", "")
             aging_stage = payload.get("aging_curve_stage", "")
-            rec = self.agent.log_consumption(b_id, count, rating, notes, pairing, aging_stage)
+            rec = self.agent.log_consumption(b_id, count, rating, notes, pairing, aging_stage, user_id=current_user.id)
             if rec:
                 self._send_json({"success": True, "record": rec.to_dict()})
             else:
@@ -238,7 +414,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             b_id = payload.get("bottle_id")
             count = int(payload.get("count", 1))
             notes = payload.get("notes", "")
-            rec = self.agent.log_gift(b_id, count, notes)
+            rec = self.agent.log_gift(b_id, count, notes, user_id=current_user.id)
             if rec:
                 self._send_json({"success": True, "record": rec.to_dict()})
             else:
@@ -250,16 +426,16 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             if not text:
                 self._send_json({"error": "text field is required"}, status=400)
                 return
-            bottles = self.agent.batch_add(text, default_fridge)
+            bottles = self.agent.batch_add(text, default_fridge, user_id=current_user.id)
             self._send_json({"success": True, "count": len(bottles), "bottles": [b.to_dict() for b in bottles]})
 
         elif path == "/api/clear":
-            self.agent.db.clear_cellar()
-            self._send_json({"success": True, "message": "Cellar cleared"})
+            self.agent.db.clear_cellar(user_id=current_user.id)
+            self._send_json({"success": True, "message": f"Cellar cleared for {current_user.name}"})
 
         elif path == "/api/enrich-all-ratings":
             from wine_agent.critic_ratings import get_public_critic_ratings
-            bottles = self.agent.db.list_bottles(only_in_stock=False)
+            bottles = self.agent.db.list_bottles(only_in_stock=False, user_id=current_user.id)
             enriched_count = 0
             for b in bottles:
                 if not b.critic_reviews:
@@ -270,7 +446,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                             scores = [x["score"] for x in revs if isinstance(x.get("score"), (int, float))]
                             if scores:
                                 b.critic_score = max(scores)
-                        self.agent.db.update_bottle(b)
+                        self.agent.db.update_bottle(b, user_id=current_user.id)
                         enriched_count += 1
             self._send_json({"success": True, "enriched_count": enriched_count})
 
@@ -280,7 +456,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             if not old_loc or not new_loc:
                 self._send_json({"error": "old_location and new_location are required"}, status=400)
                 return
-            count = self.agent.db.rename_location(old_loc, new_loc)
+            count = self.agent.db.rename_location(old_loc, new_loc, user_id=current_user.id)
             self._send_json({"success": True, "updated_count": count})
 
         elif path == "/api/clear-location":
@@ -288,7 +464,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             if not loc:
                 self._send_json({"error": "location is required"}, status=400)
                 return
-            count = self.agent.db.clear_location(loc)
+            count = self.agent.db.clear_location(loc, user_id=current_user.id)
             self._send_json({"success": True, "deleted_count": count})
 
         elif path in ("/api/delete", "/api/remove"):
@@ -296,12 +472,12 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             if not b_id:
                 self._send_json({"error": "bottle_id is required"}, status=400)
                 return
-            success = self.agent.db.delete_bottle(int(b_id))
+            success = self.agent.db.delete_bottle(int(b_id), user_id=current_user.id)
             self._send_json({"success": success})
 
         elif path == "/api/seed":
-            self.agent.db.seed_sample_collection()
-            self._send_json({"success": True, "message": "Seeded collection"})
+            self.agent.db.seed_sample_collection(user_id=current_user.id)
+            self._send_json({"success": True, "message": f"Seeded collection for {current_user.name}"})
 
         elif path == "/api/import-csv":
             csv_content = payload.get("csv_text", "")
@@ -310,7 +486,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self._send_json({"error": "csv_text is required"}, status=400)
                 return
             if mode == "replace":
-                self.agent.db.clear_cellar()
+                self.agent.db.clear_cellar(user_id=current_user.id)
             import io
             import csv
             reader = csv.DictReader(io.StringIO(csv_content))
@@ -347,10 +523,11 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                     location_bin=bin_loc,
                     purchase_price=price,
                     user_rating=u_rating,
-                    personal_notes=notes
+                    personal_notes=notes,
+                    user_id=current_user.id
                 )
-                b_id = self.agent.db.add_bottle(b)
-                saved = self.agent.db.get_bottle(b_id)
+                b_id = self.agent.db.add_bottle(b, user_id=current_user.id)
+                saved = self.agent.db.get_bottle(b_id, user_id=current_user.id)
                 imported_bottles.append(saved or b)
 
             self._send_json({"success": True, "count": len(imported_bottles), "bottles": [b.to_dict() for b in imported_bottles]})
@@ -365,7 +542,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             if not query:
                 self._send_json({"error": "query parameter is required"}, status=400)
                 return
-            bottles = self.agent.db.list_bottles(only_in_stock=True)
+            bottles = self.agent.db.list_bottles(only_in_stock=True, user_id=current_user.id)
             result = ask_gemini_sommelier(query, bottles, api_key=api_key, model=model, mode=mode, history=history)
             self._send_json(result)
 
@@ -400,9 +577,9 @@ def run_server(port: int = 8000, db_path: Optional[str] = None):
     agent = SommelierAgent(db)
     WineRequestHandler.agent = agent
 
-    # Ensure DB has at least sample data if completely empty
-    if not agent.db.list_bottles(only_in_stock=False):
-        agent.db.seed_sample_collection()
+    # Ensure DB has at least sample data for User 1 if completely empty
+    if not agent.db.list_bottles(only_in_stock=False, user_id=1):
+        agent.db.seed_sample_collection(user_id=1)
 
     handler = WineRequestHandler
     socketserver.TCPServer.allow_reuse_address = True

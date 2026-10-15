@@ -35,10 +35,10 @@ class SommelierAgent:
     def __init__(self, db: Optional[WineDatabase] = None):
         self.db = db or WineDatabase()
 
-    def audit_cellar(self) -> Dict[str, Any]:
+    def audit_cellar(self, user_id: Optional[int] = 1) -> Dict[str, Any]:
         """Performs a comprehensive cellar audit analyzing maturity, risks, and organization."""
-        stats = self.db.get_cellar_stats()
-        all_bottles = self.db.list_bottles(only_in_stock=True)
+        stats = self.db.get_cellar_stats(user_id=user_id)
+        all_bottles = self.db.list_bottles(only_in_stock=True, user_id=user_id)
 
         urgent_bottles = [
             b for b in all_bottles
@@ -92,10 +92,11 @@ class SommelierAgent:
         food: Optional[str] = None,
         style: Optional[str] = None,
         celebratory: bool = False,
-        must_be_peak: bool = True
+        must_be_peak: bool = True,
+        user_id: Optional[int] = 1
     ) -> List[Dict[str, Any]]:
         """Finds the best bottle(s) in the cellar matching dining occasion or mood."""
-        bottles = self.db.list_bottles(only_in_stock=True)
+        bottles = self.db.list_bottles(only_in_stock=True, user_id=user_id)
         scored_candidates = []
 
         food_targets = []
@@ -414,35 +415,38 @@ class SommelierAgent:
             "recommendations": [s[1] for s in scored[:4]]
         }
 
-    def add_from_text(self, natural_text: str) -> WineBottle:
-        """Parses natural language and commits new bottle to database."""
+    def add_from_text(self, natural_text: str, user_id: Optional[int] = 1) -> WineBottle:
+        """Parses natural language and commits new bottle to database for the user."""
         bottle = parse_wine_natural_language(natural_text)
-        new_id = self.db.add_bottle(bottle)
-        saved = self.db.get_bottle(new_id)
+        bottle.user_id = user_id or 1
+        new_id = self.db.add_bottle(bottle, user_id=user_id)
+        saved = self.db.get_bottle(new_id, user_id=user_id)
         return saved or bottle
 
-    def add_from_label(self, label_text: str, default_fridge: str = "Basement Fridge") -> WineBottle:
-        """Parses raw OCR text from a wine label photo and commits new bottle to database."""
+    def add_from_label(self, label_text: str, default_fridge: str = "Basement Fridge", user_id: Optional[int] = 1) -> WineBottle:
+        """Parses raw OCR text from a wine label photo and commits new bottle to database for the user."""
         from wine_agent.natural_language import parse_wine_label
         bottle = parse_wine_label(label_text, default_fridge=default_fridge)
-        new_id = self.db.add_bottle(bottle)
-        saved = self.db.get_bottle(new_id)
+        bottle.user_id = user_id or 1
+        new_id = self.db.add_bottle(bottle, user_id=user_id)
+        saved = self.db.get_bottle(new_id, user_id=user_id)
         return saved or bottle
 
-    def batch_add(self, text: str, default_fridge: str = "Fridge 1") -> List[WineBottle]:
-        """Parses a multi-line list of bottles and commits them all to the database."""
+    def batch_add(self, text: str, default_fridge: str = "Fridge 1", user_id: Optional[int] = 1) -> List[WineBottle]:
+        """Parses a multi-line list of bottles and commits them all to the database for the user."""
         from wine_agent.natural_language import parse_batch_wines
         parsed_list = parse_batch_wines(text, default_fridge)
         saved_list = []
         for b in parsed_list:
-            b_id = self.db.add_bottle(b)
-            saved = self.db.get_bottle(b_id)
+            b.user_id = user_id or 1
+            b_id = self.db.add_bottle(b, user_id=user_id)
+            saved = self.db.get_bottle(b_id, user_id=user_id)
             saved_list.append(saved or b)
         return saved_list
 
-    def get_fridge_breakdown(self) -> Dict[str, Any]:
+    def get_fridge_breakdown(self, user_id: Optional[int] = 1) -> Dict[str, Any]:
         """Groups bottles into intuitive categories: Ready Now vs Needs to Age, organized by fridge."""
-        bottles = self.db.list_bottles(only_in_stock=True)
+        bottles = self.db.list_bottles(only_in_stock=True, user_id=user_id)
         ready_now = []      # In Peak Window
         drink_soon = []     # Late Peak / Drink Soon
         approaching = []    # Approaching peak (can drink with decanting)
@@ -482,16 +486,18 @@ class SommelierAgent:
         rating: Optional[float] = None,
         notes: str = "",
         pairing: str = "",
-        aging_curve_stage: Optional[str] = None
+        aging_curve_stage: Optional[str] = None,
+        user_id: Optional[int] = None
     ) -> Optional[ConsumptionRecord]:
         """Logs a bottle consumption and updates inventory."""
-        return self.db.consume_bottle(bottle_id, count, rating, notes, pairing, aging_curve_stage)
+        return self.db.consume_bottle(bottle_id, count, rating, notes, pairing, aging_curve_stage, user_id=user_id)
 
     def log_gift(
         self,
         bottle_id: int,
         count: int = 1,
-        situation_notes: str = ""
+        situation_notes: str = "",
+        user_id: Optional[int] = None
     ) -> Optional[ConsumptionRecord]:
         """Logs a bottle gift removal and updates inventory without rating or tasting notes."""
-        return self.db.gift_bottle(bottle_id, count, situation_notes)
+        return self.db.gift_bottle(bottle_id, count, situation_notes, user_id=user_id)

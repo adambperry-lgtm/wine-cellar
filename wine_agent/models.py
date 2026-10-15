@@ -76,6 +76,7 @@ class WineBottle:
     food_pairings: List[str] = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     drinking_window: Optional[DrinkingWindow] = None
+    user_id: Optional[int] = 1
 
     def to_dict(self) -> Dict[str, Any]:
         res = asdict(self)
@@ -106,6 +107,28 @@ class ConsumptionRecord:
     bottles_consumed: int = 1
     aging_curve_stage: str = ""
     action_type: str = "opened"
+    user_id: Optional[int] = 1
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
+
+
+@dataclass
+class UserProfile:
+    id: int
+    email: str
+    name: str = ""
+    avatar_url: str = ""
+    created_at: str = ""
+    google_id: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "email": self.email,
+            "name": self.name or self.email.split("@")[0].title(),
+            "avatar_url": self.avatar_url or "",
+            "has_google": bool(self.google_id),
+            "created_at": self.created_at
+        }
+

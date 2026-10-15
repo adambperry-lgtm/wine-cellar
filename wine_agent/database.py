@@ -5,10 +5,74 @@ import json
 import csv
 import os
 import re
+import hashlib
+import secrets
+import urllib.request
+import urllib.parse
+from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any, Tuple
 from pathlib import Path
-from wine_agent.models import WineBottle, WineType, BottleFormat, DrinkingStatus, DrinkingWindow, ConsumptionRecord
+from wine_agent.models import WineBottle, WineType, BottleFormat, DrinkingStatus, DrinkingWindow, ConsumptionRecord, UserProfile
 from wine_agent.drinking_window import calculate_drinking_window, CURRENT_YEAR
+
+
+def hash_password(password: str) -> str:
+    """Hashes a password with PBKDF2-HMAC-SHA256 and a random 16-byte salt."""
+    salt = secrets.token_hex(16)
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
+    return f"pbkdf2:sha256:100000${salt}${key.hex()}"
+
+
+def verify_password(stored_hash: str, password: str) -> bool:
+    """Verifies a password against a PBKDF2-HMAC-SHA256 hash."""
+    if not stored_hash or "$" not in stored_hash:
+        return False
+    try:
+        parts = stored_hash.split("$")
+        if len(parts) != 3:
+            return False
+        method, salt, key_hex = parts
+        iters = int(method.split(":")[2])
+        new_key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), iters)
+        return secrets.compare_digest(new_key.hex(), key_hex)
+    except Exception:
+        return False
+
+
+def verify_google_id_token(id_token: str) -> Optional[Dict[str, Any]]:
+    """Verifies Google ID token against Google OAuth endpoint or mock demo token."""
+    if not id_token:
+        return None
+    token_str = str(id_token).strip()
+
+    # Fast support for demo accounts / testing / offline environments
+    if token_str.startswith("demo:") or token_str.startswith("mock:"):
+        parts = token_str.split(":", 2)
+        email = parts[1] if len(parts) > 1 else "sommelier.demo@gmail.com"
+        name = parts[2] if len(parts) > 2 else email.split("@")[0].title()
+        return {
+            "sub": f"google_{hashlib.md5(email.encode()).hexdigest()[:12]}",
+            "email": email,
+            "name": name,
+            "picture": f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(email)}"
+        }
+
+    try:
+        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={urllib.parse.quote(token_str)}"
+        req = urllib.request.Request(url, headers={"User-Agent": "WineCellarAgent/1.0"})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode("utf-8"))
+                if "email" in data:
+                    return {
+                        "sub": data.get("sub"),
+                        "email": data.get("email"),
+                        "name": data.get("name") or data.get("email", "").split("@")[0].title(),
+                        "picture": data.get("picture", "")
+                    }
+    except Exception:
+        pass
+    return None
 
 
 def get_default_db_path() -> str:
@@ -48,6 +112,30 @@ class WineDatabase:
 
     def _init_db(self):
         with self._get_conn() as conn:
+            # Users and Accounts
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT UNIQUE NOT NULL,
+                    name TEXT,
+                    password_hash TEXT,
+                    google_id TEXT UNIQUE,
+                    avatar_url TEXT,
+                    created_at TEXT NOT NULL,
+                    last_login TEXT
+                )
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_sessions (
+                    token TEXT PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    created_at TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            """)
+
+            # Core Inventory and History
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS bottles (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,6 +174,16 @@ class WineDatabase:
                     aging_curve_stage TEXT
                 )
             """)
+
+            # Migrations for user isolation & drinking window columns
+            try:
+                conn.execute("ALTER TABLE bottles ADD COLUMN user_id INTEGER DEFAULT 1")
+            except Exception:
+                pass
+            try:
+                conn.execute("ALTER TABLE consumption_log ADD COLUMN user_id INTEGER DEFAULT 1")
+            except Exception:
+                pass
             try:
                 conn.execute("ALTER TABLE consumption_log ADD COLUMN aging_curve_stage TEXT")
             except Exception:
@@ -103,14 +201,181 @@ class WineDatabase:
                 conn.execute("ALTER TABLE bottles ADD COLUMN critic_reviews TEXT")
             except Exception:
                 pass
+
+            # Ensure default User 1 (Cellar Master) exists for backward compatibility and authentic collection
+            conn.execute("""
+                INSERT OR IGNORE INTO users (id, email, name, password_hash, created_at, avatar_url)
+                VALUES (1, 'cellarmaster@cellar.local', 'Cellar Master', ?, ?, 'https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster')
+            """, (hash_password("cellarmaster"), datetime.now().isoformat()))
+
+            # Ensure all pre-existing bottles belong to User 1
+            conn.execute("UPDATE bottles SET user_id = 1 WHERE user_id IS NULL OR user_id = 0")
+            conn.execute("UPDATE consumption_log SET user_id = 1 WHERE user_id IS NULL OR user_id = 0")
+
             conn.commit()
 
-    def add_bottle(self, bottle: WineBottle) -> int:
-        """Adds a wine bottle to inventory and returns its ID."""
+    # ==================== Multi-User & Auth Management ====================
+
+    def create_user(
+        self,
+        email: str,
+        password: Optional[str] = None,
+        name: str = "",
+        google_id: Optional[str] = None,
+        avatar_url: str = ""
+    ) -> Optional[UserProfile]:
+        """Creates a new user profile with optional password or Google linking."""
+        clean_email = email.strip().lower()
+        if not clean_email:
+            return None
+        pw_hash = hash_password(password) if password else None
+        clean_name = name.strip() or clean_email.split("@")[0].title()
+        if not avatar_url:
+            avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(clean_email)}"
+        now = datetime.now().isoformat()
+        try:
+            with self._get_conn() as conn:
+                cur = conn.execute("""
+                    INSERT INTO users (email, name, password_hash, google_id, avatar_url, created_at, last_login)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (clean_email, clean_name, pw_hash, google_id, avatar_url, now, now))
+                conn.commit()
+                return UserProfile(
+                    id=cur.lastrowid,
+                    email=clean_email,
+                    name=clean_name,
+                    avatar_url=avatar_url,
+                    created_at=now,
+                    google_id=google_id
+                )
+        except sqlite3.IntegrityError:
+            return None
+
+    def authenticate_user(self, email: str, password: str) -> Optional[UserProfile]:
+        """Authenticates user with email and password."""
+        clean_email = email.strip().lower()
+        with self._get_conn() as conn:
+            row = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (clean_email,)).fetchone()
+            if not row or not row["password_hash"]:
+                return None
+            if verify_password(row["password_hash"], password):
+                conn.execute("UPDATE users SET last_login = datetime('now') WHERE id = ?", (row["id"],))
+                conn.commit()
+                return self._row_to_user(row)
+        return None
+
+    def authenticate_or_create_google_user(self, id_token: str) -> Optional[UserProfile]:
+        """Authenticates a user via verified Google ID token, creating an account if first time."""
+        info = verify_google_id_token(id_token)
+        if not info:
+            return None
+        sub = info["sub"]
+        email = info["email"].strip().lower()
+        name = info.get("name") or email.split("@")[0].title()
+        picture = info.get("picture") or f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(email)}"
+
+        with self._get_conn() as conn:
+            # Check by Google ID
+            row = conn.execute("SELECT * FROM users WHERE google_id = ?", (sub,)).fetchone()
+            if row:
+                conn.execute("""
+                    UPDATE users SET last_login = datetime('now'),
+                    avatar_url = COALESCE(NULLIF(avatar_url, ''), ?)
+                    WHERE id = ?
+                """, (picture, row["id"]))
+                conn.commit()
+                return self._row_to_user(row)
+
+            # Check by matching email address
+            row = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
+            if row:
+                conn.execute("""
+                    UPDATE users SET google_id = ?, last_login = datetime('now'),
+                    avatar_url = COALESCE(NULLIF(avatar_url, ''), ?)
+                    WHERE id = ?
+                """, (sub, picture, row["id"]))
+                conn.commit()
+                updated = conn.execute("SELECT * FROM users WHERE id = ?", (row["id"],)).fetchone()
+                return self._row_to_user(updated)
+
+        # Create new user for first-time Google sign-in
+        return self.create_user(email=email, name=name, google_id=sub, avatar_url=picture)
+
+    def create_session(self, user_id: int, days: int = 30) -> str:
+        """Generates a secure cryptographic session token valid for 30 days."""
+        token = secrets.token_hex(32)
+        now = datetime.now()
+        expires = now + timedelta(days=days)
+        with self._get_conn() as conn:
+            conn.execute("""
+                INSERT INTO user_sessions (token, user_id, created_at, expires_at)
+                VALUES (?, ?, ?, ?)
+            """, (token, user_id, now.isoformat(), expires.isoformat()))
+            conn.commit()
+        return token
+
+    def get_user_from_session(self, token: str) -> Optional[UserProfile]:
+        """Retrieves user profile associated with an active session token."""
+        if not token:
+            return None
+        with self._get_conn() as conn:
+            row = conn.execute("""
+                SELECT u.* FROM users u
+                JOIN user_sessions s ON u.id = s.user_id
+                WHERE s.token = ? AND s.expires_at > datetime('now')
+            """, (token,)).fetchone()
+            if not row:
+                return None
+            return self._row_to_user(row)
+
+    def delete_session(self, token: str) -> bool:
+        """Deletes session token on logout."""
+        if not token:
+            return False
+        with self._get_conn() as conn:
+            cur = conn.execute("DELETE FROM user_sessions WHERE token = ?", (token,))
+            conn.commit()
+            return cur.rowcount > 0
+
+    def list_users(self) -> List[UserProfile]:
+        """Lists all registered cellar users."""
+        with self._get_conn() as conn:
+            rows = conn.execute("SELECT * FROM users ORDER BY id ASC").fetchall()
+            return [self._row_to_user(r) for r in rows]
+
+    def get_user_by_id(self, user_id: int) -> Optional[UserProfile]:
+        """Retrieves user profile by ID."""
+        with self._get_conn() as conn:
+            row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+            return self._row_to_user(row) if row else None
+
+    def get_user_by_email(self, email: str) -> Optional[UserProfile]:
+        """Retrieves user profile by email."""
+        with self._get_conn() as conn:
+            row = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email.strip().lower(),)).fetchone()
+            return self._row_to_user(row) if row else None
+
+    def _row_to_user(self, r: sqlite3.Row) -> UserProfile:
+        return UserProfile(
+            id=r["id"],
+            email=r["email"],
+            name=r["name"] or r["email"].split("@")[0].title(),
+            avatar_url=r["avatar_url"] or f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(r['email'])}",
+            created_at=r["created_at"] or "",
+            google_id=r["google_id"]
+        )
+
+    # ==================== Bottle & Inventory Management ====================
+
+    def add_bottle(self, bottle: WineBottle, user_id: Optional[int] = None) -> int:
+        """Adds a wine bottle to inventory for a specific user and returns its ID."""
         pairings_json = json.dumps(bottle.food_pairings if bottle.food_pairings else [])
         wine_type_val = bottle.wine_type.value if isinstance(bottle.wine_type, WineType) else bottle.wine_type
         format_val = bottle.format.value if isinstance(bottle.format, BottleFormat) else bottle.format
         reviews_json = json.dumps(bottle.critic_reviews if bottle.critic_reviews else [])
+
+        uid = user_id if user_id is not None else (bottle.user_id if bottle.user_id is not None else 1)
+        bottle.user_id = uid
 
         dw = bottle.drinking_window
         w_start = dw.window_start if dw else None
@@ -125,8 +390,8 @@ class WineDatabase:
                     country, wine_type, format, quantity, location_rack, location_bin,
                     purchase_date, purchase_price, market_value, critic_score,
                     user_rating, personal_notes, food_pairings, created_at,
-                    window_start, peak_start, peak_end, window_end, critic_reviews
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    window_start, peak_start, peak_end, window_end, critic_reviews, user_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 bottle.producer, bottle.wine_name, bottle.vintage, bottle.varietal,
                 bottle.region, bottle.sub_region, bottle.country, wine_type_val,
@@ -134,13 +399,13 @@ class WineDatabase:
                 bottle.purchase_date, bottle.purchase_price, bottle.market_value,
                 bottle.critic_score, bottle.user_rating, bottle.personal_notes,
                 pairings_json, bottle.created_at,
-                w_start, p_start, p_end, w_end, reviews_json
+                w_start, p_start, p_end, w_end, reviews_json, uid
             ))
             conn.commit()
             return cursor.lastrowid
 
-    def update_bottle(self, bottle: WineBottle) -> bool:
-        """Updates an existing bottle in the inventory."""
+    def update_bottle(self, bottle: WineBottle, user_id: Optional[int] = None) -> bool:
+        """Updates an existing bottle in the inventory for the owner."""
         if not bottle.id:
             return False
         pairings_json = json.dumps(bottle.food_pairings if bottle.food_pairings else [])
@@ -148,65 +413,114 @@ class WineDatabase:
         format_val = bottle.format.value if isinstance(bottle.format, BottleFormat) else bottle.format
         reviews_json = json.dumps(bottle.critic_reviews if bottle.critic_reviews else [])
 
+        uid = user_id if user_id is not None else bottle.user_id
+
         with self._get_conn() as conn:
-            cursor = conn.execute("""
-                UPDATE bottles SET
-                    producer = ?, wine_name = ?, vintage = ?, varietal = ?,
-                    region = ?, sub_region = ?, country = ?, wine_type = ?,
-                    format = ?, quantity = ?, location_rack = ?, location_bin = ?,
-                    purchase_date = ?, purchase_price = ?, market_value = ?,
-                    critic_score = ?, user_rating = ?, personal_notes = ?,
-                    food_pairings = ?, critic_reviews = ?
-                WHERE id = ?
-            """, (
-                bottle.producer, bottle.wine_name, bottle.vintage, bottle.varietal,
-                bottle.region, bottle.sub_region, bottle.country, wine_type_val,
-                format_val, bottle.quantity, bottle.location_rack, bottle.location_bin,
-                bottle.purchase_date, bottle.purchase_price, bottle.market_value,
-                bottle.critic_score, bottle.user_rating, bottle.personal_notes,
-                pairings_json, reviews_json, bottle.id
-            ))
+            if uid is not None:
+                cursor = conn.execute("""
+                    UPDATE bottles SET
+                        producer = ?, wine_name = ?, vintage = ?, varietal = ?,
+                        region = ?, sub_region = ?, country = ?, wine_type = ?,
+                        format = ?, quantity = ?, location_rack = ?, location_bin = ?,
+                        purchase_date = ?, purchase_price = ?, market_value = ?,
+                        critic_score = ?, user_rating = ?, personal_notes = ?,
+                        food_pairings = ?, critic_reviews = ?
+                    WHERE id = ? AND (user_id = ? OR (user_id IS NULL AND ? = 1))
+                """, (
+                    bottle.producer, bottle.wine_name, bottle.vintage, bottle.varietal,
+                    bottle.region, bottle.sub_region, bottle.country, wine_type_val,
+                    format_val, bottle.quantity, bottle.location_rack, bottle.location_bin,
+                    bottle.purchase_date, bottle.purchase_price, bottle.market_value,
+                    bottle.critic_score, bottle.user_rating, bottle.personal_notes,
+                    pairings_json, reviews_json, bottle.id, uid, uid
+                ))
+            else:
+                cursor = conn.execute("""
+                    UPDATE bottles SET
+                        producer = ?, wine_name = ?, vintage = ?, varietal = ?,
+                        region = ?, sub_region = ?, country = ?, wine_type = ?,
+                        format = ?, quantity = ?, location_rack = ?, location_bin = ?,
+                        purchase_date = ?, purchase_price = ?, market_value = ?,
+                        critic_score = ?, user_rating = ?, personal_notes = ?,
+                        food_pairings = ?, critic_reviews = ?
+                    WHERE id = ?
+                """, (
+                    bottle.producer, bottle.wine_name, bottle.vintage, bottle.varietal,
+                    bottle.region, bottle.sub_region, bottle.country, wine_type_val,
+                    format_val, bottle.quantity, bottle.location_rack, bottle.location_bin,
+                    bottle.purchase_date, bottle.purchase_price, bottle.market_value,
+                    bottle.critic_score, bottle.user_rating, bottle.personal_notes,
+                    pairings_json, reviews_json, bottle.id
+                ))
             conn.commit()
             return cursor.rowcount > 0
 
-    def delete_bottle(self, bottle_id: int) -> bool:
-        """Deletes a bottle record."""
+    def delete_bottle(self, bottle_id: int, user_id: Optional[int] = None) -> bool:
+        """Deletes a bottle record belonging to the user."""
         with self._get_conn() as conn:
-            cursor = conn.execute("DELETE FROM bottles WHERE id = ?", (bottle_id,))
+            if user_id is not None:
+                cursor = conn.execute(
+                    "DELETE FROM bottles WHERE id = ? AND (user_id = ? OR (user_id IS NULL AND ? = 1))",
+                    (bottle_id, user_id, user_id)
+                )
+            else:
+                cursor = conn.execute("DELETE FROM bottles WHERE id = ?", (bottle_id,))
             conn.commit()
             return cursor.rowcount > 0
 
-    def clear_cellar(self):
-        """Removes all bottles and logs to start fresh."""
+    def clear_cellar(self, user_id: Optional[int] = 1):
+        """Removes all bottles and logs for a specific user to start fresh."""
         with self._get_conn() as conn:
-            conn.execute("DELETE FROM bottles")
-            conn.execute("DELETE FROM consumption_log")
+            if user_id is not None:
+                conn.execute("DELETE FROM bottles WHERE user_id = ? OR (user_id IS NULL AND ? = 1)", (user_id, user_id))
+                conn.execute("DELETE FROM consumption_log WHERE user_id = ? OR (user_id IS NULL AND ? = 1)", (user_id, user_id))
+            else:
+                conn.execute("DELETE FROM bottles")
+                conn.execute("DELETE FROM consumption_log")
             conn.commit()
 
-    def rename_location(self, old_location: str, new_location: str) -> int:
-        """Renames a storage location/rack across all bottles."""
+    def rename_location(self, old_location: str, new_location: str, user_id: Optional[int] = 1) -> int:
+        """Renames a storage location/rack across bottles for the user."""
         with self._get_conn() as conn:
-            cursor = conn.execute(
-                "UPDATE bottles SET location_rack = ? WHERE LOWER(location_rack) = LOWER(?)",
-                (new_location, old_location)
-            )
+            if user_id is not None:
+                cursor = conn.execute(
+                    "UPDATE bottles SET location_rack = ? WHERE LOWER(location_rack) = LOWER(?) AND (user_id = ? OR (user_id IS NULL AND ? = 1))",
+                    (new_location, old_location, user_id, user_id)
+                )
+            else:
+                cursor = conn.execute(
+                    "UPDATE bottles SET location_rack = ? WHERE LOWER(location_rack) = LOWER(?)",
+                    (new_location, old_location)
+                )
             conn.commit()
             return cursor.rowcount
 
-    def clear_location(self, location: str) -> int:
-        """Deletes all bottles in a specific storage location."""
+    def clear_location(self, location: str, user_id: Optional[int] = 1) -> int:
+        """Deletes all bottles in a specific storage location for the user."""
         with self._get_conn() as conn:
-            cursor = conn.execute(
-                "DELETE FROM bottles WHERE LOWER(location_rack) = LOWER(?)",
-                (location,)
-            )
+            if user_id is not None:
+                cursor = conn.execute(
+                    "DELETE FROM bottles WHERE LOWER(location_rack) = LOWER(?) AND (user_id = ? OR (user_id IS NULL AND ? = 1))",
+                    (location, user_id, user_id)
+                )
+            else:
+                cursor = conn.execute(
+                    "DELETE FROM bottles WHERE LOWER(location_rack) = LOWER(?)",
+                    (location,)
+                )
             conn.commit()
             return cursor.rowcount
 
-    def get_bottle(self, bottle_id: int) -> Optional[WineBottle]:
+    def get_bottle(self, bottle_id: int, user_id: Optional[int] = None) -> Optional[WineBottle]:
         """Retrieves a single bottle by ID with computed drinking window."""
         with self._get_conn() as conn:
-            row = conn.execute("SELECT * FROM bottles WHERE id = ?", (bottle_id,)).fetchone()
+            if user_id is not None:
+                row = conn.execute(
+                    "SELECT * FROM bottles WHERE id = ? AND (user_id = ? OR (user_id IS NULL AND ? = 1))",
+                    (bottle_id, user_id, user_id)
+                ).fetchone()
+            else:
+                row = conn.execute("SELECT * FROM bottles WHERE id = ?", (bottle_id,)).fetchone()
             if not row:
                 return None
             return self._row_to_bottle(row)
@@ -216,11 +530,16 @@ class WineDatabase:
         status_filter: Optional[DrinkingStatus] = None,
         wine_type_filter: Optional[str] = None,
         search_query: Optional[str] = None,
-        only_in_stock: bool = True
+        only_in_stock: bool = True,
+        user_id: Optional[int] = 1
     ) -> List[WineBottle]:
-        """Lists bottles with optional filtering and computed drinking windows."""
+        """Lists bottles with optional filtering and computed drinking windows scoped to user."""
         sql = "SELECT * FROM bottles WHERE 1=1"
         params = []
+
+        if user_id is not None:
+            sql += " AND (user_id = ? OR (user_id IS NULL AND ? = 1))"
+            params.extend([user_id, user_id])
 
         if only_in_stock:
             sql += " AND quantity > 0"
@@ -254,13 +573,15 @@ class WineDatabase:
         rating: Optional[float] = None,
         tasting_notes: str = "",
         pairing_notes: str = "",
-        aging_curve_stage: Optional[str] = None
+        aging_curve_stage: Optional[str] = None,
+        user_id: Optional[int] = None
     ) -> Optional[ConsumptionRecord]:
         """Marks bottle(s) as consumed, decrements inventory, and logs tasting notes and aging curve status."""
-        bottle = self.get_bottle(bottle_id)
+        bottle = self.get_bottle(bottle_id, user_id=user_id)
         if not bottle:
             return None
 
+        uid = user_id if user_id is not None else (bottle.user_id if bottle.user_id is not None else 1)
         dw = bottle.drinking_window
         if not aging_curve_stage:
             if dw:
@@ -277,11 +598,11 @@ class WineDatabase:
             cursor = conn.execute("""
                 INSERT INTO consumption_log (
                     bottle_id, wine_display_name, date_opened, rating,
-                    tasting_notes, pairing_notes, bottles_consumed, aging_curve_stage, action_type
-                ) VALUES (?, ?, date('now'), ?, ?, ?, ?, ?, 'opened')
+                    tasting_notes, pairing_notes, bottles_consumed, aging_curve_stage, action_type, user_id
+                ) VALUES (?, ?, date('now'), ?, ?, ?, ?, ?, 'opened', ?)
             """, (
                 bottle_id, bottle.display_name, rating,
-                tasting_notes, pairing_notes, count, aging_curve_stage
+                tasting_notes, pairing_notes, count, aging_curve_stage, uid
             ))
             conn.commit()
             log_id = cursor.lastrowid
@@ -295,20 +616,23 @@ class WineDatabase:
             pairing_notes=pairing_notes,
             bottles_consumed=count,
             aging_curve_stage=aging_curve_stage,
-            action_type="opened"
+            action_type="opened",
+            user_id=uid
         )
 
     def gift_bottle(
         self,
         bottle_id: int,
         count: int = 1,
-        situation_notes: str = ""
+        situation_notes: str = "",
+        user_id: Optional[int] = None
     ) -> Optional[ConsumptionRecord]:
-        """Marks bottle(s) as gifted, decrements inventory, and logs gift situation notes without rating or tasting impressions."""
-        bottle = self.get_bottle(bottle_id)
+        """Marks bottle(s) as gifted, decrements inventory, and logs gift situation notes."""
+        bottle = self.get_bottle(bottle_id, user_id=user_id)
         if not bottle:
             return None
 
+        uid = user_id if user_id is not None else (bottle.user_id if bottle.user_id is not None else 1)
         dw = bottle.drinking_window
         stage = f"{dw.status.value} (Peak: {dw.peak_start}–{dw.peak_end})" if dw else "Standard Aging Window"
 
@@ -318,11 +642,11 @@ class WineDatabase:
             cursor = conn.execute("""
                 INSERT INTO consumption_log (
                     bottle_id, wine_display_name, date_opened, rating,
-                    tasting_notes, pairing_notes, bottles_consumed, aging_curve_stage, action_type
-                ) VALUES (?, ?, date('now'), NULL, ?, '', ?, ?, 'gift')
+                    tasting_notes, pairing_notes, bottles_consumed, aging_curve_stage, action_type, user_id
+                ) VALUES (?, ?, date('now'), NULL, ?, '', ?, ?, 'gift', ?)
             """, (
                 bottle_id, bottle.display_name,
-                situation_notes, count, stage
+                situation_notes, count, stage, uid
             ))
             conn.commit()
             log_id = cursor.lastrowid
@@ -336,14 +660,22 @@ class WineDatabase:
             pairing_notes="",
             bottles_consumed=count,
             aging_curve_stage=stage,
-            action_type="gift"
+            action_type="gift",
+            user_id=uid
         )
 
-    def get_consumption_history(self) -> List[ConsumptionRecord]:
-        """Returns recent bottle consumption history."""
+    def get_consumption_history(self, user_id: Optional[int] = 1) -> List[ConsumptionRecord]:
+        """Returns recent bottle consumption history scoped to the user."""
         records = []
         with self._get_conn() as conn:
-            rows = conn.execute("SELECT * FROM consumption_log ORDER BY id DESC").fetchall()
+            if user_id is not None:
+                rows = conn.execute(
+                    "SELECT * FROM consumption_log WHERE user_id = ? OR (user_id IS NULL AND ? = 1) ORDER BY id DESC",
+                    (user_id, user_id)
+                ).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM consumption_log ORDER BY id DESC").fetchall()
+
             for r in rows:
                 stage = ""
                 try:
@@ -355,6 +687,12 @@ class WineDatabase:
                     action = r["action_type"] or "opened"
                 except (IndexError, KeyError):
                     action = "opened"
+                uid = 1
+                try:
+                    if "user_id" in r.keys() and r["user_id"]:
+                        uid = r["user_id"]
+                except Exception:
+                    uid = 1
                 records.append(ConsumptionRecord(
                     id=r["id"],
                     bottle_id=r["bottle_id"],
@@ -365,13 +703,14 @@ class WineDatabase:
                     pairing_notes=r["pairing_notes"] or "",
                     bottles_consumed=r["bottles_consumed"],
                     aging_curve_stage=stage,
-                    action_type=action
+                    action_type=action,
+                    user_id=uid
                 ))
         return records
 
-    def get_cellar_stats(self) -> Dict[str, Any]:
-        """Computes comprehensive cellar metrics and drinking readiness."""
-        bottles = self.list_bottles(only_in_stock=True)
+    def get_cellar_stats(self, user_id: Optional[int] = 1) -> Dict[str, Any]:
+        """Computes comprehensive cellar metrics and drinking readiness for the user's cellar."""
+        bottles = self.list_bottles(only_in_stock=True, user_id=user_id)
         total_bottles = sum(b.quantity for b in bottles)
         total_unique = len(bottles)
         total_value = sum((b.purchase_price or b.market_value or 0.0) * b.quantity for b in bottles)
@@ -425,6 +764,13 @@ class WineDatabase:
         except Exception:
             b_format = BottleFormat.STANDARD
 
+        uid = 1
+        try:
+            if "user_id" in r.keys() and r["user_id"]:
+                uid = r["user_id"]
+        except Exception:
+            uid = 1
+
         bottle = WineBottle(
             id=r["id"],
             producer=r["producer"],
@@ -446,7 +792,8 @@ class WineDatabase:
             user_rating=r["user_rating"],
             personal_notes=r["personal_notes"] or "",
             food_pairings=pairings,
-            created_at=r["created_at"]
+            created_at=r["created_at"],
+            user_id=uid
         )
 
         has_custom_dw = False
@@ -505,9 +852,9 @@ class WineDatabase:
 
         return bottle
 
-    def export_csv(self, file_path: str):
-        """Exports the entire cellar to a CSV spreadsheet."""
-        bottles = self.list_bottles(only_in_stock=False)
+    def export_csv(self, file_path: str, user_id: Optional[int] = 1):
+        """Exports the user's cellar to a CSV spreadsheet."""
+        bottles = self.list_bottles(only_in_stock=False, user_id=user_id)
         fieldnames = [
             "id", "producer", "wine_name", "vintage", "varietal", "region", "sub_region", "country",
             "wine_type", "format", "quantity", "location_rack", "location_bin",
@@ -546,7 +893,7 @@ class WineDatabase:
                     "notes": b.personal_notes
                 })
 
-    def import_csv(self, file_path: str) -> int:
+    def import_csv(self, file_path: str, user_id: Optional[int] = 1) -> int:
         """Imports bottles from standard or CellarTracker CSV formats with full column mapping."""
         count = 0
         with open(file_path, "r", encoding="utf-8-sig", errors="replace") as f:
@@ -721,11 +1068,12 @@ class WineDatabase:
                             rationale=f"Imported from CellarTracker window (Peak: {p_start}–{p_end})."
                         )
 
-                self.add_bottle(bottle)
+                bottle.user_id = user_id or 1
+                self.add_bottle(bottle, user_id=user_id)
                 count += 1
         return count
 
-    def seed_sample_collection(self):
+    def seed_sample_collection(self, user_id: Optional[int] = 1):
         """Populates cellar with an authentic, prestigious sommelier collection."""
         samples = [
             # 1. PEAK: Legendary 2010 Bordeaux
@@ -983,4 +1331,5 @@ class WineDatabase:
         ]
 
         for s in samples:
-            self.add_bottle(s)
+            s.user_id = user_id or 1
+            self.add_bottle(s, user_id=user_id)

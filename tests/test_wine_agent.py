@@ -546,6 +546,135 @@ class TestWineDatabaseAndAgent(unittest.TestCase):
                 os.environ.pop("CELLAR_DB_PATH", None)
 
 
+class TestMultiUserAuthenticationAndIsolation(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.db_path = os.path.join(self.tmp_dir.name, "multiuser_cellar.db")
+        self.db = WineDatabase(self.db_path)
+        self.agent = SommelierAgent(self.db)
+
+    def tearDown(self):
+        self.tmp_dir.cleanup()
+
+    def test_default_cellar_master_seeded(self):
+        """Verifies default User 1 (Cellar Master) is automatically seeded for backward compatibility."""
+        user1 = self.db.get_user_by_id(1)
+        self.assertIsNotNone(user1)
+        self.assertEqual(user1.name, "Cellar Master")
+        self.assertEqual(user1.email, "cellarmaster@cellar.local")
+
+    def test_password_hashing_and_auth(self):
+        """Tests PBKDF2 password hashing, verification, and user registration/login."""
+        from wine_agent.database import hash_password, verify_password
+        pwd = "VintageSommelier2026!"
+        hashed = hash_password(pwd)
+        self.assertTrue(verify_password(hashed, pwd))
+        self.assertFalse(verify_password(hashed, "wrongpassword"))
+
+        # Create new user
+        user = self.db.create_user("sommelier@domain.com", pwd, name="Elena Sommelier")
+        self.assertIsNotNone(user)
+        self.assertEqual(user.email, "sommelier@domain.com")
+        self.assertEqual(user.name, "Elena Sommelier")
+
+        # Duplicate email should fail
+        dup = self.db.create_user("sommelier@domain.com", "anotherpass")
+        self.assertIsNone(dup)
+
+        # Authenticate
+        auth_success = self.db.authenticate_user("sommelier@domain.com", pwd)
+        self.assertIsNotNone(auth_success)
+        self.assertEqual(auth_success.id, user.id)
+
+        auth_fail = self.db.authenticate_user("sommelier@domain.com", "wrongpass")
+        self.assertIsNone(auth_fail)
+
+    def test_session_token_management(self):
+        """Tests session creation, lookup, and expiration/deletion."""
+        user = self.db.create_user("user_session@domain.com", "pass12345")
+        token = self.db.create_session(user.id)
+        self.assertTrue(len(token) >= 32)
+
+        session_user = self.db.get_user_from_session(token)
+        self.assertIsNotNone(session_user)
+        self.assertEqual(session_user.id, user.id)
+
+        deleted = self.db.delete_session(token)
+        self.assertTrue(deleted)
+        self.assertIsNone(self.db.get_user_from_session(token))
+
+    def test_google_authentication(self):
+        """Tests Google ID token authentication and user creation."""
+        demo_token = "demo:claire.google@gmail.com:Claire Redfield"
+        user = self.db.authenticate_or_create_google_user(demo_token)
+        self.assertIsNotNone(user)
+        self.assertEqual(user.email, "claire.google@gmail.com")
+        self.assertEqual(user.name, "Claire Redfield")
+        self.assertTrue(user.google_id.startswith("google_"))
+
+        # Subsequent sign-in with same token returns same user
+        re_user = self.db.authenticate_or_create_google_user(demo_token)
+        self.assertEqual(re_user.id, user.id)
+
+    def test_multi_user_data_isolation(self):
+        """Verifies strict separation of bottles, stats, and consumption records across distinct user accounts."""
+        # Create User A and User B
+        user_a = self.db.create_user("alice@domain.com", "alicepass", name="Alice")
+        user_b = self.db.create_user("bob@domain.com", "bobpass", name="Bob")
+
+        # Alice adds 2 bottles of Napa Cabernet
+        b_alice = WineBottle(
+            producer="Opus One",
+            wine_name="Napa Valley",
+            vintage=2018,
+            quantity=2,
+            user_id=user_a.id
+        )
+        self.db.add_bottle(b_alice, user_id=user_a.id)
+
+        # Bob adds 3 bottles of Barolo
+        b_bob = WineBottle(
+            producer="Giacomo Conterno",
+            wine_name="Barolo Cascina Francia",
+            vintage=2016,
+            quantity=3,
+            user_id=user_b.id
+        )
+        self.db.add_bottle(b_bob, user_id=user_b.id)
+
+        # Query bottles for Alice: only Opus One
+        alice_bottles = self.db.list_bottles(user_id=user_a.id)
+        self.assertEqual(len(alice_bottles), 1)
+        self.assertEqual(alice_bottles[0].producer, "Opus One")
+        self.assertEqual(alice_bottles[0].quantity, 2)
+
+        # Query bottles for Bob: only Giacomo Conterno
+        bob_bottles = self.db.list_bottles(user_id=user_b.id)
+        self.assertEqual(len(bob_bottles), 1)
+        self.assertEqual(bob_bottles[0].producer, "Giacomo Conterno")
+        self.assertEqual(bob_bottles[0].quantity, 3)
+
+        # Stats isolation
+        alice_stats = self.db.get_cellar_stats(user_id=user_a.id)
+        bob_stats = self.db.get_cellar_stats(user_id=user_b.id)
+        self.assertEqual(alice_stats["total_bottles"], 2)
+        self.assertEqual(bob_stats["total_bottles"], 3)
+
+        # Consumption log isolation
+        rec_alice = self.db.consume_bottle(alice_bottles[0].id, count=1, rating=98.0, tasting_notes="Superb", user_id=user_a.id)
+        self.assertIsNotNone(rec_alice)
+
+        alice_history = self.db.get_consumption_history(user_id=user_a.id)
+        bob_history = self.db.get_consumption_history(user_id=user_b.id)
+        self.assertEqual(len(alice_history), 1)
+        self.assertEqual(len(bob_history), 0)
+
+        # Bob cannot delete Alice's bottle
+        delete_fail = self.db.delete_bottle(alice_bottles[0].id, user_id=user_b.id)
+        self.assertFalse(delete_fail)
+        self.assertEqual(len(self.db.list_bottles(user_id=user_a.id)), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
 
