@@ -1,0 +1,8 @@
+.github_token
+.gemini_key
+__pycache__/
+*.pyc
+.pytest_cache/
+*.db-journal
+wine_cellar_starter.zip
+.DS_Store

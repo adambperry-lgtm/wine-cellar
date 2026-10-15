@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""Convenience launcher for Sommelier Wine Cellar Agent."""
+
+import sys
+import os
+
+# Add parent directory to sys.path so wine_agent module can be imported anywhere
+script_dir = os.path.dirname(os.path.realpath(__file__))
+if script_dir not in sys.path:
+    sys.path.insert(0, script_dir)
+
+from wine_agent.cli import main
+
+if __name__ == "__main__":
+    main()

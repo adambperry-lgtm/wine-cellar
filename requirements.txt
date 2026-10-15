@@ -1,0 +1,3 @@
+# Sommelier Wine Cellar Agent
+# The core server, SQLite database, critic engine, and Google Gemini sommelier
+# run purely on the Python standard library with zero mandatory external wheels.
