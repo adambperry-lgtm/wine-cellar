@@ -356,14 +356,129 @@ class WineDatabase:
             return self._row_to_user(row) if row else None
 
     def _row_to_user(self, r: sqlite3.Row) -> UserProfile:
+        last_log = r["last_login"] if "last_login" in r.keys() else None
         return UserProfile(
             id=r["id"],
             email=r["email"],
             name=r["name"] or r["email"].split("@")[0].title(),
             avatar_url=r["avatar_url"] or f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(r['email'])}",
             created_at=r["created_at"] or "",
-            google_id=r["google_id"]
+            google_id=r["google_id"],
+            last_login=last_log
         )
+
+    def get_admin_activity_report(self) -> Dict[str, Any]:
+        """Generates an administrative summary of user accounts, bottles, values, and activity stream."""
+        with self._get_conn() as conn:
+            user_rows = conn.execute("SELECT * FROM users ORDER BY id ASC").fetchall()
+            users_data = []
+            total_network_bottles = 0
+            total_network_value = 0.0
+
+            for u in user_rows:
+                u_id = u["id"]
+                # Total bottles and cellar value
+                b_stats = conn.execute("""
+                    SELECT COUNT(*) as b_count, SUM(quantity) as total_qty, SUM(COALESCE(purchase_price, 0) * quantity) as total_val
+                    FROM bottles
+                    WHERE user_id = ? AND quantity > 0
+                """, (u_id,)).fetchone()
+
+                b_qty = b_stats["total_qty"] or 0
+                b_val = round(b_stats["total_val"] or 0.0, 2)
+                total_network_bottles += b_qty
+                total_network_value += b_val
+
+                # Tasting / consumption log count
+                t_count = conn.execute("SELECT COUNT(*) as cnt FROM consumption_log WHERE user_id = ?", (u_id,)).fetchone()["cnt"]
+
+                # Recent bottle addition date
+                recent_b = conn.execute("SELECT created_at FROM bottles WHERE user_id = ? ORDER BY id DESC LIMIT 1", (u_id,)).fetchone()
+                last_bottle_date = recent_b["created_at"] if recent_b else None
+
+                # Favorite/top varietal
+                top_v = conn.execute("""
+                    SELECT varietal, COUNT(*) as cnt FROM bottles
+                    WHERE user_id = ? AND quantity > 0 AND varietal IS NOT NULL AND varietal != ''
+                    GROUP BY varietal ORDER BY cnt DESC LIMIT 1
+                """, (u_id,)).fetchone()
+                fav_varietal = top_v["varietal"] if top_v else "None"
+
+                users_data.append({
+                    "id": u_id,
+                    "email": u["email"],
+                    "name": u["name"] or u["email"].split("@")[0].title(),
+                    "avatar_url": u["avatar_url"] or f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(u['email'])}",
+                    "created_at": u["created_at"],
+                    "last_login": u["last_login"] or u["created_at"],
+                    "is_google": bool(u["google_id"]),
+                    "bottle_count": b_qty,
+                    "total_value": b_val,
+                    "tasting_count": t_count,
+                    "last_bottle_added": last_bottle_date,
+                    "favorite_varietal": fav_varietal
+                })
+
+            # Activity feed: recent bottles added
+            recent_bottles = conn.execute("""
+                SELECT b.id, b.producer, b.wine_name, b.vintage, b.varietal, b.created_at, b.user_id, u.name as user_name, u.email as user_email
+                FROM bottles b
+                JOIN users u ON b.user_id = u.id
+                ORDER BY b.id DESC LIMIT 15
+            """).fetchall()
+
+            # Activity feed: recent tastings from consumption_log
+            recent_tastings = conn.execute("""
+                SELECT c.id, c.wine_display_name, c.date_opened, c.rating, c.tasting_notes, c.user_id, u.name as user_name, u.email as user_email
+                FROM consumption_log c
+                JOIN users u ON c.user_id = u.id
+                ORDER BY c.id DESC LIMIT 15
+            """).fetchall()
+
+            events = []
+            for b in recent_bottles:
+                v_str = f"{b['vintage']} " if b['vintage'] else ""
+                events.append({
+                    "type": "bottle_added",
+                    "user_id": b["user_id"],
+                    "user_name": b["user_name"] or b["user_email"].split("@")[0].title(),
+                    "title": f"Added {v_str}{b['producer']} {b['wine_name'] or ''}".strip(),
+                    "subtitle": b["varietal"] or "Fine Wine",
+                    "score_or_rating": None,
+                    "note": None,
+                    "timestamp": b["created_at"]
+                })
+
+            for t in recent_tastings:
+                events.append({
+                    "type": "bottle_tasted",
+                    "user_id": t["user_id"],
+                    "user_name": t["user_name"] or t["user_email"].split("@")[0].title(),
+                    "title": f"Opened {t['wine_display_name']}",
+                    "subtitle": "Cellar Tasting",
+                    "score_or_rating": f"{t['rating']:.1f}" if t["rating"] is not None else None,
+                    "note": t["tasting_notes"] or "",
+                    "timestamp": t["date_opened"]
+                })
+
+            events.sort(key=lambda x: str(x.get("timestamp") or ""), reverse=True)
+
+            total_tastings = conn.execute("SELECT COUNT(*) as cnt FROM consumption_log").fetchone()["cnt"]
+            db_size = os.path.getsize(self.db_path) if os.path.exists(self.db_path) else 0
+
+            return {
+                "status": "success",
+                "summary": {
+                    "total_users": len(user_rows),
+                    "total_bottles": total_network_bottles,
+                    "total_value": round(total_network_value, 2),
+                    "total_tastings": total_tastings,
+                    "database_size_bytes": db_size,
+                },
+                "users": users_data,
+                "recent_activity": events[:20],
+                "generated_at": datetime.now().isoformat()
+            }
 
     # ==================== Bottle & Inventory Management ====================
 

@@ -674,6 +674,48 @@ class TestMultiUserAuthenticationAndIsolation(unittest.TestCase):
         self.assertFalse(delete_fail)
         self.assertEqual(len(self.db.list_bottles(user_id=user_a.id)), 1)
 
+    def test_admin_activity_report(self):
+        """Verifies network activity aggregation, user metrics, and activity event log."""
+        # Setup users and bottles
+        user_c = self.db.create_user("cathy@domain.com", "cathypass", name="Cathy")
+        b = WineBottle(
+            producer="Ridge Vineyards",
+            wine_name="Monte Bello",
+            vintage=2019,
+            varietal="Cabernet Sauvignon",
+            quantity=4,
+            purchase_price=225.0,
+            user_id=user_c.id
+        )
+        self.db.add_bottle(b, user_id=user_c.id)
+
+        # Cathy opens 1 bottle
+        bottles = self.db.list_bottles(user_id=user_c.id)
+        self.db.consume_bottle(bottles[0].id, count=1, rating=99.0, tasting_notes="Legendary acidity and blackberry balance.", user_id=user_c.id)
+
+        report = self.db.get_admin_activity_report()
+        self.assertEqual(report["status"], "success")
+        self.assertIn("summary", report)
+        self.assertGreaterEqual(report["summary"]["total_users"], 1)
+        self.assertGreaterEqual(report["summary"]["total_bottles"], 3)
+        self.assertGreaterEqual(report["summary"]["total_tastings"], 1)
+
+        # Verify Cathy is in user list
+        cathy_entry = next((u for u in report["users"] if u["id"] == user_c.id), None)
+        self.assertIsNotNone(cathy_entry)
+        self.assertEqual(cathy_entry["email"], "cathy@domain.com")
+        self.assertEqual(cathy_entry["bottle_count"], 3)
+        self.assertEqual(cathy_entry["favorite_varietal"], "Cabernet Sauvignon")
+        self.assertEqual(cathy_entry["tasting_count"], 1)
+
+        # Verify activity feed has events
+        self.assertGreaterEqual(len(report["recent_activity"]), 1)
+        tasting_event = next((ev for ev in report["recent_activity"] if ev["type"] == "bottle_tasted"), None)
+        self.assertIsNotNone(tasting_event)
+        self.assertEqual(tasting_event["user_name"], "Cathy")
+        self.assertEqual(tasting_event["score_or_rating"], "99.0")
+
+
 
 if __name__ == "__main__":
     unittest.main()

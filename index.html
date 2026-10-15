@@ -136,6 +136,9 @@
 
             <!-- Menu Navigation Links -->
             <div class="py-1 px-1">
+              <button onclick="openModal('adminModal'); toggleUserDropdown();" class="w-full text-left px-3 py-2 text-indigo-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
+                <span>👥</span> Cellar Network Activity
+              </button>
               <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg flex items-center gap-2 transition">
                 <span>🔄</span> Switch Cellar Account
               </button>
@@ -172,6 +175,9 @@
         </button>
         <button onclick="openStorageModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
           <span>🧊</span> Edit Storage
+        </button>
+        <button onclick="openModal('adminModal')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-950/70 hover:bg-indigo-900/90 text-indigo-200 border border-indigo-700/60 transition-all shadow-sm" title="View users, bottle counts, and network cellar activity">
+          <span>👥</span> Network Activity
         </button>
         <button onclick="exportCellarDatabase()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
           <span>📥</span> Export CSV
@@ -1278,6 +1284,113 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     </div>
   </div>
 
+  <!-- MODAL: Cellar Network Activity & Admin Dashboard -->
+  <div id="adminModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">👥</span>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              Cellar Network Activity
+              <span class="text-[10px] font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
+              </span>
+            </h3>
+            <p class="text-xs text-slate-400">Collector profiles, cellar inventories & real-time bottle activity</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="renderAdminActivityReport()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1 transition">
+            <span>🔄</span> Refresh
+          </button>
+          <button onclick="closeModal('adminModal')" class="text-slate-400 hover:text-white text-lg p-1">✕</button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-5 overflow-y-auto custom-scrollbar flex flex-col gap-5 flex-1">
+        <!-- KPI Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col">
+            <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Total Collectors</span>
+            <span id="adminTotalUsers" class="text-xl font-bold text-white mt-1">--</span>
+            <span class="text-[10px] text-slate-500 mt-0.5">registered cellars</span>
+          </div>
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col">
+            <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Network Bottles</span>
+            <span id="adminTotalBottles" class="text-xl font-bold text-emerald-400 mt-1">--</span>
+            <span class="text-[10px] text-slate-500 mt-0.5">stored across cellars</span>
+          </div>
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col">
+            <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Network Value</span>
+            <span id="adminTotalValue" class="text-xl font-bold text-indigo-400 mt-1">--</span>
+            <span class="text-[10px] text-slate-500 mt-0.5">combined collection worth</span>
+          </div>
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col">
+            <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Tasting Logs</span>
+            <span id="adminTotalTastings" class="text-xl font-bold text-amber-400 mt-1">--</span>
+            <span class="text-[10px] text-slate-500 mt-0.5">reviews & ratings logged</span>
+          </div>
+        </div>
+
+        <!-- Collectors Directory -->
+        <div class="flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>🍷</span> Registered Collectors Directory
+            </h4>
+            <span id="adminUserCountLabel" class="text-[11px] text-slate-500">Loading...</span>
+          </div>
+          <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/40">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-300">
+                <thead class="bg-slate-950 text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                  <tr>
+                    <th class="px-4 py-2.5">Collector</th>
+                    <th class="px-3 py-2.5">Auth Type</th>
+                    <th class="px-3 py-2.5 text-right">Bottles</th>
+                    <th class="px-3 py-2.5 text-right">Cellar Value</th>
+                    <th class="px-3 py-2.5">Favorite Varietal</th>
+                    <th class="px-3 py-2.5">Last Active / Login</th>
+                    <th class="px-3 py-2.5 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminUsersTableBody" class="divide-y divide-slate-800/60 font-medium">
+                  <tr>
+                    <td colspan="7" class="px-4 py-6 text-center text-slate-500">Loading collectors...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>⚡</span> Real-Time Cellar Activity Feed
+            </h4>
+            <span class="text-[11px] text-slate-500">Latest bottle additions & tastings</span>
+          </div>
+          <div id="adminActivityFeed" class="flex flex-col gap-2 max-h-72 overflow-y-auto custom-scrollbar p-1">
+            <!-- Dynamic feed items -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t border-slate-800 flex items-center justify-between bg-slate-950/60 text-xs text-slate-500 shrink-0">
+        <span id="adminLastUpdated">Updated: Just now</span>
+        <button onclick="closeModal('adminModal')" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Javascript Application Logic -->
   <script>
     const APP_VERSION = "v2.3.0";
@@ -1817,6 +1930,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       if (id === 'auditModal') {
         await renderAuditReport();
       }
+      if (id === 'adminModal') {
+        await renderAdminActivityReport();
+      }
       if (id === 'recommendModal') {
         initGeminiControls();
       }
@@ -1828,6 +1944,112 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     function openSommelierModal(intent = 'open') {
       openModal('recommendModal');
       setSommelierIntent(intent);
+    }
+
+    async function renderAdminActivityReport() {
+      const usersTbody = document.getElementById('adminUsersTableBody');
+      const feedContainer = document.getElementById('adminActivityFeed');
+      if (!usersTbody || !feedContainer) return;
+
+      try {
+        const res = await fetch('/api/admin/activity');
+        if (!res.ok) throw new Error('Failed to load network activity');
+        const data = await res.json();
+
+        // Summary KPIs
+        const s = data.summary || {};
+        document.getElementById('adminTotalUsers').textContent = s.total_users ?? 0;
+        document.getElementById('adminTotalBottles').textContent = (s.total_bottles ?? 0).toLocaleString();
+        document.getElementById('adminTotalValue').textContent = '$' + Math.round(s.total_value ?? 0).toLocaleString();
+        document.getElementById('adminTotalTastings').textContent = s.total_tastings ?? 0;
+        document.getElementById('adminUserCountLabel').textContent = `${(data.users || []).length} Cellars Active`;
+        document.getElementById('adminLastUpdated').textContent = 'Last synced: ' + new Date().toLocaleTimeString();
+
+        // Render Users Table
+        if (!data.users || data.users.length === 0) {
+          usersTbody.innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-slate-500">No users found</td></tr>';
+        } else {
+          usersTbody.innerHTML = data.users.map(u => {
+            const isGoogle = u.is_google;
+            const authBadge = isGoogle 
+              ? '<span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-800 font-semibold"><span>G</span> Google</span>'
+              : '<span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-semibold"><span>🔑</span> Password</span>';
+            const lastActive = u.last_login 
+              ? new Date(u.last_login).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) 
+              : (u.created_at ? new Date(u.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : 'Never');
+            const totalVal = '$' + Math.round(u.total_value || 0).toLocaleString();
+            const avatar = u.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(u.email || u.name)}`;
+            const isCurrent = currentUser && currentUser.id === u.id;
+
+            return `
+              <tr class="hover:bg-slate-800/40 transition">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2.5">
+                    <img src="${escapeHtml(avatar)}" class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 object-cover shrink-0" alt="">
+                    <div class="min-w-0">
+                      <div class="font-bold text-white flex items-center gap-1.5 truncate">
+                        <span>${escapeHtml(u.name || 'Anonymous')}</span>
+                        ${isCurrent ? '<span class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.2 rounded-full font-bold">You</span>' : ''}
+                      </div>
+                      <div class="text-[11px] text-slate-400 truncate">${escapeHtml(u.email || '')}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-3 py-3">${authBadge}</td>
+                <td class="px-3 py-3 text-right font-bold text-emerald-400">${u.bottle_count ?? 0}</td>
+                <td class="px-3 py-3 text-right font-semibold text-slate-200">${totalVal}</td>
+                <td class="px-3 py-3 text-slate-300">${escapeHtml(u.favorite_varietal || 'N/A')}</td>
+                <td class="px-3 py-3 text-[11px] text-slate-400">${lastActive}</td>
+                <td class="px-3 py-3 text-center">
+                  ${!isCurrent ? `
+                    <button onclick="switchAccount(${u.id}); closeModal('adminModal');" class="px-2.5 py-1 text-[11px] font-semibold rounded bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-white border border-slate-700 transition">
+                      View Cellar
+                    </button>
+                  ` : `
+                    <span class="text-[11px] text-emerald-400 font-semibold">Active</span>
+                  `}
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+
+        // Render Recent Activity Feed
+        if (!data.recent_activity || data.recent_activity.length === 0) {
+          feedContainer.innerHTML = '<div class="p-4 text-center text-slate-500 text-xs bg-slate-950/40 rounded-xl border border-slate-800">No recent activity logged yet.</div>';
+        } else {
+          feedContainer.innerHTML = data.recent_activity.map(act => {
+            const isBottle = act.type === 'bottle_added';
+            const icon = isBottle ? '🍾' : '🍷';
+            const iconBg = isBottle ? 'bg-emerald-950 text-emerald-400 border-emerald-800/80' : 'bg-amber-950 text-amber-400 border-amber-800/80';
+            const dateStr = act.timestamp ? new Date(act.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+            return `
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/50 border border-slate-800/80 hover:border-slate-700 transition">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 border ${iconBg}">
+                  ${icon}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold text-white truncate">${escapeHtml(act.title)}</span>
+                    <span class="text-[10px] text-slate-500 shrink-0 font-mono">${dateStr}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-0.5 truncate">${escapeHtml(act.subtitle || '')}</p>
+                  <div class="flex items-center gap-2 mt-1 text-[10px]">
+                    <span class="text-slate-500">by</span>
+                    <span class="font-semibold text-rose-300">${escapeHtml(act.user_name || 'Collector')}</span>
+                    ${act.score_or_rating ? `<span class="px-1.5 py-0.2 rounded bg-slate-800 text-amber-300 font-bold border border-slate-700">★ ${act.score_or_rating}</span>` : ''}
+                    ${act.note ? `<span class="text-slate-400 italic truncate max-w-[200px] sm:max-w-xs">"${escapeHtml(act.note)}"</span>` : ''}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+      } catch (err) {
+        console.error('Error fetching admin activity:', err);
+        usersTbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-rose-400">Failed to load network activity: ${escapeHtml(err.message)}</td></tr>`;
+      }
     }
 
     async function renderAuditReport() {

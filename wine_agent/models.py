@@ -121,6 +121,7 @@ class UserProfile:
     avatar_url: str = ""
     created_at: str = ""
     google_id: Optional[str] = None
+    last_login: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -129,6 +130,7 @@ class UserProfile:
             "name": self.name or self.email.split("@")[0].title(),
             "avatar_url": self.avatar_url or "",
             "has_google": bool(self.google_id),
-            "created_at": self.created_at
+            "created_at": self.created_at,
+            "last_login": self.last_login or self.created_at
         }
 

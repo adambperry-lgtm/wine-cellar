@@ -111,6 +111,11 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json([u.to_dict() for u in users])
             return
 
+        elif path == "/api/admin/activity":
+            report = self.agent.db.get_admin_activity_report()
+            self._send_json(report)
+            return
+
         # ==================== Cellar API Routes ====================
         current_user = self._get_current_user(params)
 
