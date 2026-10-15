@@ -1212,7 +1212,11 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       </div>
 
       <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-[11px] text-slate-500">
-        <span>Protected with PBKDF2-SHA256 & Google OAuth</span>
+        <div class="flex items-center gap-2">
+          <span>Protected with PBKDF2-SHA256</span>
+          <span>•</span>
+          <button type="button" onclick="configureGoogleClientId()" class="hover:text-slate-300 transition text-[10px] text-slate-500 underline decoration-slate-700">⚙️ Google OAuth Client ID</button>
+        </div>
         <button onclick="closeModal('authModal')" class="text-slate-400 hover:text-white font-medium">Close</button>
       </div>
     </div>
@@ -2330,7 +2334,12 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
         return;
       }
-      const clientId = localStorage.getItem('google_oauth_client_id') || '381948291048-cellaragent.apps.googleusercontent.com';
+      const clientId = localStorage.getItem('google_oauth_client_id');
+      if (!clientId) {
+        // Without an explicit Google Cloud OAuth Client ID, do not initialize GIS iframe
+        // to prevent Error 401: invalid_client
+        return;
+      }
       try {
         google.accounts.id.initialize({
           client_id: clientId,
@@ -2349,6 +2358,21 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         }
       } catch (e) {
         console.warn("Google GIS Notice:", e);
+      }
+    }
+
+    function configureGoogleClientId() {
+      const current = localStorage.getItem('google_oauth_client_id') || '';
+      const val = prompt("Google Cloud OAuth Client ID:\nTo enable native Google OAuth popups on this domain, enter your OAuth 2.0 Client ID from Google Cloud Console (console.cloud.google.com). Leave empty to use instant Google sign-in:", current);
+      if (val === null) return;
+      if (val.trim()) {
+        localStorage.setItem('google_oauth_client_id', val.trim());
+        alert("Google Client ID saved. Refreshing page to initialize Google Identity Services.");
+        window.location.reload();
+      } else {
+        localStorage.removeItem('google_oauth_client_id');
+        alert("Google Client ID cleared. Using instant Google sign-in.");
+        window.location.reload();
       }
     }
 
@@ -2508,12 +2532,15 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     }
 
     async function loginWithDemoGoogle() {
-      const defaultPromptEmail = (currentUser && currentUser.email && !currentUser.email.includes("cellarmaster")) ? currentUser.email : "";
-      const email = prompt("Enter your Google / Gmail account for instant sign-in:", defaultPromptEmail);
+      let email = (document.getElementById('loginEmail')?.value || document.getElementById('registerEmail')?.value || '').trim();
+      if (!email) {
+        email = prompt("Enter your Google / Gmail account for instant sign-in:", "adambperry@gmail.com");
+      }
       if (!email || !email.trim()) return;
       const cleanEmail = email.trim().toLowerCase();
       const name = cleanEmail.split('@')[0].replace(/[\._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       try {
+        showAuthFeedback("Signing into your Google cellar account...", false);
         const res = await fetch('/api/auth/google', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -1212,7 +1212,11 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       </div>
 
       <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-[11px] text-slate-500">
-        <span>Protected with PBKDF2-SHA256 & Google OAuth</span>
+        <div class="flex items-center gap-2">
+          <span>Protected with PBKDF2-SHA256</span>
+          <span>•</span>
+          <button type="button" onclick="configureGoogleClientId()" class="hover:text-slate-300 transition text-[10px] text-slate-500 underline decoration-slate-700">⚙️ Google OAuth Client ID</button>
+        </div>
         <button onclick="closeModal('authModal')" class="text-slate-400 hover:text-white font-medium">Close</button>
       </div>
     </div>
