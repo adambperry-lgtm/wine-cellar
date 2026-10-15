@@ -15,10 +15,20 @@
       --accent-wine: #9e2a2b;
       --accent-gold: #d4af37;
     }
+    html, body {
+      overscroll-behavior-y: contain;
+    }
     body {
       background-color: var(--bg-dark);
       color: #e2e8f0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    @keyframes spinCustom {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+      animation: spinCustom 0.8s linear infinite;
     }
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
@@ -49,6 +59,16 @@
   </style>
 </head>
 <body class="h-full flex flex-col antialiased">
+
+  <!-- Pulldown-to-Refresh Indicator (Mobile / iPhone Web App Mode) -->
+  <div id="pullToRefreshBar" class="fixed top-0 left-0 right-0 z-50 pointer-events-none flex items-center justify-center -translate-y-full transition-transform ease-out will-change-transform">
+    <div id="pullToRefreshPill" class="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl rounded-full px-4 py-2 mt-2 flex items-center gap-2.5 text-xs text-white transition-all shadow-rose-950/40">
+      <div id="pullSpinnerIcon" class="w-5 h-5 flex items-center justify-center text-sm transition-transform text-rose-400">
+        🍷
+      </div>
+      <span id="pullStatusText" class="font-semibold text-slate-200">Pull down to refresh cellar</span>
+    </div>
+  </div>
 
   <!-- Top Navigation Bar -->
   <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3.5">
@@ -5021,8 +5041,132 @@ USER QUERY: "${query}"`;
       processRecognizedLabelText(sample.rawText);
     }
 
+    // ==========================================
+    // 📲 PULL-DOWN-TO-REFRESH (iOS PWA / Mobile)
+    // ==========================================
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+    let pullDistance = 0;
+    const PULL_THRESHOLD = 60; // px threshold to trigger refresh
+
+    function initPullToRefresh() {
+      const bar = document.getElementById('pullToRefreshBar');
+      const pill = document.getElementById('pullToRefreshPill');
+      const icon = document.getElementById('pullSpinnerIcon');
+      const text = document.getElementById('pullStatusText');
+      if (!bar || !pill || !icon || !text) return;
+
+      window.addEventListener('touchstart', (e) => {
+        if (isRefreshing) return;
+        // Only initiate pull-to-refresh if user is at the very top of the document
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        if (scrollTop <= 0 && e.touches.length === 1) {
+          touchStartY = e.touches[0].clientY;
+          touchStartX = e.touches[0].clientX;
+          isPulling = true;
+          pullDistance = 0;
+          bar.style.transition = 'none';
+        } else {
+          isPulling = false;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isPulling || isRefreshing) return;
+        const currentY = e.touches[0].clientY;
+        const currentX = e.touches[0].clientX;
+        const deltaY = currentY - touchStartY;
+        const deltaX = currentX - touchStartX;
+
+        // Cancel if moving more horizontally than vertically
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          isPulling = false;
+          bar.style.transform = 'translateY(-100%)';
+          return;
+        }
+
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        if (scrollTop > 0) {
+          isPulling = false;
+          bar.style.transform = 'translateY(-100%)';
+          return;
+        }
+
+        if (deltaY > 0) {
+          // Damped pull distance curve
+          pullDistance = Math.min(95, deltaY * 0.42);
+
+          if (pullDistance > 6 && e.cancelable) {
+            e.preventDefault(); // Stop native document bounce
+          }
+
+          bar.style.transform = `translateY(${pullDistance}px)`;
+
+          if (pullDistance >= PULL_THRESHOLD) {
+            text.textContent = "Release to refresh cellar...";
+            icon.textContent = "🔄";
+            icon.style.transform = 'rotate(180deg)';
+            pill.className = "bg-slate-900/98 backdrop-blur-md border border-rose-500/80 shadow-2xl rounded-full px-4 py-2 mt-2 flex items-center gap-2.5 text-xs text-white transition-all shadow-rose-950/60 ring-2 ring-rose-500/30";
+          } else {
+            text.textContent = "Pull down to refresh cellar";
+            icon.textContent = "🍷";
+            icon.style.transform = `rotate(${pullDistance * 3}deg)`;
+            pill.className = "bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl rounded-full px-4 py-2 mt-2 flex items-center gap-2.5 text-xs text-white transition-all shadow-rose-950/40";
+          }
+        }
+      }, { passive: false });
+
+      const finishPull = async () => {
+        if (!isPulling || isRefreshing) return;
+        isPulling = false;
+        bar.style.transition = 'transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+        if (pullDistance >= PULL_THRESHOLD) {
+          isRefreshing = true;
+          bar.style.transform = 'translateY(55px)';
+          text.textContent = "Syncing bottles & drinking windows...";
+          icon.textContent = "🍷";
+          icon.classList.add('animate-spin-custom');
+
+          // Refresh data from server
+          try {
+            await initAuth();
+            await loadData();
+            await renderAuditReport();
+            text.textContent = "✅ Cellar refreshed!";
+            icon.classList.remove('animate-spin-custom');
+            icon.textContent = "✔";
+            pill.className = "bg-slate-900/98 backdrop-blur-md border border-emerald-500/80 shadow-2xl rounded-full px-4 py-2 mt-2 flex items-center gap-2.5 text-xs text-emerald-300 transition-all shadow-emerald-950/60";
+          } catch (err) {
+            text.textContent = "Refresh completed";
+            icon.classList.remove('animate-spin-custom');
+          }
+
+          setTimeout(() => {
+            bar.style.transition = 'transform 0.3s ease-in';
+            bar.style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+              isRefreshing = false;
+              text.textContent = "Pull down to refresh cellar";
+              icon.textContent = "🍷";
+              icon.style.transform = 'none';
+              pill.className = "bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl rounded-full px-4 py-2 mt-2 flex items-center gap-2.5 text-xs text-white transition-all shadow-rose-950/40";
+            }, 350);
+          }, 700);
+        } else {
+          bar.style.transform = 'translateY(-100%)';
+        }
+      };
+
+      window.addEventListener('touchend', finishPull, { passive: true });
+      window.addEventListener('touchcancel', finishPull, { passive: true });
+    }
+
     // Initial Load
     window.addEventListener('DOMContentLoaded', async () => {
+      initPullToRefresh();
       await initAuth();
       await loadData();
     });
