@@ -102,10 +102,10 @@
             <span class="text-[10px] text-rose-300 group-hover:text-white transition shrink-0">▼</span>
           </button>
 
-          <!-- Dropdown Menu: Styled & Clamped to Viewport -->
-          <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-24px)] rounded-2xl bg-slate-900/98 backdrop-blur-md border border-slate-700/80 shadow-2xl py-2 z-50 text-xs">
+          <!-- Dropdown Menu: Solid Opaque & High-Contrast (No Translucency) -->
+          <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-24px)] rounded-2xl border border-slate-700 shadow-2xl shadow-black py-2.5 z-50 text-xs" style="background-color: #0f172a !important; opacity: 1 !important;">
             <!-- Guest Card (shown when NOT signed in) -->
-            <div id="dropdownGuestCard" class="px-3.5 py-3 border-b border-slate-800 bg-rose-950/40 mx-2 rounded-xl mb-2">
+            <div id="dropdownGuestCard" class="px-3.5 py-3 border border-slate-800 rounded-xl mx-2 mb-2" style="background-color: #1e293b !important;">
               <div class="font-bold text-white text-xs flex items-center gap-1.5">
                 <span>🍷</span> Personal Wine Cellar
               </div>
@@ -121,31 +121,31 @@
             </div>
 
             <!-- Active User Card (shown when signed in) -->
-            <div id="dropdownUserCard" class="hidden px-3.5 py-2.5 border-b border-slate-800 bg-slate-800/40 mx-2 rounded-xl mb-2">
+            <div id="dropdownUserCard" class="hidden px-3.5 py-2.5 border border-slate-700/80 rounded-xl mx-2 mb-2" style="background-color: #1e293b !important;">
               <div class="flex items-center gap-2.5">
                 <img id="dropdownAvatarImg" class="w-8 h-8 rounded-full bg-slate-700 object-cover border border-emerald-500/50 shrink-0" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" alt="">
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                   <div class="font-bold text-white text-xs truncate flex items-center gap-1.5">
                     <span id="dropdownUserName">Adambperry</span>
-                    <span class="text-[9px] bg-emerald-900/80 text-emerald-300 px-1.5 py-0.2 rounded-full border border-emerald-700/60 font-semibold">Active</span>
+                    <span class="text-[9px] bg-emerald-950 text-emerald-300 px-1.5 py-0.2 rounded-full border border-emerald-700 font-semibold">Active</span>
                   </div>
-                  <div class="text-[11px] text-slate-400 truncate" id="dropdownUserEmail">adambperry@gmail.com</div>
+                  <div class="text-[11px] text-slate-300 truncate font-mono mt-0.5" id="dropdownUserEmail">adambperry@gmail.com</div>
                 </div>
               </div>
             </div>
 
             <!-- Menu Navigation Links -->
-            <div class="py-1 px-1">
-              <button id="adminActivityDropdownBtn" onclick="openModal('adminModal'); toggleUserDropdown();" class="hidden w-full text-left px-3 py-2 text-indigo-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
+            <div class="py-1 px-1 flex flex-col gap-0.5">
+              <button id="adminActivityDropdownBtn" onclick="openModal('adminModal'); toggleUserDropdown();" class="hidden w-full text-left px-3 py-2 text-indigo-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition font-medium">
                 <span>👥</span> Cellar Network Activity
               </button>
-              <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg flex items-center gap-2 transition">
+              <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 text-slate-200 hover:bg-slate-800 hover:text-white rounded-lg flex items-center gap-2 transition font-medium">
                 <span>🔄</span> Switch Cellar Account
               </button>
-              <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 text-emerald-400 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
+              <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 text-emerald-400 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition font-medium">
                 <span>✨</span> Create New Cellar
               </button>
-              <button id="dropdownSignOutBtn" onclick="logoutUser()" class="hidden w-full text-left px-3 py-2 text-rose-400 hover:bg-slate-800 rounded-lg flex items-center gap-2 border-t border-slate-800/80 mt-1 transition">
+              <button id="dropdownSignOutBtn" onclick="logoutUser()" class="hidden w-full text-left px-3 py-2 text-rose-300 hover:text-rose-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 border-t border-slate-800 mt-1 transition font-medium">
                 <span>🚪</span> Sign Out
               </button>
             </div>
