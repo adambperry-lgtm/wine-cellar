@@ -395,6 +395,66 @@ class SommelierAgent:
                 "match_keywords": ["steak", "ribeye", "beef", "bbq", "daily", "value", "meat", "argentina"],
                 "rationale": "High-altitude limestone elevation gives floral violets and fresh acidity that cuts right through rich marbled beef.",
                 "cellar_complement": "A crowd-pleasing, robust steakhouse wine under $40 for casual grilling."
+            },
+            {
+                "wine_name": "Chianti Classico",
+                "producer": "Fèlsina Berardenga (or Castello di Volpaia)",
+                "vintage_sweet_spot": "2020 or 2021",
+                "region": "Chianti Classico, Tuscany, Italy",
+                "varietal": "Sangiovese",
+                "est_price": 28.0,
+                "drinking_status": "Prime Peak Window",
+                "decant_advice": "Aeration 20m",
+                "serving_temp": "61°F (16°C)",
+                "nj_availability": "Available in NJ & ships to NJ (Gary's Wine, Total Wine NJ, Wine.com)",
+                "match_keywords": ["pizza", "pasta", "night", "weeknight", "italian", "tomato", "bolognese", "sangiovese", "chianti", "value", "ready", "now"],
+                "rationale": "Bright sour cherry, violet, and savory herbs with lively acidity that matches tomato sauce bite-for-bite. The definitive red-sauce wine.",
+                "cellar_complement": "A weeknight Italian staple that protects your Brunello and Super Tuscan holdings for special occasions."
+            },
+            {
+                "wine_name": "Barbera d'Alba",
+                "producer": "G.D. Vajra (or Vietti 'Tre Vigne')",
+                "vintage_sweet_spot": "2021 or 2022",
+                "region": "Piedmont, Italy",
+                "varietal": "Barbera",
+                "est_price": 26.0,
+                "drinking_status": "Prime Peak Window",
+                "decant_advice": "Pop and pour",
+                "serving_temp": "60°F (16°C)",
+                "nj_availability": "Available in NJ & ships to NJ (Gary's Wine, Buy-Rite, Wine.com)",
+                "match_keywords": ["pizza", "pasta", "night", "weeknight", "italian", "tomato", "sausage", "lasagna", "barbera", "piedmont", "value", "ready", "now"],
+                "rationale": "Juicy black cherry and plum with naturally high acidity and soft tannins — loves pepperoni, sausage, and baked lasagna.",
+                "cellar_complement": "Adds a fruit-forward, low-tannin Piedmont red that drinks perfectly young, unlike Nebbiolo."
+            },
+            {
+                "wine_name": "Etna Rosso",
+                "producer": "Tenuta delle Terre Nere (or Benanti)",
+                "vintage_sweet_spot": "2021 or 2022",
+                "region": "Mount Etna, Sicily, Italy",
+                "varietal": "Nerello Mascalese",
+                "est_price": 30.0,
+                "drinking_status": "Prime Peak Window",
+                "decant_advice": "Aeration 15m",
+                "serving_temp": "59°F (15°C)",
+                "nj_availability": "Available in NJ & ships to NJ (Gary's Wine, Wine.com)",
+                "match_keywords": ["pizza", "pasta", "night", "weeknight", "italian", "margherita", "mushroom", "sicily", "etna", "value", "ready", "now"],
+                "rationale": "Volcanic smoke, wild strawberry, and fine Burgundian tannins. Stunning with Neapolitan Margherita and mushroom pizzas.",
+                "cellar_complement": "Introduces one of Italy's most exciting volcanic regions — Pinot-like elegance at an everyday price."
+            },
+            {
+                "wine_name": "Rosso di Montalcino",
+                "producer": "Il Poggione (or Col d'Orcia)",
+                "vintage_sweet_spot": "2021 or 2022",
+                "region": "Montalcino, Tuscany, Italy",
+                "varietal": "Sangiovese Grosso",
+                "est_price": 32.0,
+                "drinking_status": "Prime Peak Window",
+                "decant_advice": "Aeration 30m",
+                "serving_temp": "62°F (17°C)",
+                "nj_availability": "Available in NJ & ships to NJ (Gary's Wine, Total Wine NJ, Wine.com)",
+                "match_keywords": ["pizza", "pasta", "night", "weeknight", "italian", "ragu", "meatballs", "bolognese", "sangiovese", "montalcino", "value", "ready", "now"],
+                "rationale": "Baby Brunello: same Sangiovese Grosso grapes, released young. Dark cherry, leather, and earth for ragù, meatballs, and pappardelle.",
+                "cellar_complement": "Drinks now while your Brunellos age — a preview of Montalcino at a third of the price."
             }
         ]
 
@@ -410,9 +470,26 @@ class SommelierAgent:
             scored.append((score, rec))
 
         scored.sort(key=lambda x: x[0], reverse=True)
+        recs = [s[1] for s in scored]
+
+        # Respect an explicit price range in the query (e.g. "$20-$40", "under $50")
+        import re
+        price_min, price_max = None, None
+        m = re.search(r"\$?\s*(\d{2,4})\s*(?:-|–|to|and)\s*\$?\s*(\d{2,4})", q_lower)
+        if m and int(m.group(2)) > int(m.group(1)):
+            price_min, price_max = int(m.group(1)), int(m.group(2))
+        else:
+            u = re.search(r"under\s*\$?\s*(\d{2,4})", q_lower)
+            if u:
+                price_min, price_max = 0, int(u.group(1))
+        if price_max is not None:
+            in_budget = [r for r in recs if price_min <= r["est_price"] <= price_max]
+            if len(in_budget) >= 2:
+                recs = in_budget
+
         return {
             "query": query,
-            "recommendations": [s[1] for s in scored[:4]]
+            "recommendations": recs[:4]
         }
 
     def add_from_text(self, natural_text: str, user_id: Optional[int] = 1) -> WineBottle:

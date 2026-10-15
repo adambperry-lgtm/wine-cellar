@@ -421,7 +421,7 @@
         </div>
         <div class="flex flex-wrap gap-2">
           <button onclick="setPairingTarget('I would like to get some wine that is ready to drink now and serve with a ribeye')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-indigo-700/50 transition font-medium">🥩 Ready to drink now with Ribeye</button>
-          <button onclick="setPairingTarget('Ready-to-drink crisp white wines for seafood and oysters that complement my cellar')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">🦪 Ready-to-drink Seafood Whites</button>
+          <button onclick="setPairingTarget('Italian reds for pizza and pasta nights in, priced $20-$40, ready to drink now')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">🍕 Pizza &amp; Pasta Nights In ($20-40)</button>
           <button onclick="setPairingTarget('Age-worthy collectible reds to cellar for 10-20 years that balance my collection')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">⏳ Age-worthy Collectibles (10-20 yrs)</button>
           <button onclick="setPairingTarget('Mature Spanish Rioja or Italian Brunello ready to open this year')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">🇪🇸 Mature Spanish / Italian Reds</button>
           <button onclick="setPairingTarget('Great value daily drinkers under $50 that deliver serious quality')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-200 text-slate-300 border border-slate-700 transition">💰 Everyday Cellar Defenders ($30-$50)</button>
@@ -3694,6 +3694,62 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         match_keywords: ["steak", "ribeye", "beef", "bbq", "daily", "value", "meat", "argentina"],
         rationale: "High-altitude limestone elevation gives floral violets and fresh acidity that cuts right through rich marbled beef.",
         cellar_complement: "A crowd-pleasing, robust steakhouse wine under $40 for casual grilling."
+      },
+      {
+        wine_name: "Chianti Classico",
+        producer: "Fèlsina Berardenga (or Castello di Volpaia)",
+        vintage_sweet_spot: "2020 or 2021",
+        region: "Chianti Classico, Tuscany, Italy",
+        varietal: "Sangiovese",
+        est_price: 28,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Aeration 20m",
+        serving_temp: "61°F",
+        match_keywords: ["pizza", "pasta", "night", "weeknight", "italian", "tomato", "red sauce", "bolognese", "sangiovese", "chianti", "value", "ready", "now"],
+        rationale: "Bright sour cherry, violet, and savory herbs with lively acidity that matches tomato sauce acidity bite-for-bite. The definitive red-sauce wine.",
+        cellar_complement: "A true weeknight Italian staple that protects your Brunello and Super Tuscan holdings for special occasions."
+      },
+      {
+        wine_name: "Barbera d'Alba",
+        producer: "G.D. Vajra (or Vietti 'Tre Vigne')",
+        vintage_sweet_spot: "2021 or 2022",
+        region: "Piedmont, Italy",
+        varietal: "Barbera",
+        est_price: 26,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Pop and pour",
+        serving_temp: "60°F",
+        match_keywords: ["pizza", "pasta", "night", "weeknight", "italian", "tomato", "sausage", "lasagna", "barbera", "piedmont", "value", "ready", "now"],
+        rationale: "Juicy black cherry and plum with naturally high acidity and soft tannins — loves pepperoni, sausage, and baked lasagna.",
+        cellar_complement: "Adds a fruit-forward, low-tannin Piedmont red that drinks perfectly young, unlike Nebbiolo."
+      },
+      {
+        wine_name: "Etna Rosso",
+        producer: "Tenuta delle Terre Nere (or Benanti)",
+        vintage_sweet_spot: "2021 or 2022",
+        region: "Mount Etna, Sicily, Italy",
+        varietal: "Nerello Mascalese",
+        est_price: 30,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Aeration 15m",
+        serving_temp: "59°F",
+        match_keywords: ["pizza", "pasta", "night", "weeknight", "italian", "margherita", "mushroom", "sicily", "etna", "value", "ready", "now"],
+        rationale: "Volcanic smoke, wild strawberry, and fine Burgundian tannins. Stunning with Neapolitan Margherita and mushroom pizzas.",
+        cellar_complement: "Introduces one of Italy's most exciting volcanic regions — Pinot-like elegance at an everyday price."
+      },
+      {
+        wine_name: "Rosso di Montalcino",
+        producer: "Il Poggione (or Col d'Orcia)",
+        vintage_sweet_spot: "2021 or 2022",
+        region: "Montalcino, Tuscany, Italy",
+        varietal: "Sangiovese Grosso",
+        est_price: 32,
+        drinking_status: "Prime Peak Window",
+        decant_advice: "Aeration 30m",
+        serving_temp: "62°F",
+        match_keywords: ["pizza", "pasta", "night", "weeknight", "italian", "ragu", "meatballs", "bolognese", "sangiovese", "montalcino", "value", "ready", "now"],
+        rationale: "Baby Brunello: same Sangiovese Grosso grapes, released young. Dark cherry, leather, and earth for ragù, meatballs, and pappardelle.",
+        cellar_complement: "Drinks now while your Brunellos age — a preview of Montalcino at a third of the price."
       }
     ];
 
@@ -3701,6 +3757,18 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       const input = document.getElementById('foodQueryInput');
       if (input) input.value = target;
       runSommelierQuery();
+    }
+
+    function parsePriceRange(qLower) {
+      // Matches "$20-$40", "$20-40", "20 - 40", "between $20 and $40"
+      const m = qLower.match(/\$?\s*(\d{2,4})\s*(?:-|–|to|and)\s*\$?\s*(\d{2,4})/);
+      if (m) {
+        const lo = parseInt(m[1], 10), hi = parseInt(m[2], 10);
+        if (hi > lo) return { min: lo, max: hi };
+      }
+      const under = qLower.match(/under\s*\$?\s*(\d{2,4})/);
+      if (under) return { min: 0, max: parseInt(under[1], 10) };
+      return null;
     }
 
     function getCatalogPurchaseRecommendations(query) {
@@ -3726,6 +3794,13 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       });
 
       scored.sort((a, b) => b.score - a.score);
+
+      // Respect an explicit price range if the query contains one
+      const range = parsePriceRange(qLower);
+      if (range) {
+        const inBudget = scored.filter(x => x.item.est_price >= range.min && x.item.est_price <= range.max);
+        if (inBudget.length >= 2) return inBudget.slice(0, 4).map(x => x.item);
+      }
       return scored.slice(0, 4).map(x => x.item);
     }
 
