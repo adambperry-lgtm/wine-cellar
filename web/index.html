@@ -51,75 +51,111 @@
 <body class="h-full flex flex-col antialiased">
 
   <!-- Top Navigation Bar -->
-  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-30 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-900 to-red-600 flex items-center justify-center shadow-lg shadow-red-950/50">
-          <span class="text-xl">🍷</span>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-lg font-bold text-white tracking-wide">Sommelier Wine Cellar Agent</h1>
-            <span class="text-xs bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-full font-medium">Ref Year: 2026</span>
+  <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-col gap-2.5">
+      <!-- TOP ROW: Brand on left, Prominent User Account / Sign In Pill on right -->
+      <div class="flex items-center justify-between w-full gap-2">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-rose-900 to-red-600 flex items-center justify-center shadow-lg shadow-red-950/50 shrink-0">
+            <span class="text-lg sm:text-xl">🍷</span>
           </div>
-          <p class="text-xs text-slate-400">Intelligent Drinking Window Engine & Cellar Management</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 flex-wrap">
-        <button onclick="openModal('scanLabelModal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/40">
-          <span>📸</span> Scan Label
-        </button>
-        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-900/30">
-          <span>➕</span> Enter Wine
-        </button>
-        <button onclick="openSommelierModal('open')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all shadow-sm">
-          <span>✨</span> What to Open
-        </button>
-        <button onclick="openSommelierModal('buy')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-500/15 border border-indigo-500/35 text-indigo-300 hover:bg-indigo-500/25 transition-all shadow-sm">
-          <span>🛒</span> What to Buy
-        </button>
-        <button onclick="openModal('auditModal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all">
-          <span>📊</span> Cellar Audit
-        </button>
-        <button onclick="openHistoryModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition-all" title="Review opened bottles, star ratings, and tasting notes">
-          <span>📖</span> Tasting Log
-        </button>
-        <button onclick="openStorageModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
-          <span>🧊</span> Edit Storage
-        </button>
-        <button onclick="exportCellarDatabase()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
-          <span>📥</span> Export Database
-        </button>
-
-        <!-- User Account Profile Button -->
-        <div class="relative inline-block text-left" id="userMenuContainer">
-          <button onclick="toggleUserDropdown()" id="userProfileBtn" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-all shadow-sm">
-            <img id="userAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" class="w-4 h-4 rounded-full bg-slate-700 object-cover" alt="Avatar">
-            <span id="userNameLabel" class="max-w-[120px] truncate">Cellar Master</span>
-            <span class="text-[10px] text-slate-400">▼</span>
-          </button>
-          <div id="userDropdown" class="hidden absolute right-0 mt-2 w-60 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-2 z-50 text-xs">
-            <div class="px-3 py-2 border-b border-slate-800">
-              <div class="font-semibold text-white truncate" id="dropdownUserName">Cellar Master</div>
-              <div class="text-[11px] text-slate-400 truncate" id="dropdownUserEmail">cellarmaster@cellar.local</div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <h1 class="text-sm sm:text-lg font-bold text-white tracking-wide truncate">Cellar Sommelier Agent</h1>
+              <span class="text-[9px] sm:text-xs bg-rose-950 text-rose-300 border border-rose-800 px-1.5 py-0.2 rounded-full font-medium shrink-0">2026</span>
             </div>
-            <div class="py-1">
-              <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
-                <span>🔄</span> Switch Account
+            <p class="text-[10px] sm:text-xs text-slate-400 truncate hidden xs:block">Drinking Window Engine & Collection Manager</p>
+          </div>
+        </div>
+
+        <!-- Prominent User Account / Sign In Pill (Always Top-Right!) -->
+        <div class="relative inline-block text-left shrink-0" id="userMenuContainer">
+          <button onclick="toggleUserDropdown()" id="userProfileBtn" class="group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-rose-950/80 to-slate-900 hover:from-rose-900 hover:to-slate-800 text-white border border-rose-500/50 hover:border-rose-400 transition-all shadow-md shadow-rose-950/30">
+            <div class="relative shrink-0 flex items-center justify-center">
+              <img id="userAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-700 object-cover border border-rose-400/50" alt="Avatar">
+              <span id="userStatusDot" class="hidden absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-900"></span>
+            </div>
+            <div class="flex flex-col text-left leading-tight min-w-0">
+              <span id="userBadgeText" class="text-[9px] font-bold text-rose-300 uppercase tracking-wider truncate">Cellar Account</span>
+              <span id="userNameLabel" class="text-xs font-bold text-white max-w-[95px] sm:max-w-[130px] truncate">Sign In / Register</span>
+            </div>
+            <span class="text-[10px] text-rose-300 group-hover:text-white transition shrink-0">▼</span>
+          </button>
+
+          <!-- Dropdown Menu: Styled & Clamped to Viewport -->
+          <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-24px)] rounded-2xl bg-slate-900/98 backdrop-blur-md border border-slate-700/80 shadow-2xl py-2 z-50 text-xs">
+            <!-- Guest Card (shown when NOT signed in) -->
+            <div id="dropdownGuestCard" class="px-3.5 py-3 border-b border-slate-800 bg-rose-950/40 mx-2 rounded-xl mb-2">
+              <div class="font-bold text-white text-xs flex items-center gap-1.5">
+                <span>🍷</span> Personal Wine Cellar
+              </div>
+              <p class="text-[11px] text-slate-300 mt-1">Sign in with Google or Email to manage private bottles & drinking windows.</p>
+              <div class="grid grid-cols-2 gap-2 mt-2.5">
+                <button onclick="openAuthModal('login')" class="py-2 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-center transition shadow-md shadow-rose-950/40 flex items-center justify-center gap-1.5 text-xs">
+                  <span>🔑</span> Sign In
+                </button>
+                <button onclick="openAuthModal('register')" class="py-2 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-center transition shadow-md shadow-emerald-950/40 flex items-center justify-center gap-1.5 text-xs">
+                  <span>✨</span> Register
+                </button>
+              </div>
+            </div>
+
+            <!-- Active User Card (shown when signed in) -->
+            <div id="dropdownUserCard" class="hidden px-3.5 py-2.5 border-b border-slate-800 bg-slate-800/40 mx-2 rounded-xl mb-2">
+              <div class="flex items-center gap-2.5">
+                <img id="dropdownAvatarImg" class="w-8 h-8 rounded-full bg-slate-700 object-cover border border-emerald-500/50 shrink-0" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" alt="">
+                <div class="min-w-0">
+                  <div class="font-bold text-white text-xs truncate flex items-center gap-1.5">
+                    <span id="dropdownUserName">Adambperry</span>
+                    <span class="text-[9px] bg-emerald-900/80 text-emerald-300 px-1.5 py-0.2 rounded-full border border-emerald-700/60 font-semibold">Active</span>
+                  </div>
+                  <div class="text-[11px] text-slate-400 truncate" id="dropdownUserEmail">adambperry@gmail.com</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Menu Navigation Links -->
+            <div class="py-1 px-1">
+              <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg flex items-center gap-2 transition">
+                <span>🔄</span> Switch Cellar Account
               </button>
-              <button onclick="openAuthModal('login')" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
-                <span>🔑</span> Sign In
-              </button>
-              <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 text-emerald-400 hover:bg-slate-800 flex items-center gap-2">
+              <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 text-emerald-400 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
                 <span>✨</span> Create New Cellar
               </button>
-              <button onclick="logoutUser()" class="w-full text-left px-3 py-2 text-rose-400 hover:bg-slate-800 flex items-center gap-2 border-t border-slate-800 mt-1">
+              <button id="dropdownSignOutBtn" onclick="logoutUser()" class="hidden w-full text-left px-3 py-2 text-rose-400 hover:bg-slate-800 rounded-lg flex items-center gap-2 border-t border-slate-800/80 mt-1 transition">
                 <span>🚪</span> Sign Out
               </button>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- ROW 2: Action Buttons Bar -->
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <button onclick="openModal('scanLabelModal')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/40">
+          <span>📸</span> Scan Label
+        </button>
+        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-900/30">
+          <span>➕</span> Enter Wine
+        </button>
+        <button onclick="openSommelierModal('open')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all shadow-sm">
+          <span>✨</span> What to Open
+        </button>
+        <button onclick="openSommelierModal('buy')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-500/15 border border-indigo-500/35 text-indigo-300 hover:bg-indigo-500/25 transition-all shadow-sm">
+          <span>🛒</span> What to Buy
+        </button>
+        <button onclick="openModal('auditModal')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all">
+          <span>📊</span> Cellar Audit
+        </button>
+        <button onclick="openHistoryModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition-all" title="Review opened bottles, star ratings, and tasting notes">
+          <span>📖</span> Tasting Log
+        </button>
+        <button onclick="openStorageModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
+          <span>🧊</span> Edit Storage
+        </button>
+        <button onclick="exportCellarDatabase()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
+          <span>📥</span> Export CSV
+        </button>
       </div>
     </div>
   </header>
@@ -2378,24 +2414,73 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
     function updateUserHeaderUI() {
       const nameEl = document.getElementById('userNameLabel');
+      const badgeTextEl = document.getElementById('userBadgeText');
+      const statusDotEl = document.getElementById('userStatusDot');
+      const btnEl = document.getElementById('userProfileBtn');
       const dropNameEl = document.getElementById('dropdownUserName');
       const dropEmailEl = document.getElementById('dropdownUserEmail');
       const avatarEl = document.getElementById('userAvatarImg');
+      const dropAvatarEl = document.getElementById('dropdownAvatarImg');
+      const guestCardEl = document.getElementById('dropdownGuestCard');
+      const userCardEl = document.getElementById('dropdownUserCard');
+      const signOutBtnEl = document.getElementById('dropdownSignOutBtn');
 
+      const isRealUser = currentUser && currentUser.id && currentUser.id !== 1 && !currentUser.email.includes('cellarmaster');
       const name = currentUser.name || (currentUser.email ? currentUser.email.split('@')[0].toUpperCase() : 'Cellar Master');
       const email = currentUser.email || 'cellarmaster@cellar.local';
       const avatar = currentUser.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`;
 
-      if (nameEl) nameEl.textContent = name;
+      if (avatarEl) avatarEl.src = avatar;
+      if (dropAvatarEl) dropAvatarEl.src = avatar;
       if (dropNameEl) dropNameEl.textContent = name;
       if (dropEmailEl) dropEmailEl.textContent = email;
-      if (avatarEl) avatarEl.src = avatar;
+
+      if (isRealUser) {
+        if (nameEl) nameEl.textContent = name;
+        if (badgeTextEl) badgeTextEl.textContent = "My Cellar";
+        if (statusDotEl) statusDotEl.classList.remove('hidden');
+        if (btnEl) {
+          btnEl.className = "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-950/70 via-slate-800 to-slate-900 hover:from-emerald-900/80 hover:to-slate-800 text-white border border-emerald-500/50 hover:border-emerald-400 transition-all shadow-md shadow-emerald-950/30";
+        }
+        if (guestCardEl) guestCardEl.classList.add('hidden');
+        if (userCardEl) userCardEl.classList.remove('hidden');
+        if (signOutBtnEl) signOutBtnEl.classList.remove('hidden');
+      } else {
+        if (nameEl) nameEl.textContent = "Sign In / Register";
+        if (badgeTextEl) badgeTextEl.textContent = "Cellar Account";
+        if (statusDotEl) statusDotEl.classList.add('hidden');
+        if (btnEl) {
+          btnEl.className = "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-rose-950/90 via-rose-900/40 to-slate-900 hover:from-rose-900 hover:to-slate-800 text-white border border-rose-500/70 hover:border-rose-400 transition-all shadow-md shadow-rose-950/40 ring-1 ring-rose-500/30";
+        }
+        if (guestCardEl) guestCardEl.classList.remove('hidden');
+        if (userCardEl) userCardEl.classList.add('hidden');
+        if (signOutBtnEl) signOutBtnEl.classList.add('hidden');
+      }
     }
 
     function toggleUserDropdown() {
       const drop = document.getElementById('userDropdown');
-      if (drop) {
-        drop.classList.toggle('hidden');
+      if (!drop) return;
+      const isOpening = drop.classList.contains('hidden');
+      drop.classList.toggle('hidden');
+      if (isOpening) {
+        // Reset positions
+        drop.style.left = '';
+        drop.style.right = '0px';
+
+        // Check viewport boundaries so menu is NEVER cut off on iPhone or mobile
+        requestAnimationFrame(() => {
+          const rect = drop.getBoundingClientRect();
+          if (rect.left < 8) {
+            // Offscreen on the left
+            drop.style.left = '8px';
+            drop.style.right = 'auto';
+          } else if (rect.right > window.innerWidth - 8) {
+            // Offscreen on the right
+            drop.style.right = '8px';
+            drop.style.left = 'auto';
+          }
+        });
       }
     }
 
