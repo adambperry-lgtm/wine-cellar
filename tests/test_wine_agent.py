@@ -806,6 +806,65 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         bottles = self.db.list_bottles(user_id=user.id)
         self.assertEqual(bottles[0].location_rack, "New EuroCave")
 
+    def test_gemini_vision_label_analysis(self):
+        from unittest.mock import patch
+        from wine_agent.gemini_sommelier import analyze_wine_label_image
+        import json
+
+        fake_gemini_response = {
+            "candidates": [{
+                "content": {
+                    "parts": [{
+                        "text": json.dumps({
+                            "producer": "Château Margaux",
+                            "wine_name": "Premier Grand Cru Classé",
+                            "vintage": 2015,
+                            "varietal": "Bordeaux Blend",
+                            "region": "Margaux, Bordeaux",
+                            "country": "France",
+                            "wine_type": "Red",
+                            "format": "Standard (750ml)",
+                            "alcohol_pct": 13.5,
+                            "critic_score": 99,
+                            "personal_notes": "First Growth Margaux with sublime violets and graphite."
+                        })
+                    }]
+                }
+            }]
+        }
+
+        with patch("wine_agent.gemini_sommelier._make_gemini_post_request") as mock_req:
+            mock_req.return_value = fake_gemini_response
+            res = analyze_wine_label_image("data:image/jpeg;base64,/9j/fakebase64", api_key="test_key")
+            self.assertTrue(res["success"])
+            bottle = res["bottle"]
+            self.assertEqual(bottle.producer, "Château Margaux")
+            self.assertEqual(bottle.wine_name, "Premier Grand Cru Classé")
+            self.assertEqual(bottle.vintage, 2015)
+            self.assertEqual(bottle.varietal, "Bordeaux Blend")
+            self.assertEqual(bottle.region, "Margaux, Bordeaux")
+            self.assertEqual(bottle.country, "France")
+            self.assertEqual(bottle.wine_type, WineType.RED)
+            self.assertEqual(bottle.critic_score, 99)
+            self.assertIsNotNone(bottle.drinking_window)
+            self.assertGreater(bottle.drinking_window.peak_end, 2030)
+
+    def test_parse_wine_label_noisy_ocr(self):
+        from wine_agent.natural_language import parse_wine_label
+        # Simulated corrupted OCR text from curved glass bottle glare
+        noisy_text = """
+        | 1\\ /| / \\ |1
+        2O19 CH/\\TE/\\U
+        ~ ~ _ * ^ [ ]
+        # $ % @
+        """
+        bottle = parse_wine_label(noisy_text)
+        # Should not adopt raw symbol noise as producer name
+        self.assertNotIn("|", bottle.producer)
+        self.assertNotIn("\\", bottle.producer)
+        self.assertNotIn("~", bottle.producer)
+        self.assertIsNotNone(bottle.drinking_window)
+
 
 if __name__ == "__main__":
     unittest.main()

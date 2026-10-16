@@ -364,21 +364,46 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"success": True, "bottle": bottle.to_dict()})
 
         elif path == "/api/scan-label":
+            image_data = payload.get("image_data") or payload.get("image_base64")
             text = payload.get("text", "")
             fridge = payload.get("fridge", "Basement Fridge")
             save_immediately = payload.get("save", False)
-            if not text:
-                self._send_json({"error": "text recognized from label is required"}, status=400)
-                return
-            from wine_agent.natural_language import parse_wine_label
-            bottle = parse_wine_label(text, default_fridge=fridge)
+            api_key = payload.get("api_key")
+
+            bottle = None
+            method = "ocr"
+
+            # 1. Attempt Gemini Multimodal Vision if an image was provided
+            if image_data:
+                from wine_agent.gemini_sommelier import analyze_wine_label_image
+                vision_res = analyze_wine_label_image(image_data, api_key=api_key, default_fridge=fridge)
+                if vision_res.get("success") and vision_res.get("bottle"):
+                    bottle = vision_res["bottle"]
+                    method = "gemini_vision"
+                elif not text:
+                    # Vision analysis failed and no fallback OCR text was provided
+                    self._send_json({
+                        "error": vision_res.get("error", "Unable to parse wine label image via Gemini Vision."),
+                        "vision_error": vision_res.get("error")
+                    }, status=400)
+                    return
+
+            # 2. Text / OCR fallback
+            if not bottle:
+                if not text:
+                    self._send_json({"error": "Neither image data nor recognized text was provided."}, status=400)
+                    return
+                from wine_agent.natural_language import parse_wine_label
+                bottle = parse_wine_label(text, default_fridge=fridge)
+                method = "ocr"
+
             bottle.user_id = current_user.id
             if save_immediately:
                 b_id = self.agent.db.add_bottle(bottle, user_id=current_user.id)
                 saved = self.agent.db.get_bottle(b_id, user_id=current_user.id)
-                self._send_json({"success": True, "bottle": (saved or bottle).to_dict(), "saved": True})
+                self._send_json({"success": True, "bottle": (saved or bottle).to_dict(), "method": method, "saved": True})
             else:
-                self._send_json({"success": True, "bottle": bottle.to_dict(), "saved": False})
+                self._send_json({"success": True, "bottle": bottle.to_dict(), "method": method, "saved": False})
 
         elif path == "/api/bottles":
             # Add direct structured bottle

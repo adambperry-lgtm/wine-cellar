@@ -487,10 +487,11 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span>📷</span>
               Wine Label Scanner
-              <span class="text-[10px] font-mono font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full">OCR + Enological Engine</span>
+              <span id="scanEngineBadge" class="text-[10px] font-mono font-semibold bg-violet-950 text-violet-300 border border-violet-800 px-2 py-0.5 rounded-full flex items-center gap-1">✨ Gemini AI Vision + Sommelier</span>
             </h3>
-            <p class="text-xs text-slate-400">Upload or snap a photo of your wine bottle label. The sommelier agent auto-detects details and assigns drinking windows.</p>
+            <p class="text-xs text-slate-400">Upload or snap a photo of your wine bottle label. Gemini Vision auto-detects estate details and assigns drinking windows.</p>
           </div>
         </div>
         <button onclick="closeModal('scanLabelModal')" class="text-slate-400 hover:text-white text-lg p-1">✕</button>
@@ -523,6 +524,10 @@
               or click to browse from device / take camera shot
             </p>
             <span class="text-[10px] text-slate-500 mt-1">Supports JPG, PNG, WebP • Paste with <kbd class="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">Cmd+V</kbd></span>
+            <div id="scanEngineStatusPill" class="mt-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-violet-950/70 text-violet-300 border border-violet-800/50 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"></span>
+              <span>Multimodal Vision Scanner Enabled</span>
+            </div>
 
             <!-- Explicit Action Buttons inside Dropzone -->
             <div class="flex items-center gap-2 mt-3.5" onclick="event.stopPropagation()">
@@ -620,9 +625,14 @@
             <!-- Headline Card -->
             <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col gap-2">
               <div class="flex items-center justify-between">
-                <span id="scanBadgeStatus" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
-                  Cellar Hold ⏳
-                </span>
+                <div class="flex items-center gap-1.5">
+                  <span id="scanBadgeStatus" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
+                    Cellar Hold ⏳
+                  </span>
+                  <span id="scanEngineSourceBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1">
+                    <span>✨</span> Gemini Vision
+                  </span>
+                </div>
                 <span id="scanDetectedType" class="text-xs text-slate-400">Red Wine</span>
               </div>
               <div>
@@ -5154,6 +5164,138 @@ USER QUERY: "${query}"`;
       triggerOcrScan();
     }
 
+    async function callGeminiVisionDirectApi(imageData, apiKey) {
+      if (!apiKey) return { success: false, error: "No Gemini API key provided." };
+      
+      let base64Clean = imageData;
+      let mimeType = "image/jpeg";
+      if (base64Clean.includes('base64,')) {
+        const parts = base64Clean.split('base64,');
+        if (parts[0].includes('image/png')) mimeType = "image/png";
+        else if (parts[0].includes('image/webp')) mimeType = "image/webp";
+        base64Clean = parts[1];
+      }
+
+      const prompt = `You are a Master Sommelier and world-class wine bottle label recognition engine.
+Analyze this wine bottle label photo with maximum enological accuracy.
+Extract and return ONLY a valid, raw JSON object (without markdown code blocks, backticks, or commentary) with these exact keys:
+- producer: The winery, château, domaine, or estate name (e.g. "Château Margaux", "Caymus Vineyards", "Hunnicutt", "Penfolds")
+- wine_name: Cuvée name, vineyard designation, or specific wine name (e.g. "Special Selection", "9-3-5", "Estate Cabernet Sauvignon"). If none, use the varietal or leave empty.
+- vintage: The 4-digit vintage year as an integer (e.g. 2019). Set to null for Non-Vintage (NV).
+- varietal: Primary grape varietal or blend name (e.g. "Cabernet Sauvignon", "Bordeaux Blend", "Pinot Noir", "Nebbiolo", "Chardonnay", "Tempranillo", "Syrah/Shiraz", "Champagne Blend")
+- region: The official wine region and appellation (e.g. "Napa Valley, California", "Margaux, Bordeaux", "Barolo, Piedmont", "Rioja Alta").
+- country: Country of origin (e.g. "United States", "France", "Italy", "Spain", "Germany", "Australia", "New Zealand", "Argentina", "Chile").
+- wine_type: Exactly one of: "Red", "White", "Sparkling", "Rosé", "Dessert / Sweet", "Fortified".
+- format: Exactly one of: "Standard (750ml)", "Magnum (1.5L)", "Half (375ml)", "Double Magnum (3.0L)".
+- alcohol_pct: Alcohol percentage as a number (e.g. 14.5) if visible, else null.
+- critic_score: Visible score points (e.g. 95) or null.
+- personal_notes: A brief 1-2 sentence sommelier appraisal of producer pedigree, terroir, and drinking profile.`;
+
+      const candidateModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+      let lastErr = "";
+
+      for (const model of candidateModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+          const payload = {
+            contents: [{
+              parts: [
+                { text: prompt },
+                {
+                  inline_data: {
+                    mime_type: mimeType,
+                    data: base64Clean
+                  }
+                }
+              ]
+            }],
+            generationConfig: {
+              temperature: 0.1,
+              maxOutputTokens: 1024,
+              responseMimeType: "application/json"
+            }
+          };
+
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+            const errTxt = await res.text();
+            lastErr = `HTTP ${res.status}: ${errTxt}`;
+            continue;
+          }
+
+          const data = await res.json();
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawText) continue;
+
+          let cleanedJson = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+          const parsed = JSON.parse(cleanedJson);
+
+          const v = parsed.vintage && !isNaN(parsed.vintage) ? parseInt(parsed.vintage) : null;
+          const varietal = parsed.varietal || "Cabernet Sauvignon";
+          const producer = parsed.producer || "Unknown Producer";
+          const wineName = parsed.wine_name || "";
+          const wineType = parsed.wine_type || "Red";
+          const region = parsed.region || "";
+
+          // Client-side drinking window calculation
+          const refYear = 2026;
+          const baseYear = v || (refYear - 2);
+          const wStart = baseYear + 3;
+          const pStart = baseYear + 6;
+          const pEnd = baseYear + 15;
+          const wEnd = baseYear + 22;
+
+          let status = "In Peak Window";
+          if (refYear < wStart) status = "Hold (Too Young)";
+          else if (refYear < pStart) status = "Approaching Peak";
+          else if (refYear <= pEnd) status = "In Peak Window";
+          else if (refYear <= wEnd) status = "Drink Soon (Late Peak)";
+          else status = "Past Peak (Decline)";
+
+          const bottle = {
+            id: Date.now(),
+            producer,
+            wine_name: wineName,
+            vintage: v,
+            varietal,
+            region,
+            country: parsed.country || "",
+            wine_type: wineType,
+            format: parsed.format || "Standard (750ml)",
+            quantity: 1,
+            location_rack: scanCurrentTargetFridge,
+            location_bin: "Shelf 1",
+            critic_score: parsed.critic_score ? parseInt(parsed.critic_score) : null,
+            personal_notes: parsed.personal_notes || "Identified via Gemini AI Vision",
+            drinking_window: {
+              window_start: wStart,
+              peak_start: pStart,
+              peak_end: pEnd,
+              window_end: wEnd,
+              status,
+              decant_hours: varietal.toLowerCase().includes("pinot") || varietal.toLowerCase().includes("white") ? 0.5 : 1.5,
+              serving_temp_f: wineType === "White" ? 50 : (wineType === "Sparkling" ? 45 : 63),
+              serving_temp_c: wineType === "White" ? 10 : (wineType === "Sparkling" ? 7 : 17),
+              aging_tier: "Cellar Collector Tier",
+              rationale: `Drinking window computed from vintage ${v || 'NV'} and ${varietal} phenolic curve.`
+            }
+          };
+
+          return { success: true, bottle, model };
+        } catch (err) {
+          lastErr = err.message;
+          continue;
+        }
+      }
+
+      return { success: false, error: lastErr || "Failed to parse label with Gemini Vision." };
+    }
+
     async function triggerOcrScan() {
       const canvas = document.getElementById('scanCanvas');
       const laser = document.getElementById('scanLaserLine');
@@ -5162,42 +5304,121 @@ USER QUERY: "${query}"`;
       const progPct = document.getElementById('scanProgressPct');
 
       laser.classList.remove('hidden');
-      statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Scanning wine label typography...';
-      progBar.style.width = '30%';
-      progPct.textContent = '30%';
+      statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span> Preparing wine label image...';
+      progBar.style.width = '20%';
+      progPct.textContent = '20%';
 
-      let recognizedText = "";
+      const imageData = canvas.toDataURL('image/jpeg', 0.88);
+      let parsedBottle = null;
+      let recognitionMethod = "gemini_vision";
+      let rawTranscript = "";
 
-      // 1. Try browser-based Tesseract.js WebAssembly
-      if (typeof Tesseract !== 'undefined') {
+      // 1. Try Server-side Gemini Vision via /api/scan-label
+      try {
+        statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span> ✨ Analyzing bottle with Google Gemini AI Vision...';
+        progBar.style.width = '45%';
+        progPct.textContent = '45%';
+
+        const res = await fetch("/api/scan-label", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image_data: imageData,
+            api_key: userGeminiKey || undefined,
+            fridge: scanCurrentTargetFridge,
+            save: false
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.bottle) {
+            parsedBottle = data.bottle;
+            recognitionMethod = data.method || "gemini_vision";
+            rawTranscript = data.bottle.personal_notes || "Scanned via Gemini Multimodal Vision";
+          }
+        }
+      } catch (e) {
+        console.warn("Server Gemini vision scan attempt:", e);
+      }
+
+      // 2. Direct client-side Gemini Vision call if server didn't succeed and user has key
+      if (!parsedBottle && userGeminiKey) {
         try {
-          statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Recognizing text via optical engine...';
-          const result = await Tesseract.recognize(canvas, 'eng', {
-            logger: m => {
-              if (m.status === 'recognizing text' && m.progress) {
-                const pct = Math.round(30 + (m.progress * 60));
-                progBar.style.width = `${pct}%`;
-                progPct.textContent = `${pct}%`;
-              }
-            }
-          });
-          recognizedText = result.data.text || "";
-        } catch (err) {
-          console.warn("Tesseract client OCR failed, trying server API:", err);
+          statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span> ✨ Querying Gemini Vision API directly...';
+          progBar.style.width = '65%';
+          progPct.textContent = '65%';
+
+          const directRes = await callGeminiVisionDirectApi(imageData, userGeminiKey);
+          if (directRes.success && directRes.bottle) {
+            parsedBottle = directRes.bottle;
+            recognitionMethod = "gemini_vision";
+            rawTranscript = directRes.bottle.personal_notes || "Scanned via Direct Gemini Vision";
+          }
+        } catch (e) {
+          console.warn("Direct client Gemini vision failed:", e);
         }
       }
 
-      progBar.style.width = '95%';
-      progPct.textContent = '95%';
-      statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Calculating drinking window...';
+      // 3. Fallback to Tesseract OCR if Gemini vision was unavailable
+      if (!parsedBottle) {
+        recognitionMethod = "ocr";
+        if (typeof Tesseract !== 'undefined') {
+          try {
+            statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Reading label typography with optical OCR...';
+            const result = await Tesseract.recognize(canvas, 'eng', {
+              logger: m => {
+                if (m.status === 'recognizing text' && m.progress) {
+                  const pct = Math.round(50 + (m.progress * 40));
+                  progBar.style.width = `${pct}%`;
+                  progPct.textContent = `${pct}%`;
+                }
+              }
+            });
+            rawTranscript = result.data.text || "";
+          } catch (err) {
+            console.warn("Tesseract client OCR failed:", err);
+          }
+        }
 
-      // 2. Pass recognized text to parser (tries server first, falls back to client sommelier logic)
-      await processRecognizedLabelText(recognizedText);
+        // Send recognized text to server or client parser
+        if (rawTranscript && rawTranscript.trim().length > 3) {
+          try {
+            const res = await fetch("/api/scan-label", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                text: rawTranscript,
+                fridge: scanCurrentTargetFridge,
+                save: false
+              })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.success && data.bottle) {
+                parsedBottle = data.bottle;
+              }
+            }
+          } catch (e) {}
+        }
+
+        if (!parsedBottle) {
+          parsedBottle = clientParseWineLabel(rawTranscript);
+        }
+      }
 
       laser.classList.add('hidden');
       progBar.style.width = '100%';
       progPct.textContent = '100%';
-      statusText.innerHTML = '✔ Bottle recognized successfully!';
+
+      if (recognitionMethod === "gemini_vision") {
+        statusText.innerHTML = '<span class="text-emerald-400 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ✨ Bottle recognized by Google Gemini Vision!</span>';
+      } else {
+        statusText.innerHTML = '<span class="text-amber-300 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> 🔍 Scanned via optical OCR (Verify details below)</span>';
+      }
+
+      currentScannedBottle = parsedBottle;
+      renderScanCandidateUI(parsedBottle, rawTranscript, recognitionMethod);
     }
 
     async function processRecognizedLabelText(rawText) {
@@ -5232,11 +5453,11 @@ USER QUERY: "${query}"`;
       }
 
       currentScannedBottle = parsedBottle;
-      renderScanCandidateUI(parsedBottle, rawText);
+      renderScanCandidateUI(parsedBottle, rawText, "sample");
     }
 
     function clientParseWineLabel(text) {
-      const clean = text || "";
+      const clean = (text || "").replace(/[|\\/_~*^\[\]{}<>]+/g, ' ').replace(/\s+/g, ' ').trim();
       const lower = clean.toLowerCase();
 
       // Vintage
@@ -5245,21 +5466,21 @@ USER QUERY: "${query}"`;
       if (vMatch) vintage = parseInt(vMatch[1]);
 
       // Region & Varietal detection
-      let region = "California";
+      let region = "";
       let varietal = "Cabernet Sauvignon";
       let wineType = "Red";
 
       if (lower.includes("napa")) region = "Napa Valley, California";
       else if (lower.includes("bordeaux") || lower.includes("margaux") || lower.includes("pauillac")) {
         region = "Bordeaux, France";
-        varietal = "Cabernet Sauvignon, Merlot";
+        varietal = "Bordeaux Blend";
       } else if (lower.includes("burgundy") || lower.includes("chablis")) {
         region = "Burgundy, France";
         varietal = lower.includes("chablis") ? "Chardonnay" : "Pinot Noir";
         wineType = lower.includes("chablis") ? "White" : "Red";
       } else if (lower.includes("champagne")) {
         region = "Champagne, France";
-        varietal = "Chardonnay, Pinot Noir";
+        varietal = "Champagne Blend";
         wineType = "Sparkling";
       } else if (lower.includes("rioja")) {
         region = "Rioja, Spain";
@@ -5267,6 +5488,9 @@ USER QUERY: "${query}"`;
       } else if (lower.includes("barolo") || lower.includes("piemont")) {
         region = "Piedmont, Italy";
         varietal = "Nebbiolo";
+      } else if (lower.includes("tuscany") || lower.includes("chianti") || lower.includes("brunello")) {
+        region = "Tuscany, Italy";
+        varietal = "Sangiovese";
       }
 
       if (lower.includes("zinfandel")) varietal = "Zinfandel";
@@ -5275,17 +5499,25 @@ USER QUERY: "${query}"`;
       if (lower.includes("sauvignon blanc")) { varietal = "Sauvignon Blanc"; wineType = "White"; }
 
       // Producer detection
-      let producer = "Hunnicutt";
+      let producer = "";
       if (lower.includes("hunnicutt")) producer = "Hunnicutt";
       else if (lower.includes("caymus")) producer = "Caymus Vineyards";
       else if (lower.includes("silver oak")) producer = "Silver Oak";
       else if (lower.includes("ridge")) producer = "Ridge Vineyards";
       else if (lower.includes("margaux")) producer = "Château Margaux";
       else if (lower.includes("veuve clicquot")) { producer = "Veuve Clicquot"; wineType = "Sparkling"; }
+      else if (lower.includes("opus one")) producer = "Opus One";
+      else if (lower.includes("stags leap") || lower.includes("stag's leap")) producer = "Stag's Leap Wine Cellars";
       else {
-        // extract first meaningful word
-        const lines = clean.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-        if (lines.length > 0) producer = lines[0];
+        // Extract meaningful word line with letters
+        const lines = clean.split('\n')
+          .map(l => l.trim())
+          .filter(l => l.length > 2 && /[a-zA-Z]{3,}/.test(l));
+        if (lines.length > 0) {
+          producer = lines[0];
+        } else {
+          producer = "Unidentified Producer (Verify Details)";
+        }
       }
 
       // Wine Name / Cuvée
@@ -5356,7 +5588,7 @@ USER QUERY: "${query}"`;
         wine_name: wineName,
         vintage,
         varietal,
-        region,
+        region: region || "Cellar Selection",
         sub_region: "",
         country: region.includes("France") ? "France" : "USA",
         wine_type: wineType,
@@ -5381,7 +5613,7 @@ USER QUERY: "${query}"`;
       };
     }
 
-    function renderScanCandidateUI(bottle, rawText) {
+    function renderScanCandidateUI(bottle, rawText, method = "gemini_vision") {
       document.getElementById('scanEmptyPlaceholder').classList.add('hidden');
       document.getElementById('scanResultCard').classList.remove('hidden');
 
@@ -5406,6 +5638,21 @@ USER QUERY: "${query}"`;
       } else {
         badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-950 text-indigo-300 border border-indigo-800";
         badge.textContent = "Cellar Hold ⏳";
+      }
+
+      // Recognition method source badge
+      const sourceBadge = document.getElementById('scanEngineSourceBadge');
+      if (sourceBadge) {
+        if (method === "gemini_vision") {
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1";
+          sourceBadge.innerHTML = "<span>✨</span> Gemini Vision";
+        } else if (method === "sample") {
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1";
+          sourceBadge.innerHTML = "<span>⚡</span> Sample Label";
+        } else {
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1";
+          sourceBadge.innerHTML = "<span>🔍</span> Optical OCR";
+        }
       }
 
       // Window stats

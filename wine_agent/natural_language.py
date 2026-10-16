@@ -374,6 +374,12 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
             if re.search(nr, line):
                 skip = True
                 break
+
+        # Skip lines that are mostly punctuation, slashes, bars, or OCR noise
+        alnum = re.findall(r'[a-zA-Z0-9]', line)
+        if len(line) >= 3 and len(alnum) / max(len(line), 1) < 0.35:
+            skip = True
+
         if not skip and len(line) >= 2:
             cleaned_lines.append(line)
 
@@ -427,15 +433,18 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
     # Fallback to top non-noise line if producer not matched
     if not producer and cleaned_lines:
         for line in cleaned_lines:
-            # Skip if this line is just the vintage or region or grape
-            l_lower = line.lower()
+            l_clean = re.sub(r'[^a-zA-Z0-9\s\'-]', '', line).strip()
+            letters = re.findall(r'[a-zA-Z]', l_clean)
+            if len(letters) < 3:
+                continue
+            l_lower = l_clean.lower()
             if vintage and str(vintage) == line.strip():
                 continue
             if varietal and varietal.lower() == l_lower:
                 continue
             if region and region.lower() == l_lower:
                 continue
-            producer = line
+            producer = l_clean
             break
 
     if not producer:
