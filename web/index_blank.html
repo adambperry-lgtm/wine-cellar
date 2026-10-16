@@ -1468,7 +1468,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       if (window.location.protocol === 'file:') {
         const saved = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
         cellarBottles = saved ? JSON.parse(saved) : (uId === 1 ? FALLBACK_BOTTLES : []);
-        initStorageZones();
+        await initStorageZones();
         renderKPIs();
         applyFilters();
         initGeminiControls();
@@ -1488,7 +1488,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const cached = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
         cellarBottles = cached ? JSON.parse(cached) : (uId === 1 ? FALLBACK_BOTTLES : []);
       }
-      initStorageZones();
+      await initStorageZones();
       renderKPIs();
       applyFilters();
       initGeminiControls();
@@ -2337,28 +2337,47 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     // ==========================================
     // 🧊 STORAGE MANAGEMENT & CUSTOM LOCATIONS
     // ==========================================
-    function initStorageZones() {
+    async function initStorageZones() {
+      const uId = currentUser ? currentUser.id : 1;
+      const storageKey = `wine_cellar_storage_zones_u${uId}`;
+
+      // 1. Immediately render from user-scoped localStorage cache if available for instant UI
       try {
-        const saved = localStorage.getItem('wine_cellar_storage_zones');
+        const saved = localStorage.getItem(storageKey);
         if (saved) {
-          storageZones = JSON.parse(saved);
-        } else {
-          storageZones = ["Basement Fridge", "Upstairs Fridge"];
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            storageZones = parsed;
+            updateStorageUI();
+          }
         }
-      } catch (e) {
-        storageZones = ["Basement Fridge", "Upstairs Fridge"];
+      } catch (e) {}
+
+      // 2. Fetch authoritative sticky storage locations from server for this user
+      if (window.location.protocol !== 'file:') {
+        try {
+          const res = await fetch("/api/storage-locations");
+          if (res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data.locations) && data.locations.length > 0) {
+              storageZones = data.locations;
+              try {
+                localStorage.setItem(storageKey, JSON.stringify(storageZones));
+              } catch (e) {}
+              updateStorageUI();
+              return;
+            }
+          }
+        } catch (e) {}
       }
 
-      // Automatically include any existing location from cellar bottles
-      cellarBottles.forEach(b => {
-        if (b.location_rack && !storageZones.some(z => z.toLowerCase() === b.location_rack.toLowerCase())) {
-          storageZones.push(b.location_rack);
-        }
-      });
-
-      try {
-        localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
-      } catch (e) {}
+      // 3. Fallback defaults if no cache or server response yet
+      if (!storageZones || storageZones.length === 0) {
+        storageZones = ["Basement Fridge", "Upstairs Fridge"];
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(storageZones));
+        } catch (e) {}
+      }
 
       updateStorageUI();
     }
@@ -2481,12 +2500,34 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         return;
       }
 
+      const uId = currentUser ? currentUser.id : 1;
+      const storageKey = `wine_cellar_storage_zones_u${uId}`;
+
+      // Optimistic update
       storageZones.push(name);
-      localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
+      try { localStorage.setItem(storageKey, JSON.stringify(storageZones)); } catch (e) {}
       if (input) input.value = '';
 
       updateStorageUI();
       renderStorageModal();
+
+      // Persist sticky storage location to server for this user
+      try {
+        const res = await fetch("/api/storage-locations/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.locations)) {
+            storageZones = data.locations;
+            try { localStorage.setItem(storageKey, JSON.stringify(storageZones)); } catch (e) {}
+            updateStorageUI();
+            renderStorageModal();
+          }
+        }
+      } catch (e) {}
     }
 
     async function promptRenameStorage(oldName) {
@@ -2499,10 +2540,13 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         return;
       }
 
+      const uId = currentUser ? currentUser.id : 1;
+      const storageKey = `wine_cellar_storage_zones_u${uId}`;
+
       // Update in storageZones list
       const idx = storageZones.findIndex(z => z.toLowerCase() === oldName.toLowerCase());
       if (idx !== -1) storageZones[idx] = trimmedNew;
-      localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
+      try { localStorage.setItem(storageKey, JSON.stringify(storageZones)); } catch (e) {}
 
       // Update in cellarBottles
       let updatedCount = 0;
@@ -2512,16 +2556,24 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           updatedCount += (b.quantity || 1);
         }
       });
-      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
-      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
-
-      // Send to server
       try {
-        await fetch("/api/rename-location", {
+        localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles));
+      } catch (e) {}
+
+      // Send to server (updates user_storage_locations AND bottles in DB)
+      try {
+        const res = await fetch("/api/storage-locations/rename", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ old_location: oldName, new_location: trimmedNew })
+          body: JSON.stringify({ old_name: oldName, new_name: trimmedNew })
         });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.locations)) {
+            storageZones = data.locations;
+            try { localStorage.setItem(storageKey, JSON.stringify(storageZones)); } catch (e) {}
+          }
+        }
       } catch (e) {}
 
       if (scanCurrentTargetFridge.toLowerCase() === oldName.toLowerCase()) {
@@ -2543,20 +2595,20 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           return;
         }
         matchingBottles.forEach(b => { b.location_rack = "Unassigned"; });
-        if (!storageZones.includes("Unassigned")) storageZones.push("Unassigned");
-        try {
-          await fetch("/api/rename-location", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ old_location: zoneName, new_location: "Unassigned" })
-          });
-        } catch (e) {}
+        if (!storageZones.some(z => z.toLowerCase() === "unassigned")) {
+          storageZones.push("Unassigned");
+        }
       }
 
+      const uId = currentUser ? currentUser.id : 1;
+      const storageKey = `wine_cellar_storage_zones_u${uId}`;
+
+      // Optimistically remove from list
       storageZones = storageZones.filter(z => z.toLowerCase() !== zoneName.toLowerCase());
-      localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
-      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
-      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(storageZones));
+        localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles));
+      } catch (e) {}
 
       if (scanCurrentTargetFridge.toLowerCase() === zoneName.toLowerCase()) {
         scanCurrentTargetFridge = storageZones[0] || 'Unassigned';
@@ -2566,6 +2618,24 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       renderKPIs();
       applyFilters();
       renderStorageModal();
+
+      // Persist deletion to server (deletes from user_storage_locations and reassigns bottles)
+      try {
+        const res = await fetch("/api/storage-locations/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: zoneName, reassign_to: "Unassigned" })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.locations)) {
+            storageZones = data.locations;
+            try { localStorage.setItem(storageKey, JSON.stringify(storageZones)); } catch (e) {}
+            updateStorageUI();
+            renderStorageModal();
+          }
+        }
+      } catch (e) {}
     }
 
     async function clearCellar() {
@@ -3137,16 +3207,17 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
 
       // Add any new storage zones from the spreadsheet
+      const uId = currentUser ? currentUser.id : 1;
+      const storageKey = `wine_cellar_storage_zones_u${uId}`;
       newBottles.forEach(b => {
         if (b.location_rack && !storageZones.some(z => z.toLowerCase() === b.location_rack.toLowerCase())) {
           storageZones.push(b.location_rack);
         }
       });
-      localStorage.setItem('wine_cellar_storage_zones', JSON.stringify(storageZones));
-
-      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
-      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
-      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(storageZones));
+        localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles));
+      } catch (e) {}
 
       // Sync with backend if available
       try {

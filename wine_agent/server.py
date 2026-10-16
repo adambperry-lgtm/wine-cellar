@@ -139,6 +139,10 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             history = self.agent.db.get_consumption_history(user_id=current_user.id)
             self._send_json([r.to_dict() for r in history])
 
+        elif path == "/api/storage-locations":
+            locations = self.agent.db.get_storage_locations(user_id=current_user.id)
+            self._send_json({"locations": locations})
+
         elif path == "/api/recommend":
             food = params.get("food", [None])[0]
             style = params.get("style", [None])[0]
@@ -455,12 +459,44 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                         enriched_count += 1
             self._send_json({"success": True, "enriched_count": enriched_count})
 
+        elif path == "/api/storage-locations":
+            locs = payload.get("locations", [])
+            updated = self.agent.db.set_storage_locations(user_id=current_user.id, locations=locs)
+            self._send_json({"success": True, "locations": updated})
+
+        elif path == "/api/storage-locations/add":
+            name = payload.get("name", "").strip()
+            if not name:
+                self._send_json({"error": "name is required"}, status=400)
+                return
+            updated = self.agent.db.add_storage_location(user_id=current_user.id, name=name)
+            self._send_json({"success": True, "locations": updated})
+
+        elif path == "/api/storage-locations/delete":
+            name = payload.get("name", "").strip()
+            reassign_to = payload.get("reassign_to", "Unassigned").strip()
+            if not name:
+                self._send_json({"error": "name is required"}, status=400)
+                return
+            updated = self.agent.db.delete_storage_location(user_id=current_user.id, name=name, reassign_to=reassign_to)
+            self._send_json({"success": True, "locations": updated})
+
+        elif path == "/api/storage-locations/rename":
+            old_name = payload.get("old_name", "").strip()
+            new_name = payload.get("new_name", "").strip()
+            if not old_name or not new_name:
+                self._send_json({"error": "old_name and new_name are required"}, status=400)
+                return
+            updated = self.agent.db.rename_storage_location(user_id=current_user.id, old_name=old_name, new_name=new_name)
+            self._send_json({"success": True, "locations": updated})
+
         elif path == "/api/rename-location":
             old_loc = payload.get("old_location", "").strip()
             new_loc = payload.get("new_location", "").strip()
             if not old_loc or not new_loc:
                 self._send_json({"error": "old_location and new_location are required"}, status=400)
                 return
+            self.agent.db.rename_storage_location(user_id=current_user.id, old_name=old_loc, new_name=new_loc)
             count = self.agent.db.rename_location(old_loc, new_loc, user_id=current_user.id)
             self._send_json({"success": True, "updated_count": count})
 

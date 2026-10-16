@@ -721,6 +721,91 @@ class TestMultiUserAuthenticationAndIsolation(unittest.TestCase):
         self.assertIn("tasting note", tasting_event["title"].lower())
 
 
+class TestUserStickyStorageLocations(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.NamedTemporaryFile(delete=False)
+        self.tmp.close()
+        self.db = WineDatabase(db_path=self.tmp.name)
+
+    def tearDown(self):
+        if os.path.exists(self.tmp.name):
+            os.unlink(self.tmp.name)
+
+    def test_sticky_storage_locations_isolation(self):
+        # Create User A and User B
+        user_a = self.db.create_user("alice@domain.com", "pass123", "Alice")
+        user_b = self.db.create_user("bob@domain.com", "pass123", "Bob")
+
+        # Alice adds custom storage locations
+        self.db.set_storage_locations(user_id=user_a.id, locations=["Kitchen Cooler", "Basement Rack 1"])
+        
+        # Bob has different custom locations
+        self.db.set_storage_locations(user_id=user_b.id, locations=["Main Cellar", "Dining Room Fridge"])
+
+        # Verify Alice's locations are sticky and isolated
+        alice_locs = self.db.get_storage_locations(user_id=user_a.id)
+        self.assertEqual(alice_locs, ["Kitchen Cooler", "Basement Rack 1"])
+
+        # Verify Bob's locations are sticky and isolated
+        bob_locs = self.db.get_storage_locations(user_id=user_b.id)
+        self.assertEqual(bob_locs, ["Main Cellar", "Dining Room Fridge"])
+
+    def test_delete_storage_location_reassigns_bottles(self):
+        user = self.db.create_user("somm@domain.com", "pass123", "Somm")
+        # Add a bottle in "Rack A"
+        b = WineBottle(
+            producer="Caymus",
+            vintage=2021,
+            wine_type=WineType.RED,
+            location_rack="Rack A",
+            quantity=2
+        )
+        self.db.add_bottle(b, user_id=user.id)
+        self.db.set_storage_locations(user_id=user.id, locations=["Basement Fridge", "Rack A", "Sparkling Fridge"])
+
+        # Verify initial locations
+        locs = self.db.get_storage_locations(user_id=user.id)
+        self.assertIn("Rack A", locs)
+        self.assertIn("Sparkling Fridge", locs)
+
+        # Delete "Rack A" and "Sparkling Fridge"
+        self.db.delete_storage_location(user_id=user.id, name="Rack A", reassign_to="Unassigned")
+        self.db.delete_storage_location(user_id=user.id, name="Sparkling Fridge", reassign_to="Unassigned")
+
+        # Verify they are permanently gone
+        updated_locs = self.db.get_storage_locations(user_id=user.id)
+        self.assertNotIn("Rack A", updated_locs)
+        self.assertNotIn("Sparkling Fridge", updated_locs)
+        self.assertIn("Basement Fridge", updated_locs)
+        self.assertIn("Unassigned", updated_locs)
+
+        # Verify bottle in database was reassigned to "Unassigned"
+        bottles = self.db.list_bottles(user_id=user.id)
+        self.assertEqual(bottles[0].location_rack, "Unassigned")
+
+    def test_rename_storage_location(self):
+        user = self.db.create_user("collector@domain.com", "pass123", "Collector")
+        b = WineBottle(
+            producer="Opus One",
+            vintage=2018,
+            wine_type=WineType.RED,
+            location_rack="Old Rack",
+            quantity=1
+        )
+        self.db.add_bottle(b, user_id=user.id)
+        self.db.set_storage_locations(user_id=user.id, locations=["Old Rack", "Basement Fridge"])
+
+        # Rename "Old Rack" to "New EuroCave"
+        self.db.rename_storage_location(user_id=user.id, old_name="Old Rack", new_name="New EuroCave")
+
+        locs = self.db.get_storage_locations(user_id=user.id)
+        self.assertNotIn("Old Rack", locs)
+        self.assertIn("New EuroCave", locs)
+
+        # Bottle should be updated to "New EuroCave"
+        bottles = self.db.list_bottles(user_id=user.id)
+        self.assertEqual(bottles[0].location_rack, "New EuroCave")
+
 
 if __name__ == "__main__":
     unittest.main()

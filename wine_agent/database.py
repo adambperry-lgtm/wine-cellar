@@ -135,6 +135,18 @@ class WineDatabase:
                 )
             """)
 
+            # User Storage Locations (Sticky per-user custom storage options)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_storage_locations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    UNIQUE(user_id, name),
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            """)
+
             # Core Inventory and History
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS bottles (
@@ -211,6 +223,19 @@ class WineDatabase:
             # Ensure all pre-existing bottles belong to User 1
             conn.execute("UPDATE bottles SET user_id = 1 WHERE user_id IS NULL OR user_id = 0")
             conn.execute("UPDATE consumption_log SET user_id = 1 WHERE user_id IS NULL OR user_id = 0")
+
+            # Clean up legacy sample storage names if any exist in bottles
+            try:
+                conn.execute("""
+                    UPDATE bottles SET location_rack = 'Basement Fridge' 
+                    WHERE location_rack IN ('Rack A', 'Rack C')
+                """)
+                conn.execute("""
+                    UPDATE bottles SET location_rack = 'Upstairs Fridge' 
+                    WHERE location_rack IN ('Rack B', 'Sparkling Fridge')
+                """)
+            except Exception:
+                pass
 
             conn.commit()
 
@@ -654,6 +679,145 @@ class WineDatabase:
                 )
             conn.commit()
             return cursor.rowcount
+
+    # ==================== Sticky User Storage Locations ====================
+
+    def get_storage_locations(self, user_id: int = 1) -> List[str]:
+        """Returns the sticky list of storage locations for a specific user."""
+        effective_user_id = user_id if user_id is not None else 1
+        with self._get_conn() as conn:
+            rows = conn.execute(
+                "SELECT name FROM user_storage_locations WHERE user_id = ? ORDER BY id ASC",
+                (effective_user_id,)
+            ).fetchall()
+            if rows:
+                return [r["name"] for r in rows]
+
+            # If no storage locations have been saved yet for this user, seed default fridges
+            bottle_locs = conn.execute(
+                """SELECT DISTINCT location_rack FROM bottles 
+                   WHERE (user_id = ? OR (user_id IS NULL AND ? = 1)) 
+                   AND location_rack IS NOT NULL AND TRIM(location_rack) != ''""",
+                (effective_user_id, effective_user_id)
+            ).fetchall()
+
+            defaults = []
+            for b in bottle_locs:
+                loc = (b["location_rack"] or "").strip()
+                if loc and loc not in defaults and loc.lower() not in ("rack a", "rack b", "rack c", "sparkling fridge"):
+                    defaults.append(loc)
+
+            if not defaults:
+                defaults = ["Basement Fridge", "Upstairs Fridge"]
+
+            now_iso = datetime.now().isoformat()
+            for d in defaults:
+                conn.execute(
+                    "INSERT OR IGNORE INTO user_storage_locations (user_id, name, created_at) VALUES (?, ?, ?)",
+                    (effective_user_id, d, now_iso)
+                )
+            conn.commit()
+            return defaults
+
+    def set_storage_locations(self, user_id: int = 1, locations: Optional[List[str]] = None) -> List[str]:
+        """Sets the sticky storage locations for a user, replacing existing ones."""
+        effective_user_id = user_id if user_id is not None else 1
+        cleaned = []
+        if locations:
+            seen = set()
+            for l in locations:
+                name = str(l).strip()
+                if name and name.lower() not in seen:
+                    seen.add(name.lower())
+                    cleaned.append(name)
+        if not cleaned:
+            cleaned = ["Unassigned"]
+
+        now_iso = datetime.now().isoformat()
+        with self._get_conn() as conn:
+            conn.execute("DELETE FROM user_storage_locations WHERE user_id = ?", (effective_user_id,))
+            for name in cleaned:
+                conn.execute(
+                    "INSERT OR IGNORE INTO user_storage_locations (user_id, name, created_at) VALUES (?, ?, ?)",
+                    (effective_user_id, name, now_iso)
+                )
+            conn.commit()
+        return cleaned
+
+    def add_storage_location(self, user_id: int = 1, name: str = "") -> List[str]:
+        """Adds a storage location for a user if it doesn't already exist."""
+        clean_name = str(name).strip()
+        if not clean_name:
+            return self.get_storage_locations(user_id=user_id)
+
+        effective_user_id = user_id if user_id is not None else 1
+        current = self.get_storage_locations(user_id=effective_user_id)
+        if any(c.lower() == clean_name.lower() for c in current):
+            return current
+
+        now_iso = datetime.now().isoformat()
+        with self._get_conn() as conn:
+            conn.execute(
+                "INSERT OR IGNORE INTO user_storage_locations (user_id, name, created_at) VALUES (?, ?, ?)",
+                (effective_user_id, clean_name, now_iso)
+            )
+            conn.commit()
+        return self.get_storage_locations(user_id=effective_user_id)
+
+    def delete_storage_location(self, user_id: int = 1, name: str = "", reassign_to: str = "Unassigned") -> List[str]:
+        """Deletes a storage location for a user, reassigning existing bottles to reassign_to."""
+        effective_user_id = user_id if user_id is not None else 1
+        clean_name = str(name).strip()
+        clean_reassign = str(reassign_to).strip() or "Unassigned"
+
+        with self._get_conn() as conn:
+            # Reassign any bottles currently in this storage location
+            cursor = conn.execute(
+                """UPDATE bottles SET location_rack = ? 
+                   WHERE LOWER(location_rack) = LOWER(?) 
+                   AND (user_id = ? OR (user_id IS NULL AND ? = 1))""",
+                (clean_reassign, clean_name, effective_user_id, effective_user_id)
+            )
+            reassigned_count = cursor.rowcount
+
+            # Delete the location from sticky table
+            conn.execute(
+                "DELETE FROM user_storage_locations WHERE user_id = ? AND LOWER(name) = LOWER(?)",
+                (effective_user_id, clean_name)
+            )
+
+            # If bottles were reassigned to clean_reassign, make sure clean_reassign is in user_storage_locations
+            if reassigned_count > 0:
+                conn.execute(
+                    "INSERT OR IGNORE INTO user_storage_locations (user_id, name, created_at) VALUES (?, ?, ?)",
+                    (effective_user_id, clean_reassign, datetime.now().isoformat())
+                )
+            conn.commit()
+
+        return self.get_storage_locations(user_id=effective_user_id)
+
+    def rename_storage_location(self, user_id: int = 1, old_name: str = "", new_name: str = "") -> List[str]:
+        """Renames a storage location for a user and updates all corresponding bottles."""
+        effective_user_id = user_id if user_id is not None else 1
+        clean_old = str(old_name).strip()
+        clean_new = str(new_name).strip()
+        if not clean_old or not clean_new or clean_old.lower() == clean_new.lower():
+            return self.get_storage_locations(user_id=effective_user_id)
+
+        with self._get_conn() as conn:
+            conn.execute(
+                "UPDATE user_storage_locations SET name = ? WHERE user_id = ? AND LOWER(name) = LOWER(?)",
+                (clean_new, effective_user_id, clean_old)
+            )
+            conn.execute(
+                """UPDATE bottles SET location_rack = ? 
+                   WHERE LOWER(location_rack) = LOWER(?) 
+                   AND (user_id = ? OR (user_id IS NULL AND ? = 1))""",
+                (clean_new, clean_old, effective_user_id, effective_user_id)
+            )
+            conn.commit()
+
+        return self.get_storage_locations(user_id=effective_user_id)
 
     def get_bottle(self, bottle_id: int, user_id: Optional[int] = None) -> Optional[WineBottle]:
         """Retrieves a single bottle by ID with computed drinking window."""
@@ -1232,7 +1396,7 @@ class WineDatabase:
                 wine_type=WineType.RED,
                 format=BottleFormat.STANDARD,
                 quantity=3,
-                location_rack="Rack A",
+                location_rack="Basement Fridge",
                 location_bin="Row 1, Bin 1-3",
                 purchase_date="2014-05-12",
                 purchase_price=195.0,
@@ -1253,7 +1417,7 @@ class WineDatabase:
                 wine_type=WineType.RED,
                 format=BottleFormat.STANDARD,
                 quantity=2,
-                location_rack="Rack A",
+                location_rack="Basement Fridge",
                 location_bin="Row 2, Bin 4-5",
                 purchase_date="2018-09-20",
                 purchase_price=175.0,
@@ -1274,7 +1438,7 @@ class WineDatabase:
                 wine_type=WineType.RED,
                 format=BottleFormat.STANDARD,
                 quantity=2,
-                location_rack="Rack A",
+                location_rack="Basement Fridge",
                 location_bin="Row 3, Bin 1-2",
                 purchase_date="2016-03-10",
                 purchase_price=140.0,
@@ -1295,7 +1459,7 @@ class WineDatabase:
                 wine_type=WineType.RED,
                 format=BottleFormat.STANDARD,
                 quantity=1,
-                location_rack="Rack B",
+                location_rack="Upstairs Fridge",
                 location_bin="Row 1, Bin 6 (Drink Soon)",
                 purchase_date="2015-11-04",
                 purchase_price=75.0,
@@ -1316,7 +1480,7 @@ class WineDatabase:
                 wine_type=WineType.WHITE,
                 format=BottleFormat.STANDARD,
                 quantity=1,
-                location_rack="Rack B",
+                location_rack="Upstairs Fridge",
                 location_bin="Row 2, Bin 1",
                 purchase_date="2017-04-18",
                 purchase_price=160.0,
@@ -1337,7 +1501,7 @@ class WineDatabase:
                 wine_type=WineType.RED,
                 format=BottleFormat.STANDARD,
                 quantity=4,
-                location_rack="Rack C",
+                location_rack="Basement Fridge",
                 location_bin="Deep Cellar 1-4",
                 purchase_date="2022-10-01",
                 purchase_price=225.0,
@@ -1358,7 +1522,7 @@ class WineDatabase:
                 wine_type=WineType.RED,
                 format=BottleFormat.STANDARD,
                 quantity=2,
-                location_rack="Rack C",
+                location_rack="Basement Fridge",
                 location_bin="Deep Cellar 5-6",
                 purchase_date="2021-06-15",
                 purchase_price=280.0,
@@ -1379,7 +1543,7 @@ class WineDatabase:
                 wine_type=WineType.RED,
                 format=BottleFormat.STANDARD,
                 quantity=1,
-                location_rack="Rack C",
+                location_rack="Basement Fridge",
                 location_bin="Lockbox 1",
                 purchase_date="2023-02-14",
                 purchase_price=850.0,
@@ -1400,7 +1564,7 @@ class WineDatabase:
                 wine_type=WineType.RED,
                 format=BottleFormat.STANDARD,
                 quantity=2,
-                location_rack="Rack A",
+                location_rack="Basement Fridge",
                 location_bin="Row 4, Bin 1-2",
                 purchase_date="2019-11-20",
                 purchase_price=260.0,
@@ -1421,7 +1585,7 @@ class WineDatabase:
                 wine_type=WineType.SPARKLING,
                 format=BottleFormat.STANDARD,
                 quantity=3,
-                location_rack="Sparkling Fridge",
+                location_rack="Upstairs Fridge",
                 location_bin="Shelf 1",
                 purchase_date="2021-12-05",
                 purchase_price=220.0,
@@ -1442,7 +1606,7 @@ class WineDatabase:
                 wine_type=WineType.WHITE,
                 format=BottleFormat.STANDARD,
                 quantity=2,
-                location_rack="Rack B",
+                location_rack="Upstairs Fridge",
                 location_bin="Row 3, Bin 3-4",
                 purchase_date="2017-08-10",
                 purchase_price=120.0,
@@ -1463,7 +1627,7 @@ class WineDatabase:
                 wine_type=WineType.DESSERT,
                 format=BottleFormat.HALF,
                 quantity=2,
-                location_rack="Rack B",
+                location_rack="Upstairs Fridge",
                 location_bin="Half Bottle Bin 1",
                 purchase_date="2010-01-20",
                 purchase_price=290.0,
@@ -1474,6 +1638,8 @@ class WineDatabase:
             )
         ]
 
+        target_uid = user_id or 1
         for s in samples:
-            s.user_id = user_id or 1
-            self.add_bottle(s, user_id=user_id)
+            s.user_id = target_uid
+            self.add_bottle(s, user_id=target_uid)
+        self.set_storage_locations(user_id=target_uid, locations=["Basement Fridge", "Upstairs Fridge"])
