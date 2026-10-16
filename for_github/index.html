@@ -2,7 +2,12 @@
 <html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cellar Agent">
+  <meta name="theme-color" content="#0f1117">
+  <meta name="format-detection" content="telephone=no">
   <title>Cellar Sommelier Agent | Wine Collection & Drinking Windows</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -22,6 +27,26 @@
       background-color: var(--bg-dark);
       color: #e2e8f0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    /* Mobile PWA & Responsive Utilities */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @media screen and (max-width: 768px) {
+      /* Prevent iOS Safari auto-zoom on input focus */
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+    .safe-top-padding {
+      padding-top: max(0.625rem, env(safe-area-inset-top));
+    }
+    .safe-bottom-padding {
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
     }
     @keyframes spinCustom {
       from { transform: rotate(0deg); }
@@ -71,7 +96,7 @@
   </div>
 
   <!-- Top Navigation Bar -->
-  <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3.5">
+  <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3.5" style="padding-top: max(10px, env(safe-area-inset-top));">
     <div class="max-w-7xl mx-auto flex flex-col gap-2.5">
       <!-- TOP ROW: Brand on left, Prominent User Account / Sign In Pill on right -->
       <div class="flex items-center justify-between w-full gap-2">
@@ -153,33 +178,33 @@
         </div>
       </div>
 
-      <!-- ROW 2: Action Buttons Bar -->
-      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-        <button onclick="openModal('scanLabelModal')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/40">
+      <!-- ROW 2: Action Buttons Bar (Smooth horizontal swipe on mobile, wrap on desktop) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 sm:flex-wrap">
+        <button onclick="openModal('scanLabelModal')" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/40">
           <span>📸</span> Scan Label
         </button>
-        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-900/30">
+        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-900/30">
           <span>➕</span> Enter Wine
         </button>
-        <button onclick="openSommelierModal('open')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all shadow-sm">
+        <button onclick="openSommelierModal('open')" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all shadow-sm">
           <span>✨</span> What to Open
         </button>
-        <button onclick="openSommelierModal('buy')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-500/15 border border-indigo-500/35 text-indigo-300 hover:bg-indigo-500/25 transition-all shadow-sm">
+        <button onclick="openSommelierModal('buy')" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-500/15 border border-indigo-500/35 text-indigo-300 hover:bg-indigo-500/25 transition-all shadow-sm">
           <span>🛒</span> What to Buy
         </button>
-        <button onclick="openModal('auditModal')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all">
+        <button onclick="openModal('auditModal')" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all">
           <span>📊</span> Cellar Audit
         </button>
-        <button onclick="openHistoryModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition-all" title="Review opened bottles, star ratings, and tasting notes">
+        <button onclick="openHistoryModal()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition-all" title="Review opened bottles, star ratings, and tasting notes">
           <span>📖</span> Tasting Log
         </button>
-        <button onclick="openStorageModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
+        <button onclick="openStorageModal()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
           <span>🧊</span> Edit Storage
         </button>
-        <button id="adminActivityHeaderBtn" onclick="openModal('adminModal')" class="hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-950/70 hover:bg-indigo-900/90 text-indigo-200 border border-indigo-700/60 transition-all shadow-sm" title="View users, bottle counts, and network cellar activity">
+        <button id="adminActivityHeaderBtn" onclick="openModal('adminModal')" class="hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-950/70 hover:bg-indigo-900/90 text-indigo-200 border border-indigo-700/60 transition-all shadow-sm" title="View users, bottle counts, and network cellar activity">
           <span>👥</span> Network Activity
         </button>
-        <button onclick="exportCellarDatabase()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
+        <button onclick="exportCellarDatabase()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
           <span>📥</span> Export CSV
         </button>
       </div>
@@ -187,7 +212,7 @@
   </header>
 
   <!-- Main Content Layout -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-6 flex flex-col gap-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-6 flex flex-col gap-6 safe-bottom-padding">
 
     <!-- KPI Summary Cards -->
     <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
@@ -917,7 +942,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
   <!-- MODAL: Mark Bottle Consumed / Open Bottle -->
   <div id="consumeModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex items-center justify-between pb-2 border-b border-slate-800">
         <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🥂</span> Open Bottle / Log Tasting</h3>
         <button onclick="closeModal('consumeModal')" class="text-slate-400 hover:text-white">✕</button>
@@ -965,7 +990,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
   <!-- MODAL: Gift Wine Bottle -->
   <div id="giftModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex items-center justify-between pb-2 border-b border-slate-800">
         <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>🎁</span> Gift Wine Bottle</h3>
         <button onclick="closeModal('giftModal')" class="text-slate-400 hover:text-white">✕</button>
@@ -1169,7 +1194,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
   <!-- MODAL: Multi-User Login & Account Manager -->
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div class="flex items-center gap-2.5">
           <span class="text-2xl">🍷</span>
@@ -1578,12 +1603,24 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       renderBottleList(filtered);
     }
 
+    function resetAllFilters() {
+      const sInput = document.getElementById('searchInput');
+      if (sInput) sInput.value = '';
+      const tSelect = document.getElementById('typeSelect');
+      if (tSelect) tSelect.value = 'all';
+      setFilter('all');
+    }
+
     function renderBottleList(bottles) {
       const container = document.getElementById('bottleContainer');
       if (bottles.length === 0) {
         container.innerHTML = `
-          <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs">
-            No wines matching the current filter criteria.
+          <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-3">
+            <span class="text-3xl">🍷</span>
+            <p class="font-medium text-slate-300">No wines matching the current filter criteria.</p>
+            <button onclick="resetAllFilters()" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition shadow-md shadow-rose-950/40 flex items-center gap-1.5">
+              <span>🔄</span> Reset All Filters
+            </button>
           </div>
         `;
         return;
@@ -1958,7 +1995,11 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           return;
         }
       }
-      document.getElementById(id).classList.remove('hidden');
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
       if (id === 'auditModal') {
         await renderAuditReport();
       }
@@ -1970,8 +2011,31 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
     }
     function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+      const openModals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
+      if (openModals.length === 0) {
+        document.body.classList.remove('overflow-hidden');
+      }
     }
+
+    // Global Dismissal Handlers: Backdrop Click & Escape Key
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.classList && e.target.classList.contains('fixed') && e.target.classList.contains('inset-0') && !e.target.classList.contains('hidden') && e.target.id) {
+        closeModal(e.target.id);
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const openModals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
+        openModals.forEach(m => closeModal(m.id));
+        const userDropdown = document.getElementById('userDropdown');
+        if (userDropdown && !userDropdown.classList.contains('hidden')) {
+          userDropdown.classList.add('hidden');
+        }
+      }
+    });
 
     function openSommelierModal(intent = 'open') {
       openModal('recommendModal');
@@ -2006,9 +2070,10 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             const authBadge = isGoogle 
               ? '<span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-800 font-semibold"><span>G</span> Google</span>'
               : '<span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-semibold"><span>🔑</span> Password</span>';
-            const lastActive = u.last_active 
-              ? new Date(u.last_active).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) 
-              : (u.created_at ? new Date(u.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : 'Never');
+            const activeTimestamp = u.last_active || u.last_login || u.created_at;
+            const lastActive = activeTimestamp 
+              ? new Date(activeTimestamp).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) 
+              : 'Never';
             const totalVal = '$' + Math.round(u.total_value || 0).toLocaleString();
             const avatar = u.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(u.email || u.name)}`;
             const isCurrent = currentUser && currentUser.id === u.id;
@@ -4672,12 +4737,12 @@ USER QUERY: "${query}"`;
       closeModal('recommendModal');
       openModal('addBottleModal');
       switchAddTab('form');
-      const pInput = document.getElementById('bottleProducer');
-      const wInput = document.getElementById('bottleName');
-      const vInput = document.getElementById('bottleVintage');
-      const vaInput = document.getElementById('bottleVarietal');
-      const rInput = document.getElementById('bottleRegion');
-      const prInput = document.getElementById('bottlePrice');
+      const pInput = document.getElementById('formProducer') || document.getElementById('bottleProducer');
+      const wInput = document.getElementById('formWine') || document.getElementById('bottleName');
+      const vInput = document.getElementById('formVintage') || document.getElementById('bottleVintage');
+      const vaInput = document.getElementById('formVarietal') || document.getElementById('bottleVarietal');
+      const rInput = document.getElementById('formRegion') || document.getElementById('bottleRegion');
+      const prInput = document.getElementById('formPrice') || document.getElementById('bottlePrice');
 
       if (pInput) pInput.value = producer || '';
       if (wInput) wInput.value = wineName || '';
@@ -5417,6 +5482,16 @@ USER QUERY: "${query}"`;
 
       window.addEventListener('touchstart', (e) => {
         if (isRefreshing) return;
+        // Do not trigger pull-to-refresh if any modal is currently open
+        if (document.querySelector('.fixed.inset-0:not(.hidden)')) {
+          isPulling = false;
+          return;
+        }
+        // Do not trigger pull-to-refresh if touch originated inside dropdowns or menus
+        if (e.target && e.target.closest && (e.target.closest('#userDropdown') || e.target.closest('.fixed.inset-0'))) {
+          isPulling = false;
+          return;
+        }
         // Only initiate pull-to-refresh if user is at the very top of the document
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
         if (scrollTop <= 0 && e.touches.length === 1) {
@@ -5432,6 +5507,11 @@ USER QUERY: "${query}"`;
 
       window.addEventListener('touchmove', (e) => {
         if (!isPulling || isRefreshing) return;
+        if (document.querySelector('.fixed.inset-0:not(.hidden)')) {
+          isPulling = false;
+          bar.style.transform = 'translateY(-100%)';
+          return;
+        }
         const currentY = e.touches[0].clientY;
         const currentX = e.touches[0].clientX;
         const deltaY = currentY - touchStartY;
