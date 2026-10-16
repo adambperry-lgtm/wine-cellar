@@ -3522,6 +3522,8 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     function openSommelierModal(intent = 'open') {
       openModal('recommendModal');
       setSommelierIntent(intent);
+      const modalScroll = document.querySelector('#recommendModal .overflow-y-auto') || document.querySelector('#recommendModal > div');
+      if (modalScroll) modalScroll.scrollTop = 0;
     }
 
     async function renderAdminActivityReport() {
@@ -5905,6 +5907,26 @@ USER QUERY: "${query}"`;
       return { success: false, error: geminiError || "Google Gemini AI was unavailable or reached quota." };
     }
 
+    function scrollSommelierToTop(targetElement = null) {
+      const modal = document.querySelector('#recommendModal .overflow-y-auto') || document.querySelector('#recommendModal > div');
+      const el = targetElement || document.getElementById('sommelierResults');
+      if (!el) return;
+
+      requestAnimationFrame(() => {
+        if (modal) {
+          const modalRect = modal.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          const targetScrollTop = modal.scrollTop + (elRect.top - modalRect.top) - 16;
+          modal.scrollTo({
+            top: Math.max(0, targetScrollTop),
+            behavior: 'smooth'
+          });
+        } else {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
     function renderSommelierChatThread(loading = false, errorMsg = null) {
       const container = document.getElementById('sommelierResults');
       if (!container) return;
@@ -5912,7 +5934,7 @@ USER QUERY: "${query}"`;
       const turnsHtml = sommelierChatHistory.map((turn, idx) => {
         if (turn.role === 'user') {
           return `
-            <div class="bg-slate-800/85 border border-slate-700/80 rounded-xl p-3.5 flex items-start gap-3 shadow-sm">
+            <div id="sommTurn_${idx}" class="bg-slate-800/85 border border-slate-700/80 rounded-xl p-3.5 flex items-start gap-3 shadow-sm">
               <div class="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-sm shrink-0">👤</div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
@@ -5926,7 +5948,7 @@ USER QUERY: "${query}"`;
         } else {
           const headerTitle = sommelierIntent === 'buy' ? 'CELLAR ACQUISITION ADVISOR' : 'PRIVATE CELLAR SOMMELIER';
           return `
-            <div class="bg-slate-950/95 border border-indigo-700/50 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-xl">
+            <div id="sommTurn_${idx}" class="bg-slate-950/95 border border-indigo-700/50 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-xl">
               <div class="flex items-center justify-between border-b border-indigo-900/50 pb-2.5 flex-wrap gap-2">
                 <div class="flex items-center gap-2">
                   <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
@@ -5952,7 +5974,7 @@ USER QUERY: "${query}"`;
       if (loading) {
         const loadingTitle = sommelierIntent === 'buy' ? 'Consulting Google Gemini AI Acquisition Advisor...' : 'Consulting Google Gemini AI Sommelier...';
         loadingHtml = `
-          <div class="bg-slate-950/80 border border-indigo-900/60 rounded-xl p-4 flex items-center gap-3">
+          <div id="sommLoadingIndicator" class="bg-slate-950/80 border border-indigo-900/60 rounded-xl p-4 flex items-center gap-3">
             <span class="text-xl animate-spin">✨</span>
             <div>
               <span class="text-xs font-bold text-indigo-300">${loadingTitle}</span>
@@ -5978,8 +6000,12 @@ USER QUERY: "${query}"`;
       }
 
       container.innerHTML = `<div class="flex flex-col gap-3">${turnsHtml}${loadingHtml}${errorHtml}${interactiveBarHtml}</div>`;
-      if (loading || sommelierChatHistory.length > 0) {
-        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (loading) {
+        scrollSommelierToTop(document.getElementById('sommLoadingIndicator') || container);
+      } else if (sommelierChatHistory.length > 0) {
+        const latestTurn = document.getElementById(`sommTurn_${sommelierChatHistory.length - 1}`);
+        const target = (sommelierChatHistory.length <= 2) ? container : (latestTurn || container);
+        scrollSommelierToTop(target);
       }
     }
 
@@ -6133,7 +6159,7 @@ USER QUERY: "${query}"`;
 
       if (!recs || recs.length === 0) {
         container.innerHTML = prefixHtml + '<div class="text-xs text-yellow-400 p-3 bg-yellow-950/30 border border-yellow-800/50 rounded-xl">No purchase recommendations match this request. Try a different dish or category.</div>';
-        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        scrollSommelierToTop(container);
         return;
       }
 
@@ -6191,7 +6217,7 @@ USER QUERY: "${query}"`;
 
       const interactiveBarHtml = getInteractiveFollowUpBarHtml();
       container.innerHTML = prefixHtml + `<div class="flex flex-col gap-3">${cardsHtml}${interactiveBarHtml}</div>`;
-      container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      scrollSommelierToTop(container);
     }
 
     function launchGoogleSearchBuy(producer, wineName, vintage) {
@@ -6334,7 +6360,7 @@ USER QUERY: "${query}"`;
 
       if (!recs || recs.length === 0) {
         container.innerHTML = prefixHtml + '<div class="text-xs text-yellow-400 p-3 bg-yellow-950/30 border border-yellow-800/50 rounded-xl">No cellar bottles match this pairing. Try a different dish or style.</div>';
-        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        scrollSommelierToTop(container);
         return;
       }
 
@@ -6364,7 +6390,7 @@ USER QUERY: "${query}"`;
 
       const interactiveBarHtml = getInteractiveFollowUpBarHtml();
       container.innerHTML = prefixHtml + cardsHtml + interactiveBarHtml;
-      container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      scrollSommelierToTop(container);
     }
 
     // ==========================================
