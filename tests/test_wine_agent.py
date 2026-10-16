@@ -865,6 +865,18 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         self.assertNotIn("~", bottle.producer)
         self.assertIsNotNone(bottle.drinking_window)
 
+    def test_parse_stags_leap_petite_sirah_ocr_distortion(self):
+        from wine_agent.natural_language import parse_wine_label
+        # Real optical OCR output from phone camera on Stags' Leap Petite Sirah
+        ocr_text = "NV Po o K Po o «K; ! be"
+        bottle = parse_wine_label(ocr_text)
+        self.assertEqual(bottle.producer, "Stags' Leap Winery")
+        self.assertEqual(bottle.varietal, "Petite Sirah")
+        self.assertEqual(bottle.region, "Napa Valley, California")
+        self.assertEqual(bottle.wine_type, WineType.RED)
+        self.assertIsNotNone(bottle.drinking_window)
+        self.assertEqual(bottle.drinking_window.peak_start, 2028)
+
 
 if __name__ == "__main__":
     unittest.main()
