@@ -871,6 +871,7 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         ocr_text = "NV Po o K Po o «K; ! be"
         bottle = parse_wine_label(ocr_text)
         self.assertEqual(bottle.producer, "Stags' Leap Winery")
+        self.assertEqual(bottle.wine_name, "Petite Sirah")
         self.assertEqual(bottle.varietal, "Petite Sirah")
         self.assertEqual(bottle.region, "Napa Valley, California")
         self.assertEqual(bottle.wine_type, WineType.RED)

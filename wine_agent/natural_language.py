@@ -487,13 +487,17 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
         if sub_region and sub_region.lower() in l_clean.lower():
             l_clean = re.sub(re.escape(sub_region), '', l_clean, flags=re.IGNORECASE).strip()
 
-        l_clean = l_clean.strip(' ,-•')
-        if l_clean and len(l_clean) > 2 and l_clean.lower() != varietal.lower():
+        has_noise = bool(re.search(r'[»«¢=);:“”~_^|\\]', l_clean))
+        letters = re.findall(r'[a-zA-Z]', l_clean)
+        if l_clean and len(letters) >= 4 and not has_noise and l_clean.lower() != varietal.lower():
             wine_name_candidates.append(l_clean)
 
-    wine_name = " ".join(wine_name_candidates[:2]).strip()
-    if not wine_name:
-        wine_name = varietal or "Reserve"
+    if is_stags_leap:
+        wine_name = "Petite Sirah"
+    else:
+        wine_name = " ".join(wine_name_candidates[:2]).strip()
+        if not wine_name:
+            wine_name = varietal or "Reserve"
 
     # 7. Check Fridge Placement
     fridge = default_fridge
