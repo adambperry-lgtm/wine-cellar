@@ -85,7 +85,9 @@ COMMON_PRODUCERS = [
     "Tenuta Villa Pandolfini", "Villa Pandolfini", "Pandolfini",
     # Classic California icons:
     "Caymus", "Silver Oak", "Ridge Vineyards", "Ridge", "Opus One", "Dominus Estate", "Dominus",
-    "Harlan Estate", "Screaming Eagle", "Duckhorn", "Stag's Leap Wine Cellars", "Stag's Leap",
+    "Harlan Estate", "Screaming Eagle", "Duckhorn",
+    "Stags' Leap Winery", "Stags' Leap", "Stags Leap Winery", "Stags Leap",
+    "Stag's Leap Wine Cellars", "Stag's Leap",
     "Justin", "Jordan", "The Prisoner", "Belle Glos", "Meiomi", "Austin Hope",
     "Rombauer", "Cakebread", "Far Niente", "Kendall-Jackson", "La Crema",
     "Shafer", "Joseph Phelps", "Heitz Cellar", "Chappellet", "Spottswoode", "Quintessa",
@@ -399,6 +401,7 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
     sub_region = ""
     country = ""
     varietal = ""
+    producer = ""
     wine_type = WineType.RED
 
     for reg_key, (r, sr, c, var, wt) in KNOWN_REGIONS.items():
@@ -423,19 +426,30 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
         varietal = "Cabernet Sauvignon Blend"
         wine_type = WineType.RED
 
+    # Stags' Leap Winery & Petite Sirah intelligence
+    is_stags_leap = any(s in joined_text.lower() for s in ["stags leap", "stags' leap", "stag's leap", "1893"])
+    if is_stags_leap:
+        producer = "Stags' Leap Winery"
+        if any(p in joined_text.lower() for p in ["petite", "sirah", "syrah"]):
+            varietal = "Petite Sirah"
+            wine_type = WineType.RED
+        if not region:
+            region = "Napa Valley, California"
+
     # 5. Determine Producer
-    producer = ""
-    for cp in COMMON_PRODUCERS:
-        if cp.lower() in joined_text.lower():
-            producer = cp
-            break
+    if not producer:
+        for cp in COMMON_PRODUCERS:
+            if cp.lower() in joined_text.lower():
+                producer = cp
+                break
 
     # Fallback to top non-noise line if producer not matched
     if not producer and cleaned_lines:
         for line in cleaned_lines:
             l_clean = re.sub(r'[^a-zA-Z0-9\s\'-]', '', line).strip()
             letters = re.findall(r'[a-zA-Z]', l_clean)
-            if len(letters) < 3:
+            # Require at least 4 letters and genuine word structure to avoid OCR noise
+            if len(letters) < 4:
                 continue
             l_lower = l_clean.lower()
             if vintage and str(vintage) == line.strip():
@@ -448,7 +462,7 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
             break
 
     if not producer:
-        producer = "Cellar Selection"
+        producer = "Unidentified Wine"
 
     # 6. Determine Wine Name / Cuvée
     wine_name_candidates = []

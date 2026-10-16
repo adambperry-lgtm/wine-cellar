@@ -503,6 +503,26 @@
         <!-- Left Column: Upload / Camera / Canvas Preview -->
         <div class="flex flex-col gap-4">
           
+          <!-- Gemini AI Vision Key Banner -->
+          <div id="scanGeminiBanner" class="bg-gradient-to-r from-violet-950/70 via-slate-900 to-indigo-950/70 border border-violet-800/60 rounded-xl p-3 flex flex-col gap-2 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                <span class="text-base">✨</span> Google Gemini AI Vision Scanner
+              </span>
+              <span id="scanGeminiStatusPill" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Checking...</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-snug">
+              Multimodal AI reads curved calligraphy, estate crests, fine-print vintages, and cursive scripts with near-perfect precision.
+            </p>
+            <div id="scanGeminiInputRow" class="flex items-center gap-2 pt-0.5">
+              <input type="password" id="scanModalKeyInput" placeholder="Paste free key (AIzaSy...)" class="flex-1 bg-slate-950 border border-violet-700/60 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-400">
+              <button onclick="saveScanModalKey()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-violet-600 hover:bg-violet-500 text-white whitespace-nowrap shadow-sm">
+                Save Key
+              </button>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] text-violet-300 underline hover:text-violet-200 whitespace-nowrap px-1">Get Free Key ↗</a>
+            </div>
+          </div>
+
           <!-- Dropzone Area -->
           <div id="scanDropzone" 
                ondragover="handleScanDragOver(event)" 
@@ -549,6 +569,9 @@
               <span class="text-[10px] text-slate-500">1-click demo</span>
             </div>
             <div class="flex flex-wrap gap-1.5">
+              <button onclick="loadSampleLabel('stags_leap_petite_sirah')" class="px-2 py-1 text-[11px] font-medium rounded-md bg-slate-800/80 hover:bg-rose-950 text-rose-300 border border-rose-900/40 transition-all">
+                🍷 Stags' Leap 2021 Petite Sirah
+              </button>
               <button onclick="loadSampleLabel('hunnicutt_cab')" class="px-2 py-1 text-[11px] font-medium rounded-md bg-slate-800/80 hover:bg-rose-950 text-rose-300 border border-rose-900/40 transition-all">
                 🍷 Hunnicutt 2024 Cabernet
               </button>
@@ -622,6 +645,15 @@
           <!-- Candidate Result Card (Shown once processed) -->
           <div id="scanResultCard" class="hidden flex flex-col gap-4">
             
+            <!-- OCR Warning Notice (Shown when OCR has low confidence or failed to read handwriting) -->
+            <div id="scanOcrNotice" class="hidden bg-amber-950/40 border border-amber-800/60 rounded-xl p-3 text-xs text-amber-200 flex items-start gap-2.5 shadow-sm">
+              <span class="text-base leading-none">⚠️</span>
+              <div>
+                <span class="font-bold text-amber-100">Optical OCR couldn't read cursive / calligraphy text.</span>
+                <p class="text-[11px] text-amber-300/80 mt-0.5">Wine bottle labels with script, foil, or cylindrical curves are best recognized by Google Gemini AI Vision (connect above), or type the producer name in the fields below.</p>
+              </div>
+            </div>
+
             <!-- Headline Card -->
             <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col gap-2">
               <div class="flex items-center justify-between">
@@ -2018,6 +2050,11 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
       if (id === 'recommendModal') {
         initGeminiControls();
+      }
+      if (id === 'scanLabelModal') {
+        if (typeof updateScanModalGeminiStatus === 'function') {
+          updateScanModalGeminiStatus();
+        }
       }
     }
     function closeModal(id) {
@@ -5002,6 +5039,14 @@ USER QUERY: "${query}"`;
     let isContrastEnhanced = false;
 
     const SAMPLE_LABELS = {
+      stags_leap_petite_sirah: {
+        title: "Stags' Leap 2021 Petite Sirah Napa Valley",
+        lines: ["STAGS' LEAP", "2021", "Petite Sirah", "NAPA VALLEY", "FIRST VINTAGE 1893", "ESTATE GROWN", "ALC. 14.5% BY VOL."],
+        rawText: "STAGS' LEAP\n2021\nPetite Sirah\nNAPA VALLEY\nFIRST VINTAGE 1893\nESTATE GROWN\nALC. 14.5% BY VOL.",
+        bg: "#161614",
+        textCol: "#f5f0e6",
+        accentCol: "#a88434"
+      },
       hunnicutt_cab: {
         title: "Hunnicutt 2024 Cabernet Sauvignon",
         lines: ["HUNNICUTT", "2024", "CABERNET SAUVIGNON", "NAPA VALLEY", "ALC. 14.8% BY VOL. • 750 ML", "PRODUCED AND BOTTLED BY HUNNICUTT WINES", "ST. HELENA, CALIFORNIA", "CONTAINS SULFITES"],
@@ -5043,6 +5088,53 @@ USER QUERY: "${query}"`;
         accentCol: "#ffcc00"
       }
     };
+
+    function updateScanModalGeminiStatus() {
+      const pill = document.getElementById('scanGeminiStatusPill');
+      const inputRow = document.getElementById('scanGeminiInputRow');
+      const hasKey = Boolean(userGeminiKey || serverHasGeminiKey);
+      if (pill) {
+        if (hasKey) {
+          pill.className = "text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1";
+          pill.innerHTML = "<span>✔</span> AI Vision Active";
+        } else {
+          pill.className = "text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800";
+          pill.textContent = "Key Not Set";
+        }
+      }
+      if (inputRow) {
+        if (hasKey) {
+          inputRow.classList.add('hidden');
+        } else {
+          inputRow.classList.remove('hidden');
+        }
+      }
+    }
+
+    async function saveScanModalKey() {
+      const input = document.getElementById('scanModalKeyInput');
+      const key = (input ? input.value : '').trim();
+      if (!key) {
+        alert("Please enter a valid Google Gemini API Key.");
+        return;
+      }
+      userGeminiKey = key;
+      localStorage.setItem('gemini_api_key', key);
+      try {
+        await fetch('/api/gemini/save-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: key })
+        });
+        serverHasGeminiKey = true;
+      } catch (e) {}
+
+      updateScanModalGeminiStatus();
+      alert("✔ Google Gemini API Key connected! AI Vision is now active for all wine label scans.");
+      if (currentScanImage) {
+        triggerOcrScan();
+      }
+    }
 
     function handleScanDragOver(e) {
       e.preventDefault();
@@ -5411,10 +5503,13 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       progBar.style.width = '100%';
       progPct.textContent = '100%';
 
-      if (recognitionMethod === "gemini_vision") {
+      const isUnclear = (!parsedBottle || parsedBottle.producer === "Unidentified Wine");
+      if (recognitionMethod === "gemini_vision" && !isUnclear) {
         statusText.innerHTML = '<span class="text-emerald-400 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ✨ Bottle recognized by Google Gemini Vision!</span>';
-      } else {
+      } else if (!isUnclear) {
         statusText.innerHTML = '<span class="text-amber-300 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> 🔍 Scanned via optical OCR (Verify details below)</span>';
+      } else {
+        statusText.innerHTML = '<span class="text-amber-400 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> ⚠️ Handwriting unclear: Type producer below or connect Gemini AI Vision</span>';
       }
 
       currentScannedBottle = parsedBottle;
@@ -5498,31 +5593,51 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       if (lower.includes("chardonnay")) { varietal = "Chardonnay"; wineType = "White"; }
       if (lower.includes("sauvignon blanc")) { varietal = "Sauvignon Blanc"; wineType = "White"; }
 
-      // Producer detection
+      // Stags' Leap Winery & Petite Sirah check
       let producer = "";
-      if (lower.includes("hunnicutt")) producer = "Hunnicutt";
-      else if (lower.includes("caymus")) producer = "Caymus Vineyards";
-      else if (lower.includes("silver oak")) producer = "Silver Oak";
-      else if (lower.includes("ridge")) producer = "Ridge Vineyards";
-      else if (lower.includes("margaux")) producer = "Château Margaux";
-      else if (lower.includes("veuve clicquot")) { producer = "Veuve Clicquot"; wineType = "Sparkling"; }
-      else if (lower.includes("opus one")) producer = "Opus One";
-      else if (lower.includes("stags leap") || lower.includes("stag's leap")) producer = "Stag's Leap Wine Cellars";
-      else {
-        // Extract meaningful word line with letters
-        const lines = clean.split('\n')
-          .map(l => l.trim())
-          .filter(l => l.length > 2 && /[a-zA-Z]{3,}/.test(l));
-        if (lines.length > 0) {
-          producer = lines[0];
-        } else {
-          producer = "Unidentified Producer (Verify Details)";
+      if (lower.includes("stags leap") || lower.includes("stag's leap") || lower.includes("stags' leap") || lower.includes("1893")) {
+        producer = "Stags' Leap Winery";
+        if (lower.includes("petite") || lower.includes("sirah") || lower.includes("syrah")) {
+          varietal = "Petite Sirah";
+          wineType = "Red";
+          if (!region) region = "Napa Valley, California";
+        }
+      } else if (lower.includes("petite sirah") || lower.includes("petite syrah") || (lower.includes("petite") && lower.includes("sirah"))) {
+        varietal = "Petite Sirah";
+        wineType = "Red";
+      }
+
+      // Other Producer detection
+      if (!producer) {
+        if (lower.includes("hunnicutt")) producer = "Hunnicutt";
+        else if (lower.includes("caymus")) producer = "Caymus Vineyards";
+        else if (lower.includes("silver oak")) producer = "Silver Oak";
+        else if (lower.includes("ridge")) producer = "Ridge Vineyards";
+        else if (lower.includes("margaux")) producer = "Château Margaux";
+        else if (lower.includes("veuve clicquot")) { producer = "Veuve Clicquot"; wineType = "Sparkling"; }
+        else if (lower.includes("opus one")) producer = "Opus One";
+        else {
+          // Extract meaningful word line with letters
+          const lines = clean.split('\n')
+            .map(l => l.trim())
+            .filter(l => {
+              const letters = (l.match(/[a-zA-Z]/g) || []).length;
+              const hasNoise = /[»«¢=);:“”~_^|\\]/.test(l);
+              return l.length >= 3 && letters >= 4 && (letters / l.length) >= 0.7 && !hasNoise;
+            });
+          if (lines.length > 0) {
+            producer = lines[0];
+          } else {
+            producer = "Unidentified Wine";
+          }
         }
       }
 
       // Wine Name / Cuvée
       let wineName = varietal;
-      if (lower.includes("9-3-5")) {
+      if (lower.includes("petite sirah") || lower.includes("petite syrah")) {
+        wineName = "Petite Sirah";
+      } else if (lower.includes("9-3-5")) {
         wineName = "9-3-5 Proprietary Red";
         varietal = "Cabernet Sauvignon Blend";
       } else if (lower.includes("luvisi")) {
@@ -5547,7 +5662,15 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       let temp = 63;
       let tier = "Cellar Selection (8-22 yrs)";
 
-      if (varietal.includes("Cabernet") || producer.includes("Hunnicutt") || producer.includes("Caymus")) {
+      if (varietal.includes("Petite Sirah") || producer.includes("Stags' Leap")) {
+        wStart = v + 4;
+        pStart = v + 7;
+        pEnd = v + 16;
+        wEnd = v + 25;
+        tier = "Napa Petite Sirah (7-25 yrs)";
+        decant = 2.0;
+        temp = 64;
+      } else if (varietal.includes("Cabernet") || producer.includes("Hunnicutt") || producer.includes("Caymus")) {
         wStart = v + 5;
         pStart = v + 8;
         pEnd = v + 16;
@@ -5617,13 +5740,28 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       document.getElementById('scanEmptyPlaceholder').classList.add('hidden');
       document.getElementById('scanResultCard').classList.remove('hidden');
 
-      const dw = bottle.drinking_window || {};
+      const isUnidentified = (!bottle || bottle.producer === "Unidentified Wine");
+      const ocrNotice = document.getElementById('scanOcrNotice');
+      if (ocrNotice) {
+        if (isUnidentified || method === "ocr") {
+          ocrNotice.classList.remove('hidden');
+        } else {
+          ocrNotice.classList.add('hidden');
+        }
+      }
+
+      const dw = (bottle && bottle.drinking_window) || {};
       const status = dw.status || "Hold (Too Young)";
 
       // Top title & status
-      document.getElementById('scanDisplayTitle').textContent = `${bottle.vintage || 'NV'} ${bottle.producer} ${bottle.wine_name || bottle.varietal}`;
-      document.getElementById('scanDisplaySubtitle').textContent = `${bottle.region || ''} • ${bottle.varietal || ''}`;
-      document.getElementById('scanDetectedType').textContent = `${getWineIcon(bottle.wine_type)} ${bottle.wine_type || 'Red'} Wine`;
+      if (isUnidentified) {
+        document.getElementById('scanDisplayTitle').textContent = `NV [Unidentified Wine - Tap Below to Name]`;
+        document.getElementById('scanDisplaySubtitle').textContent = `Please enter Producer & Vintage below`;
+      } else {
+        document.getElementById('scanDisplayTitle').textContent = `${bottle.vintage || 'NV'} ${bottle.producer} ${bottle.wine_name || bottle.varietal}`;
+        document.getElementById('scanDisplaySubtitle').textContent = `${bottle.region || ''} • ${bottle.varietal || ''}`;
+      }
+      document.getElementById('scanDetectedType').textContent = `${getWineIcon(bottle ? bottle.wine_type : 'Red')} ${(bottle && bottle.wine_type) || 'Red'} Wine`;
       
       const badge = document.getElementById('scanBadgeStatus');
       if (status.includes("Peak Window")) {
@@ -5663,13 +5801,15 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       document.getElementById('scanRationaleText').textContent = dw.rationale || "Calculated by Sommelier intelligence.";
 
       // Populate form fields
-      document.getElementById('scanEditProducer').value = bottle.producer || '';
-      document.getElementById('scanEditWine').value = bottle.wine_name || '';
-      document.getElementById('scanEditVintage').value = bottle.vintage || '';
-      document.getElementById('scanEditVarietal').value = bottle.varietal || '';
-      document.getElementById('scanEditRegion').value = bottle.region || '';
-      document.getElementById('scanEditPrice').value = bottle.purchase_price || '';
-      document.getElementById('scanEditNotes').value = bottle.personal_notes || '';
+      document.getElementById('scanEditProducer').value = (bottle && bottle.producer !== "Unidentified Wine") ? (bottle.producer || '') : '';
+      document.getElementById('scanEditProducer').placeholder = "e.g. Stags' Leap Winery";
+      document.getElementById('scanEditWine').value = (bottle && bottle.wine_name !== "Please enter name") ? (bottle.wine_name || '') : '';
+      document.getElementById('scanEditWine').placeholder = "e.g. Petite Sirah";
+      document.getElementById('scanEditVintage').value = (bottle && bottle.vintage) ? bottle.vintage : '';
+      document.getElementById('scanEditVarietal').value = (bottle && bottle.varietal) || '';
+      document.getElementById('scanEditRegion').value = (bottle && bottle.region) || '';
+      document.getElementById('scanEditPrice').value = (bottle && bottle.purchase_price) || '';
+      document.getElementById('scanEditNotes').value = (bottle && bottle.personal_notes) || '';
       document.getElementById('scanRawOcrText').value = rawText || '';
 
       updateScanFridgeButtons();

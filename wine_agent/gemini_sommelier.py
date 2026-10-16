@@ -73,11 +73,23 @@ def _make_gemini_post_request(url: str, payload: Dict[str, Any], timeout: int = 
     raise RuntimeError("Unable to establish connection to Google Gemini API.")
 
 
+def _is_valid_gemini_key(k: Optional[str]) -> bool:
+    """Validates that a string has the structural signature of a Google AI Studio API key."""
+    if not k or not isinstance(k, str):
+        return False
+    clean = k.strip()
+    # Google AI Studio keys start with AIzaSy and are ~39 chars.
+    # Exclude internal tokens starting with "AQ." which cause 403 policy errors.
+    if clean.startswith("AQ.") or len(clean) < 15:
+        return False
+    return True
+
+
 def get_gemini_api_key() -> Optional[str]:
     """Retrieves Gemini API key from environment, project config, or user profile."""
     # 1. Environment variables
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if key and key.strip():
+    if _is_valid_gemini_key(key):
         return key.strip()
 
     # 2. Local project config file (.gemini_key)
@@ -87,7 +99,7 @@ def get_gemini_api_key() -> Optional[str]:
         try:
             with open(key_file, "r", encoding="utf-8") as f:
                 k = f.read().strip()
-                if k:
+                if _is_valid_gemini_key(k):
                     return k
         except Exception:
             pass
@@ -98,7 +110,7 @@ def get_gemini_api_key() -> Optional[str]:
         try:
             with open(user_gemini_file, "r", encoding="utf-8") as f:
                 k = f.read().strip()
-                if k:
+                if _is_valid_gemini_key(k):
                     return k
         except Exception:
             pass
@@ -109,7 +121,7 @@ def get_gemini_api_key() -> Optional[str]:
         try:
             with open(home_key_file, "r", encoding="utf-8") as f:
                 k = f.read().strip()
-                if k:
+                if _is_valid_gemini_key(k):
                     return k
         except Exception:
             pass
@@ -124,7 +136,7 @@ def get_gemini_api_key() -> Optional[str]:
             for srv in servers.values():
                 env = srv.get("env", {})
                 gk = env.get("GEMINI_API_KEY") or env.get("GOOGLE_API_KEY")
-                if gk and gk.strip():
+                if _is_valid_gemini_key(gk):
                     return gk.strip()
         except Exception:
             pass
