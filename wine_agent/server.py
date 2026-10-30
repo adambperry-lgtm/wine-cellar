@@ -28,7 +28,7 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
         self.wfile.write(body)
@@ -42,9 +42,12 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
+
+    def do_PUT(self):
+        return self.do_POST()
 
     def _get_authenticated_user_strict(self) -> Optional[UserProfile]:
         """Extracts strictly authenticated user from session token without falling back to default."""
@@ -140,8 +143,19 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
         current_user = self._get_current_user(params)
 
         if path == "/api/bottles":
-            bottles = self.agent.db.list_bottles(only_in_stock=False, user_id=current_user.id)
+            archived = params.get("archived", ["0"])[0].lower() in ("1", "true")
+            include_all = params.get("all", ["0"])[0].lower() in ("1", "true")
+            if archived:
+                bottles = self.agent.db.list_bottles(only_in_stock=False, archived_only=True, user_id=current_user.id)
+            elif include_all:
+                bottles = self.agent.db.list_bottles(only_in_stock=False, user_id=current_user.id)
+            else:
+                bottles = self.agent.db.list_bottles(only_in_stock=True, user_id=current_user.id)
             self._send_json([b.to_dict() for b in bottles])
+
+        elif path in ("/api/archive", "/api/bottles/archive"):
+            archived = self.agent.db.list_bottles(only_in_stock=False, archived_only=True, user_id=current_user.id)
+            self._send_json([b.to_dict() for b in archived])
 
         elif path == "/api/stats":
             stats = self.agent.audit_cellar(user_id=current_user.id)
@@ -424,6 +438,56 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self._send_json({"success": True, "bottle": (saved or bottle).to_dict(), "method": method, "saved": True})
             else:
                 self._send_json({"success": True, "bottle": bottle.to_dict(), "method": method, "saved": False})
+
+        elif path in ("/api/archive/restock", "/api/bottles/restock"):
+            b_id = payload.get("bottle_id") or payload.get("id")
+            if not b_id:
+                self._send_json({"error": "bottle_id is required"}, status=400)
+                return
+            qty = int(payload.get("quantity", 1))
+            rack = payload.get("location_rack")
+            bin_loc = payload.get("location_bin")
+            restocked = self.agent.restock_bottle(
+                bottle_id=int(b_id),
+                quantity=qty,
+                location_rack=rack,
+                location_bin=bin_loc,
+                user_id=current_user.id
+            )
+            if restocked:
+                self._send_json({"success": True, "bottle": restocked.to_dict()})
+            else:
+                self._send_json({"error": "Bottle not found"}, status=404)
+
+        elif path.startswith("/api/bottles/") and path[len("/api/bottles/"):].split("/")[0].isdigit():
+            # Update existing bottle
+            b_id = int(path[len("/api/bottles/"):].split("/")[0])
+            existing = self.agent.db.get_bottle(b_id, user_id=current_user.id)
+            if not existing:
+                self._send_json({"error": "Bottle not found"}, status=404)
+                return
+            for key in ("producer", "wine_name", "varietal", "region", "sub_region", "country", "location_rack", "location_bin", "personal_notes"):
+                if key in payload:
+                    setattr(existing, key, payload[key])
+            if "vintage" in payload:
+                existing.vintage = int(payload["vintage"]) if payload["vintage"] is not None else None
+            if "wine_type" in payload:
+                existing.wine_type = WineType(payload["wine_type"])
+            if "format" in payload:
+                existing.format = BottleFormat(payload["format"])
+            if "quantity" in payload:
+                existing.quantity = max(0, int(payload["quantity"]))
+            if "purchase_price" in payload:
+                existing.purchase_price = float(payload["purchase_price"]) if payload["purchase_price"] is not None else None
+            if "critic_score" in payload:
+                existing.critic_score = int(payload["critic_score"]) if payload["critic_score"] is not None else None
+            if "user_rating" in payload:
+                existing.user_rating = float(payload["user_rating"]) if payload["user_rating"] is not None else None
+            if "critic_reviews" in payload:
+                existing.critic_reviews = payload["critic_reviews"]
+            self.agent.db.update_bottle(existing, user_id=current_user.id)
+            saved = self.agent.db.get_bottle(b_id, user_id=current_user.id)
+            self._send_json({"success": True, "bottle": (saved or existing).to_dict()})
 
         elif path == "/api/bottles":
             # Add direct structured bottle

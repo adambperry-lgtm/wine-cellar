@@ -878,6 +878,122 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         self.assertIsNotNone(bottle.drinking_window)
         self.assertEqual(bottle.drinking_window.peak_start, 2028)
 
+    def test_zero_bottle_wine_moves_to_archive_and_restock(self):
+        """Verifies that once a wine drops to 0 bottles, it leaves the active cellar and moves to archive, and can be restocked."""
+        b = WineBottle(
+            producer="Château Palmer",
+            wine_name="Alter Ego",
+            vintage=2015,
+            varietal="Bordeaux Blend",
+            region="Margaux, Bordeaux",
+            quantity=1,
+            user_id=1
+        )
+        b_id = self.db.add_bottle(b, user_id=1)
+
+        # Active cellar contains the wine
+        active = self.db.list_bottles(only_in_stock=True, user_id=1)
+        self.assertTrue(any(x.id == b_id for x in active))
+
+        # Archive does not contain the wine yet
+        archived = self.db.get_archived_bottles(user_id=1)
+        self.assertFalse(any(x.id == b_id for x in archived))
+
+        # Consume the last bottle -> quantity = 0
+        rec = self.db.consume_bottle(b_id, count=1, rating=97.0, tasting_notes="Silky tannins, exquisite finish", user_id=1)
+        self.assertIsNotNone(rec)
+
+        # Verify it is NO LONGER in the active cellar list
+        active_after = self.db.list_bottles(only_in_stock=True, user_id=1)
+        self.assertFalse(any(x.id == b_id for x in active_after))
+
+        # Verify it IS in the archive
+        archived_after = self.db.get_archived_bottles(user_id=1)
+        self.assertTrue(any(x.id == b_id for x in archived_after))
+        archived_bottle = next(x for x in archived_after if x.id == b_id)
+        self.assertEqual(archived_bottle.quantity, 0)
+
+        # Restock the wine by 2 bottles
+        restocked = self.db.restock_bottle(b_id, quantity=2, user_id=1)
+        self.assertIsNotNone(restocked)
+        self.assertEqual(restocked.quantity, 2)
+
+        # Verify it is back in the active cellar and out of the archive
+        active_restocked = self.db.list_bottles(only_in_stock=True, user_id=1)
+        self.assertTrue(any(x.id == b_id for x in active_restocked))
+
+        archived_restocked = self.db.get_archived_bottles(user_id=1)
+        self.assertFalse(any(x.id == b_id for x in archived_restocked))
+
+    def test_server_archive_and_restock_endpoints(self):
+        """Verifies handler logic for active bottles, archive, and restocking."""
+        import io
+        import json
+        from unittest.mock import MagicMock
+        from wine_agent.server import WineRequestHandler, SommelierAgent
+
+        agent = SommelierAgent(self.db)
+        WineRequestHandler.agent = agent
+
+        # Add test bottle with quantity 1
+        b = WineBottle(producer="Château Latour", vintage=2010, quantity=1, user_id=1)
+        b_id = self.db.add_bottle(b, user_id=1)
+
+        def make_request(method, path, body=None):
+            req_handler = WineRequestHandler.__new__(WineRequestHandler)
+            req_handler.agent = agent
+            req_handler.path = path
+            req_handler.headers = {"Content-Type": "application/json"}
+            if body:
+                body_bytes = json.dumps(body).encode("utf-8")
+                req_handler.headers["Content-Length"] = str(len(body_bytes))
+                req_handler.rfile = io.BytesIO(body_bytes)
+            else:
+                req_handler.rfile = io.BytesIO(b"")
+
+            wfile = io.BytesIO()
+            req_handler.wfile = wfile
+            req_handler.send_response = MagicMock()
+            req_handler.send_header = MagicMock()
+            req_handler.end_headers = MagicMock()
+
+            if method == "GET":
+                req_handler.do_GET()
+            elif method in ("POST", "PUT"):
+                req_handler.do_POST()
+
+            wfile.seek(0)
+            return json.loads(wfile.read().decode("utf-8"))
+
+        # 1. Active bottles returns Latour
+        data = make_request("GET", "/api/bottles")
+        self.assertTrue(any(x["id"] == b_id for x in data))
+
+        # 2. Archive is empty of Latour
+        data_arch = make_request("GET", "/api/archive")
+        self.assertFalse(any(x["id"] == b_id for x in data_arch))
+
+        # 3. Consume the bottle -> drops to 0 bottles
+        consume_res = make_request("POST", "/api/consume", {"bottle_id": b_id, "count": 1})
+        self.assertTrue(consume_res.get("success"))
+
+        # 4. Active bottles NO LONGER displays Latour
+        data_active2 = make_request("GET", "/api/bottles")
+        self.assertFalse(any(x["id"] == b_id for x in data_active2))
+
+        # 5. Archive NOW contains Latour
+        data_arch2 = make_request("GET", "/api/archive")
+        self.assertTrue(any(x["id"] == b_id for x in data_arch2))
+
+        # 6. Restock bottle with 3 bottles
+        restock_res = make_request("POST", "/api/archive/restock", {"bottle_id": b_id, "quantity": 3})
+        self.assertTrue(restock_res.get("success"))
+        self.assertEqual(restock_res["bottle"]["quantity"], 3)
+
+        # 7. Active bottles now displays Latour again with 3 bottles
+        data_active3 = make_request("GET", "/api/bottles")
+        self.assertTrue(any(x["id"] == b_id and x["quantity"] == 3 for x in data_active3))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -839,9 +839,14 @@ class WineDatabase:
         wine_type_filter: Optional[str] = None,
         search_query: Optional[str] = None,
         only_in_stock: bool = True,
-        user_id: Optional[int] = 1
+        user_id: Optional[int] = 1,
+        archived_only: bool = False
     ) -> List[WineBottle]:
-        """Lists bottles with optional filtering and computed drinking windows scoped to user."""
+        """Lists bottles with optional filtering and computed drinking windows scoped to user.
+
+        When archived_only is True, returns wines where quantity <= 0.
+        When archived_only is False and only_in_stock is True, returns wines where quantity > 0.
+        """
         sql = "SELECT * FROM bottles WHERE 1=1"
         params = []
 
@@ -849,7 +854,9 @@ class WineDatabase:
             sql += " AND (user_id = ? OR (user_id IS NULL AND ? = 1))"
             params.extend([user_id, user_id])
 
-        if only_in_stock:
+        if archived_only:
+            sql += " AND (quantity IS NULL OR quantity <= 0)"
+        elif only_in_stock:
             sql += " AND quantity > 0"
 
         if wine_type_filter:
@@ -873,6 +880,35 @@ class WineDatabase:
                 bottles.append(b)
 
         return bottles
+
+    def get_archived_bottles(self, user_id: Optional[int] = 1) -> List[WineBottle]:
+        """Returns all bottles at zero quantity (archived) for the specified user."""
+        return self.list_bottles(only_in_stock=False, archived_only=True, user_id=user_id)
+
+    def restock_bottle(
+        self,
+        bottle_id: int,
+        quantity: int = 1,
+        location_rack: Optional[str] = None,
+        location_bin: Optional[str] = None,
+        user_id: Optional[int] = None
+    ) -> Optional[WineBottle]:
+        """Restores an archived bottle back to the active cellar by adding quantity."""
+        bottle = self.get_bottle(bottle_id, user_id=user_id)
+        if not bottle:
+            return None
+
+        # If bottle had 0 quantity, set to new quantity; if positive, increment
+        current_qty = bottle.quantity if bottle.quantity and bottle.quantity > 0 else 0
+        bottle.quantity = current_qty + max(1, quantity)
+
+        if location_rack is not None and location_rack.strip():
+            bottle.location_rack = location_rack.strip()
+        if location_bin is not None:
+            bottle.location_bin = location_bin.strip()
+
+        self.update_bottle(bottle, user_id=user_id)
+        return self.get_bottle(bottle_id, user_id=user_id)
 
     def consume_bottle(
         self,

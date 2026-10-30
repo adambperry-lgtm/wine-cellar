@@ -578,3 +578,24 @@ class SommelierAgent:
     ) -> Optional[ConsumptionRecord]:
         """Logs a bottle gift removal and updates inventory without rating or tasting notes."""
         return self.db.gift_bottle(bottle_id, count, situation_notes, user_id=user_id)
+
+    def get_archived_bottles(self, user_id: Optional[int] = 1) -> List[WineBottle]:
+        """Returns all depleted wines (0 bottles) in the archive for the user."""
+        return self.db.get_archived_bottles(user_id=user_id)
+
+    def restock_bottle(
+        self,
+        bottle_id: int,
+        quantity: int = 1,
+        location_rack: Optional[str] = None,
+        location_bin: Optional[str] = None,
+        user_id: Optional[int] = None
+    ) -> Optional[WineBottle]:
+        """Restores an archived wine back to the active cellar with the specified bottle count."""
+        return self.db.restock_bottle(
+            bottle_id=bottle_id,
+            quantity=quantity,
+            location_rack=location_rack,
+            location_bin=location_bin,
+            user_id=user_id
+        )

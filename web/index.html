@@ -207,6 +207,9 @@
         <button onclick="openHistoryModal()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition-all" title="Review opened bottles, star ratings, and tasting notes">
           <span>📖</span> Tasting Log
         </button>
+        <button onclick="openArchiveModal()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all shadow-sm" title="Review depleted wines (0 bottles) in your archive and restock">
+          <span>📦</span> Archive <span id="archiveHeaderBadge" class="ml-0.5 px-1.5 py-0.2 rounded-full bg-slate-900 text-slate-300 border border-slate-700 text-[10px] font-mono">0</span>
+        </button>
         <button onclick="openStorageModal()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
           <span>🧊</span> Edit Storage
         </button>
@@ -300,6 +303,9 @@
         </button>
         <button onclick="setFilter('urgent')" id="btnFilterUrgent" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 transition-all">
           Drink Soon ⚠️
+        </button>
+        <button onclick="setFilter('archive')" id="btnFilterArchive" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all flex items-center gap-1.5" title="View depleted wines at zero bottles">
+          <span>📦</span> Archive (<span id="archiveFilterCount">0</span>)
         </button>
         <span id="dynamicStorageFilterButtons" class="inline-flex items-center gap-2 flex-wrap">
           <button onclick="setFilter('basement')" id="btnFilterBasement" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
@@ -1117,6 +1123,41 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     </div>
   </div>
 
+  <!-- MODAL: Wine Archive (Zero Bottles Remaining) -->
+  <div id="archiveModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[88vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">📦</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-white">Wine Archive</h3>
+              <span id="archiveModalCountBadge" class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">0 wines</span>
+            </div>
+            <p class="text-xs text-slate-400">Past wines with zero bottles in cellar. Review tasting notes or restock them back into your cellar.</p>
+          </div>
+        </div>
+        <button onclick="closeModal('archiveModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Quick Search inside Archive Modal -->
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1">
+          <input type="text" id="archiveSearchInput" oninput="renderArchiveModalList()" placeholder="Search archived producer, vintage, or varietal..." class="w-full bg-slate-800 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 pl-8 pr-3 py-2 outline-none focus:border-rose-500">
+          <span class="absolute left-2.5 top-2.5 text-slate-500 text-xs">🔍</span>
+        </div>
+        <button onclick="document.getElementById('archiveSearchInput').value = ''; renderArchiveModalList();" class="px-2.5 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700">
+          Clear
+        </button>
+      </div>
+
+      <!-- Archive List -->
+      <div id="archiveListContainer" class="flex flex-col gap-3">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: Edit Storage Options -->
   <div id="storageModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[88vh] overflow-y-auto custom-scrollbar">
@@ -1494,6 +1535,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
   <script>
     const APP_VERSION = "v2.3.0";
     let cellarBottles = [];
+    let archivedBottles = [];
     let tastingHistory = [];
     let storageZones = [];
     let currentFilter = 'all';
@@ -3000,7 +3042,10 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
       if (window.location.protocol === 'file:') {
         const saved = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
-        cellarBottles = saved ? JSON.parse(saved) : (uId === 1 ? FALLBACK_BOTTLES : []);
+        const all = saved ? JSON.parse(saved) : (uId === 1 ? FALLBACK_BOTTLES : []);
+        const savedArch = localStorage.getItem(`wine_cellar_archive_u${uId}`);
+        archivedBottles = savedArch ? JSON.parse(savedArch) : all.filter(b => (b.quantity || 0) <= 0);
+        cellarBottles = all.filter(b => (b.quantity || 0) > 0);
         await initStorageZones();
         renderKPIs();
         applyFilters();
@@ -3011,16 +3056,35 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       try {
         const res = await fetch("/api/bottles");
         if (res.ok) {
-          cellarBottles = await res.json();
+          const raw = await res.json();
+          cellarBottles = raw.filter(b => (b.quantity || 0) > 0);
           try { localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles)); } catch (e) {}
         } else {
           const cached = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
-          cellarBottles = cached ? JSON.parse(cached) : (uId === 1 ? FALLBACK_BOTTLES : []);
+          const all = cached ? JSON.parse(cached) : (uId === 1 ? FALLBACK_BOTTLES : []);
+          cellarBottles = all.filter(b => (b.quantity || 0) > 0);
         }
       } catch (e) {
         const cached = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
-        cellarBottles = cached ? JSON.parse(cached) : (uId === 1 ? FALLBACK_BOTTLES : []);
+        const all = cached ? JSON.parse(cached) : (uId === 1 ? FALLBACK_BOTTLES : []);
+        cellarBottles = all.filter(b => (b.quantity || 0) > 0);
       }
+
+      // Sync archived bottles (zero quantity)
+      try {
+        const archRes = await fetch("/api/archive");
+        if (archRes.ok) {
+          archivedBottles = await archRes.json();
+          try { localStorage.setItem(`wine_cellar_archive_u${uId}`, JSON.stringify(archivedBottles)); } catch (e) {}
+        } else {
+          const cachedArch = localStorage.getItem(`wine_cellar_archive_u${uId}`);
+          archivedBottles = cachedArch ? JSON.parse(cachedArch) : [];
+        }
+      } catch (e) {
+        const cachedArch = localStorage.getItem(`wine_cellar_archive_u${uId}`);
+        archivedBottles = cachedArch ? JSON.parse(cachedArch) : [];
+      }
+
       await initStorageZones();
       renderKPIs();
       applyFilters();
@@ -3064,6 +3128,15 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       } else {
         alertBox.classList.add('hidden');
       }
+
+      // Update archive counters
+      const archCount = (archivedBottles || []).length;
+      const hBadge = document.getElementById('archiveHeaderBadge');
+      if (hBadge) hBadge.textContent = archCount;
+      const fCount = document.getElementById('archiveFilterCount');
+      if (fCount) fCount.textContent = archCount;
+      const mBadge = document.getElementById('archiveModalCountBadge');
+      if (mBadge) mBadge.textContent = `${archCount} wine${archCount === 1 ? '' : 's'}`;
     }
 
     function setFilter(filter) {
@@ -3081,6 +3154,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         'aging': 'btnFilterAging',
         'hold': 'btnFilterAging',
         'urgent': 'btnFilterUrgent',
+        'archive': 'btnFilterArchive',
         'basement': 'btnFilterBasement',
         'upstairs': 'btnFilterUpstairs',
         'fridge1': 'btnFilterBasement',
@@ -3099,25 +3173,30 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       const typeVal = document.getElementById('typeSelect').value.toLowerCase();
       const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
 
-      const filtered = cellarBottles.filter(b => {
-        // Status filter
-        const dw = b.drinking_window;
-        const st = dw ? dw.status : '';
-        const rackLower = (b.location_rack || '').toLowerCase();
+      const isArchiveMode = (currentFilter === 'archive');
+      const sourceList = isArchiveMode ? archivedBottles : cellarBottles.filter(b => (b.quantity || 0) > 0);
 
-        // 'ready' strictly filters for Peak Window
-        if ((currentFilter === 'ready' || currentFilter === 'peak') && (!dw || !st.includes('Peak Window') || st.includes('Approaching'))) return false;
-        // 'approaching' filters for Approaching Peak (early window / decant)
-        if (currentFilter === 'approaching' && (!dw || !st.includes('Approaching'))) return false;
-        // 'aging' filters for Hold (Too young)
-        if ((currentFilter === 'aging' || currentFilter === 'hold') && (!dw || !st.includes('Hold'))) return false;
-        // 'urgent' filters for late peak / drink soon
-        if (currentFilter === 'urgent' && (!dw || (!st.includes('Drink Soon') && !st.includes('Past Peak')))) return false;
-        if (currentFilter === 'basement' && !(rackLower.includes('basement') || rackLower.includes('rack a') || rackLower.includes('rack c'))) return false;
-        if (currentFilter === 'upstairs' && !(rackLower.includes('upstairs') || rackLower.includes('rack b') || rackLower.includes('sparkling'))) return false;
-        if (currentFilter.startsWith('storage:')) {
-          const targetZone = currentFilter.replace('storage:', '').toLowerCase();
-          if (rackLower !== targetZone && !rackLower.includes(targetZone)) return false;
+      const filtered = sourceList.filter(b => {
+        // Status filter (only applied in cellar mode)
+        if (!isArchiveMode) {
+          const dw = b.drinking_window;
+          const st = dw ? dw.status : '';
+          const rackLower = (b.location_rack || '').toLowerCase();
+
+          // 'ready' strictly filters for Peak Window
+          if ((currentFilter === 'ready' || currentFilter === 'peak') && (!dw || !st.includes('Peak Window') || st.includes('Approaching'))) return false;
+          // 'approaching' filters for Approaching Peak (early window / decant)
+          if (currentFilter === 'approaching' && (!dw || !st.includes('Approaching'))) return false;
+          // 'aging' filters for Hold (Too young)
+          if ((currentFilter === 'aging' || currentFilter === 'hold') && (!dw || !st.includes('Hold'))) return false;
+          // 'urgent' filters for late peak / drink soon
+          if (currentFilter === 'urgent' && (!dw || (!st.includes('Drink Soon') && !st.includes('Past Peak')))) return false;
+          if (currentFilter === 'basement' && !(rackLower.includes('basement') || rackLower.includes('rack a') || rackLower.includes('rack c'))) return false;
+          if (currentFilter === 'upstairs' && !(rackLower.includes('upstairs') || rackLower.includes('rack b') || rackLower.includes('sparkling'))) return false;
+          if (currentFilter.startsWith('storage:')) {
+            const targetZone = currentFilter.replace('storage:', '').toLowerCase();
+            if (rackLower !== targetZone && !rackLower.includes(targetZone)) return false;
+          }
         }
 
         // Type filter
@@ -3132,8 +3211,12 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         return true;
       });
 
-      document.getElementById('resultsCount').textContent = `Showing ${filtered.length} of ${cellarBottles.length} bottles`;
-      renderBottleList(filtered);
+      if (isArchiveMode) {
+        document.getElementById('resultsCount').textContent = `Showing ${filtered.length} of ${archivedBottles.length} archived wines (0 bottles remaining)`;
+      } else {
+        document.getElementById('resultsCount').textContent = `Showing ${filtered.length} of ${cellarBottles.length} bottles`;
+      }
+      renderBottleList(filtered, isArchiveMode);
     }
 
     function resetAllFilters() {
@@ -3144,25 +3227,40 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       setFilter('all');
     }
 
-    function renderBottleList(bottles) {
+    function renderBottleList(bottles, isArchive = false) {
       const container = document.getElementById('bottleContainer');
       if (bottles.length === 0) {
-        container.innerHTML = `
-          <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-3">
-            <span class="text-3xl">🍷</span>
-            <p class="font-medium text-slate-300">No wines matching the current filter criteria.</p>
-            <button onclick="resetAllFilters()" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition shadow-md shadow-rose-950/40 flex items-center gap-1.5">
-              <span>🔄</span> Reset All Filters
-            </button>
-          </div>
-        `;
+        if (isArchive) {
+          container.innerHTML = `
+            <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-3">
+              <span class="text-3xl">📦</span>
+              <p class="font-medium text-slate-300">No wines currently in your archive.</p>
+              <p class="text-[11px] text-slate-500 max-w-sm">When a wine reaches 0 bottles (opened or gifted), it is automatically moved to the archive so your active cellar stays clean.</p>
+              <button onclick="setFilter('all')" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition shadow-md shadow-rose-950/40 flex items-center gap-1.5">
+                <span>🍷</span> View Active Cellar
+              </button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-3">
+              <span class="text-3xl">🍷</span>
+              <p class="font-medium text-slate-300">No wines matching the current filter criteria.</p>
+              <button onclick="resetAllFilters()" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition shadow-md shadow-rose-950/40 flex items-center gap-1.5">
+                <span>🔄</span> Reset All Filters
+              </button>
+            </div>
+          `;
+        }
         return;
       }
 
       container.innerHTML = bottles.map(b => {
         const dw = b.drinking_window;
         const vintage = b.vintage || 'NV';
-        const statusBadge = getStatusBadgeHtml(dw ? dw.status : '');
+        const statusBadge = isArchive
+          ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800/80 flex items-center gap-1 shadow-sm"><span>📦</span> Archived</span>'
+          : getStatusBadgeHtml(dw ? dw.status : '');
 
         // Calculate timeline bar metrics (based on span from 2000 to 2045)
         const timelineMin = Math.min(2010, (b.vintage || 2020) - 2);
@@ -3188,8 +3286,47 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const approachWidth = Math.max(1, peakStartPct - startPct);
         const lateWidth = Math.max(1, endPct - peakEndPct);
 
+        const actionsHtml = isArchive ? `
+          <div class="flex items-center gap-3 self-end md:self-auto">
+            <div class="text-right">
+              <span class="text-xs text-slate-400">Inventory:</span>
+              <span class="text-xs font-bold text-amber-400 bg-amber-950/70 px-2 py-0.5 rounded border border-amber-800/80 block">0 btl</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="promptRestockBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1 shadow-md shadow-emerald-950/40" title="Restock / add bottles back to active cellar">
+                <span>➕</span> Restock
+              </button>
+              <button onclick="openHistoryModal()" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="View tasting notes and history">
+                <span>📖</span> Log
+              </button>
+              <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}', true)" class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-red-900/60 hover:text-red-200 text-slate-400 border border-slate-700 transition" title="Permanently delete from archive">
+                🗑
+              </button>
+            </div>
+          </div>
+        ` : `
+          <div class="flex items-center gap-3 self-end md:self-auto">
+            <div class="text-right">
+              <span class="text-xs text-slate-400">Qty:</span>
+              <span class="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded border border-slate-700">${b.quantity} btl</span>
+              ${b.purchase_price ? `<span class="text-[11px] text-emerald-400 block">$${b.purchase_price}/ea</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-rose-900/60 hover:text-rose-200 border border-slate-700 transition" title="Mark as consumed / Open bottle">
+                🥂 Open
+              </button>
+              <button onclick="openGiftModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-amber-900/60 hover:text-amber-200 text-slate-300 border border-slate-700 transition" title="Gift bottle (remove from cellar without opening)">
+                🎁 Gift
+              </button>
+              <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-red-900/60 hover:text-red-200 text-slate-400 border border-slate-700 transition" title="Remove / Delete from cellar">
+                🗑
+              </button>
+            </div>
+          </div>
+        `;
+
         return `
-          <div class="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-4 transition-all flex flex-col gap-3">
+          <div class="bg-slate-900 border ${isArchive ? 'border-amber-900/40 bg-slate-900/90' : 'border-slate-800 hover:border-slate-700'} rounded-xl p-4 transition-all flex flex-col gap-3">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
               <div class="flex items-start gap-3">
                 <span class="text-xl mt-0.5">${getWineIcon(b.wine_type)}</span>
@@ -3208,24 +3345,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 self-end md:self-auto">
-                <div class="text-right">
-                  <span class="text-xs text-slate-400">Qty:</span>
-                  <span class="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded border border-slate-700">${b.quantity} btl</span>
-                  ${b.purchase_price ? `<span class="text-[11px] text-emerald-400 block">$${b.purchase_price}/ea</span>` : ''}
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-rose-900/60 hover:text-rose-200 border border-slate-700 transition" title="Mark as consumed / Open bottle">
-                    🥂 Open
-                  </button>
-                  <button onclick="openGiftModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-amber-900/60 hover:text-amber-200 text-slate-300 border border-slate-700 transition" title="Gift bottle (remove from cellar without opening)">
-                    🎁 Gift
-                  </button>
-                  <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-red-900/60 hover:text-red-200 text-slate-400 border border-slate-700 transition" title="Remove / Delete from cellar">
-                    🗑
-                  </button>
-                </div>
-              </div>
+              ${actionsHtml}
             </div>
 
             <!-- Drinking Window Timeline Visualizer -->
@@ -3254,6 +3374,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
               <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
                 <span>${timelineMin} (Vintage)</span>
                 <span class="text-emerald-400 font-bold">${dw ? dw.peak_start : ''} Peak</span>
+                <span>${timelineMax}+</span>
+              </div>
+            </div>
                 <span>${timelineMax}+</span>
               </div>
             </div>
@@ -4851,8 +4974,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       openModal('consumeModal');
     }
 
-    async function deleteBottle(id, name) {
-      if (!confirm(`Are you sure you want to remove "${name || 'this wine'}" from your cellar?`)) {
+    async function deleteBottle(id, name, fromArchive = false) {
+      const typeLabel = fromArchive ? "from your wine archive" : "from your active cellar";
+      if (!confirm(`Are you sure you want to permanently delete "${name || 'this wine'}" ${typeLabel}?`)) {
         return;
       }
       try {
@@ -4862,12 +4986,150 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           body: JSON.stringify({ bottle_id: parseInt(id) })
         });
       } catch (e) {
-        // Offline bookmark resilience
+        // Offline resilience
       }
-      cellarBottles = cellarBottles.filter(b => b.id !== id);
-      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+      if (fromArchive) {
+        archivedBottles = archivedBottles.filter(b => b.id !== id);
+      } else {
+        cellarBottles = cellarBottles.filter(b => b.id !== id);
+      }
+      const uId = currentUser ? currentUser.id : 1;
+      try {
+        localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles));
+        localStorage.setItem(`wine_cellar_archive_u${uId}`, JSON.stringify(archivedBottles));
+        localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+      } catch (e) {}
+
       renderKPIs();
       applyFilters();
+      if (fromArchive) renderArchiveModalList();
+    }
+
+    async function promptRestockBottle(id, name) {
+      const qtyStr = prompt(`Restock "${name || 'Wine'}":\nHow many bottles are you adding back to your cellar?`, "1");
+      if (qtyStr === null) return;
+      const qty = parseInt(qtyStr, 10);
+      if (isNaN(qty) || qty <= 0) {
+        alert("Please enter a valid positive number of bottles.");
+        return;
+      }
+      await restockBottle(id, qty);
+    }
+
+    async function restockBottle(id, quantity = 1) {
+      let target = archivedBottles.find(b => b.id == id);
+      if (!target) target = cellarBottles.find(b => b.id == id);
+
+      let updatedBottle = null;
+      try {
+        const res = await fetch("/api/archive/restock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bottle_id: parseInt(id), quantity })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.bottle) updatedBottle = data.bottle;
+        }
+      } catch (e) {}
+
+      // Fallback local update
+      if (!updatedBottle && target) {
+        updatedBottle = { ...target, quantity: (target.quantity > 0 ? target.quantity : 0) + quantity };
+      }
+
+      if (updatedBottle) {
+        // Remove from archive
+        archivedBottles = archivedBottles.filter(b => b.id != id);
+        // Add or update in cellarBottles
+        cellarBottles = cellarBottles.filter(b => b.id != id);
+        cellarBottles.unshift(updatedBottle);
+
+        const uId = currentUser ? currentUser.id : 1;
+        try {
+          localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles));
+          localStorage.setItem(`wine_cellar_archive_u${uId}`, JSON.stringify(archivedBottles));
+          localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+          localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+          localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+        } catch (e) {}
+
+        renderKPIs();
+        applyFilters();
+        renderArchiveModalList();
+        if (typeof updateStorageUI === 'function') updateStorageUI();
+
+        const wName = `${updatedBottle.vintage || 'NV'} ${updatedBottle.producer} ${updatedBottle.wine_name || ''}`.trim();
+        alert(`🍷 Restocked ${quantity} bottle(s) of ${wName}! Moved back to your active cellar.`);
+      }
+    }
+
+    function openArchiveModal() {
+      const sInput = document.getElementById('archiveSearchInput');
+      if (sInput) sInput.value = '';
+      renderArchiveModalList();
+      openModal('archiveModal');
+    }
+
+    function renderArchiveModalList() {
+      const container = document.getElementById('archiveListContainer');
+      if (!container) return;
+
+      const searchVal = (document.getElementById('archiveSearchInput')?.value || '').toLowerCase().trim();
+      const list = archivedBottles.filter(b => {
+        if (!searchVal) return true;
+        const hay = `${b.producer} ${b.wine_name} ${b.vintage} ${b.varietal} ${b.region} ${b.personal_notes || ''}`.toLowerCase();
+        return hay.includes(searchVal);
+      });
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 bg-slate-950/40 border border-slate-800 rounded-xl flex flex-col items-center gap-2 text-slate-400">
+            <span class="text-3xl">📦</span>
+            <p class="text-xs font-semibold text-white">No archived wines found ${searchVal ? 'matching your search' : 'yet'}</p>
+            <p class="text-[11px] text-slate-500 max-w-xs">
+              When a wine reaches zero bottles (opened or gifted), it is automatically archived here.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(b => {
+        const vintage = b.vintage || 'NV';
+        const dw = b.drinking_window;
+        const wName = `${vintage} ${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}`.trim();
+
+        return `
+          <div class="bg-slate-950/80 border border-slate-800 hover:border-slate-700 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition">
+            <div class="flex items-start gap-3 min-w-0">
+              <span class="text-xl shrink-0 mt-0.5">${getWineIcon(b.wine_type)}</span>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="text-xs font-bold text-white">${vintage} ${escapeHtml(b.producer)}</h4>
+                  ${b.wine_name ? `<span class="text-xs text-rose-300 font-medium">${escapeHtml(b.wine_name)}</span>` : ''}
+                  <span class="px-2 py-0.2 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800/80">0 btl</span>
+                  ${b.user_rating ? `<span class="px-1.5 py-0.2 rounded bg-amber-950/60 text-amber-300 text-[10px] font-bold border border-amber-800/60">★ ${b.user_rating}/5</span>` : ''}
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">
+                  ${escapeHtml(b.region)} | <span class="text-slate-300">${escapeHtml(b.varietal)}</span>
+                  ${dw ? `• Peak: ${dw.peak_start}–${dw.peak_end}` : ''}
+                </p>
+                ${b.personal_notes ? `<p class="text-[11px] text-slate-400 italic mt-1 line-clamp-2 bg-slate-900/60 rounded px-2 py-1 border border-slate-800/60">"${escapeHtml(b.personal_notes)}"</p>` : ''}
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <button onclick="promptRestockBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1 shadow-md shadow-emerald-950/40" title="Add bottles back to active cellar">
+                <span>➕</span> Restock
+              </button>
+              <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}', true)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-red-950 hover:text-red-300 text-slate-400 text-xs border border-slate-700 transition" title="Permanently delete this wine from archive">
+                🗑
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     async function submitConsume() {
@@ -4897,17 +5159,29 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
       closeModal('consumeModal');
 
-      // Decrement locally and record rating
+      // Decrement locally and check if zero bottles (archive)
+      let movedToArchive = false;
       if (target) {
         if (target.quantity > 0) target.quantity -= 1;
         if (starVal) target.user_rating = starVal;
         if (target.quantity <= 0) {
+          target.quantity = 0;
           cellarBottles = cellarBottles.filter(b => b.id != bId);
+          if (!archivedBottles.some(x => x.id == target.id)) {
+            archivedBottles.unshift({ ...target });
+          }
+          movedToArchive = true;
         }
       }
-      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
-      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
-      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+
+      const uId = currentUser ? currentUser.id : 1;
+      try {
+        localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles));
+        localStorage.setItem(`wine_cellar_archive_u${uId}`, JSON.stringify(archivedBottles));
+        localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+        localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+        localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+      } catch (e) {}
 
       // Append to tasting journal history with aging curve stage
       const historyEntry = {
@@ -4929,7 +5203,12 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       renderKPIs();
       applyFilters();
       if (typeof updateStorageUI === 'function') updateStorageUI();
-      alert(`🥂 Cheers! Bottle opened${starVal ? ' and ' + starVal + '★ rating' : ''} recorded. Review anytime under 📖 Tasting Log.`);
+
+      if (movedToArchive) {
+        alert(`🥂 Cheers! Last bottle opened! All bottles of ${target ? (target.vintage || 'NV') + ' ' + target.producer + ' ' + (target.wine_name || '') : 'this wine'} have been enjoyed.\n\nMoved to your Wine Archive (Review or restock anytime under 📦 Archive).`);
+      } else {
+        alert(`🥂 Cheers! Bottle opened${starVal ? ' and ' + starVal + '★ rating' : ''} recorded. Review anytime under 📖 Tasting Log.`);
+      }
     }
 
     function openGiftModal(id, name) {
@@ -4974,16 +5253,28 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
       closeModal('giftModal');
 
-      // Decrement or remove locally
+      // Decrement or remove locally (and move to archive if 0)
+      let movedToArchive = false;
       if (target) {
         target.quantity = Math.max(0, (target.quantity || 0) - count);
         if (target.quantity <= 0) {
+          target.quantity = 0;
           cellarBottles = cellarBottles.filter(b => b.id != bId);
+          if (!archivedBottles.some(x => x.id == target.id)) {
+            archivedBottles.unshift({ ...target });
+          }
+          movedToArchive = true;
         }
       }
-      localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
-      localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
-      localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+
+      const uId = currentUser ? currentUser.id : 1;
+      try {
+        localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles));
+        localStorage.setItem(`wine_cellar_archive_u${uId}`, JSON.stringify(archivedBottles));
+        localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+        localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+        localStorage.setItem('wine_cellar_offline_cache', JSON.stringify(cellarBottles));
+      } catch (e) {}
 
       // Append to cellar history log
       const historyEntry = {
@@ -5005,7 +5296,12 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       renderKPIs();
       applyFilters();
       if (typeof updateStorageUI === 'function') updateStorageUI();
-      alert(`🎁 Successfully gifted ${count} bottle(s) of ${wineName}! Removed from storage.`);
+
+      if (movedToArchive) {
+        alert(`🎁 Last bottle gifted! Moved ${wineName} to your Wine Archive (Review or restock anytime under 📦 Archive).`);
+      } else {
+        alert(`🎁 Successfully gifted ${count} bottle(s) of ${wineName}! Removed from storage.`);
+      }
     }
 
     function openHistoryModal() {
