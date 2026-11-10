@@ -624,6 +624,106 @@ class WineDatabase:
             conn.commit()
             return cursor.rowcount > 0
 
+    def move_bottle(
+        self,
+        bottle_id: int,
+        new_rack: str,
+        new_bin: Optional[str] = None,
+        count: Optional[int] = None,
+        user_id: Optional[int] = 1
+    ) -> Optional[WineBottle]:
+        """Moves all or a portion of bottles from their current location to new_rack/new_bin.
+
+        If count is less than bottle.quantity, splits the lot by decrementing the current record
+        and creating (or merging into) a bottle record at the destination.
+        """
+        uid = user_id if user_id is not None else 1
+        bottle = self.get_bottle(bottle_id, user_id=uid)
+        if not bottle:
+            return None
+
+        clean_rack = (new_rack or "").strip()
+        if not clean_rack:
+            clean_rack = "Basement Fridge"
+        clean_bin = (new_bin or "").strip() if new_bin is not None else (bottle.location_bin or "Shelf 1")
+
+        # Automatically register target rack in user's sticky storage locations
+        self.add_storage_location(user_id=uid, name=clean_rack)
+
+        total_qty = max(1, bottle.quantity)
+        move_qty = count if count is not None and count > 0 else total_qty
+        move_qty = min(move_qty, total_qty)
+
+        # Check if matching wine already exists at destination (excluding this bottle itself)
+        with self._get_conn() as conn:
+            existing = conn.execute("""
+                SELECT id, quantity FROM bottles
+                WHERE (user_id = ? OR (user_id IS NULL AND ? = 1))
+                  AND id != ?
+                  AND LOWER(TRIM(producer)) = LOWER(TRIM(?))
+                  AND LOWER(TRIM(COALESCE(wine_name, ''))) = LOWER(TRIM(?))
+                  AND (vintage = ? OR (vintage IS NULL AND ? IS NULL))
+                  AND LOWER(TRIM(location_rack)) = LOWER(TRIM(?))
+                  AND LOWER(TRIM(COALESCE(location_bin, ''))) = LOWER(TRIM(?))
+            """, (
+                uid, uid,
+                bottle.id,
+                bottle.producer,
+                bottle.wine_name or '',
+                bottle.vintage, bottle.vintage,
+                clean_rack,
+                clean_bin
+            )).fetchone()
+
+            if existing:
+                target_id = existing["id"]
+                new_target_qty = existing["quantity"] + move_qty
+                conn.execute("UPDATE bottles SET quantity = ? WHERE id = ?", (new_target_qty, target_id))
+                if move_qty >= total_qty:
+                    conn.execute("DELETE FROM bottles WHERE id = ?", (bottle.id,))
+                else:
+                    conn.execute("UPDATE bottles SET quantity = ? WHERE id = ?", (total_qty - move_qty, bottle.id))
+                conn.commit()
+                return self.get_bottle(target_id, user_id=uid)
+            else:
+                if move_qty >= total_qty:
+                    # Move entire record
+                    bottle.location_rack = clean_rack
+                    bottle.location_bin = clean_bin
+                    self.update_bottle(bottle, user_id=uid)
+                    return self.get_bottle(bottle.id, user_id=uid)
+                else:
+                    # Partial move: decrement original and insert new record
+                    bottle.quantity = total_qty - move_qty
+                    self.update_bottle(bottle, user_id=uid)
+
+                    new_bottle = WineBottle(
+                        producer=bottle.producer,
+                        wine_name=bottle.wine_name,
+                        vintage=bottle.vintage,
+                        varietal=bottle.varietal,
+                        region=bottle.region,
+                        sub_region=bottle.sub_region,
+                        country=bottle.country,
+                        wine_type=bottle.wine_type,
+                        format=bottle.format,
+                        quantity=move_qty,
+                        location_rack=clean_rack,
+                        location_bin=clean_bin,
+                        purchase_date=bottle.purchase_date,
+                        purchase_price=bottle.purchase_price,
+                        market_value=bottle.market_value,
+                        critic_score=bottle.critic_score,
+                        user_rating=bottle.user_rating,
+                        personal_notes=bottle.personal_notes,
+                        food_pairings=bottle.food_pairings,
+                        drinking_window=bottle.drinking_window,
+                        critic_reviews=bottle.critic_reviews,
+                        user_id=uid
+                    )
+                    new_id = self.add_bottle(new_bottle, user_id=uid)
+                    return self.get_bottle(new_id, user_id=uid)
+
     def delete_bottle(self, bottle_id: int, user_id: Optional[int] = None) -> bool:
         """Deletes a bottle record belonging to the user."""
         with self._get_conn() as conn:

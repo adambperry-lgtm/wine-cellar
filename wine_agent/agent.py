@@ -599,3 +599,20 @@ class SommelierAgent:
             location_bin=location_bin,
             user_id=user_id
         )
+
+    def move_bottle(
+        self,
+        bottle_id: int,
+        location_rack: str,
+        location_bin: Optional[str] = None,
+        count: Optional[int] = None,
+        user_id: Optional[int] = 1
+    ) -> Optional[WineBottle]:
+        """Moves bottles from one storage location to another."""
+        return self.db.move_bottle(
+            bottle_id=bottle_id,
+            new_rack=location_rack,
+            new_bin=location_bin,
+            count=count,
+            user_id=user_id
+        )

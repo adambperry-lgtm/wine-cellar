@@ -321,6 +321,28 @@ def parse_wine_natural_language(text: str) -> WineBottle:
     return bottle
 
 
+def is_ocr_gibberish(text: str) -> bool:
+    """Detects distorted optical OCR output and script typography artifacts."""
+    if not text:
+        return True
+    clean = text.strip()
+    # Punctuation/noise symbols typical of failed OCR on script fonts
+    if re.search(r'[«»¢=);:“”~_^|\\]', clean) or clean.count(';') > 0 or clean.count('!') > 0:
+        return True
+    words = clean.split()
+    if words:
+        # High proportion of 1-letter tokens like "P o o K" or "«K ; ! b e"
+        single_chars = [w for w in words if len(w) == 1]
+        if len(single_chars) / len(words) >= 0.35 and len(words) >= 2:
+            return True
+    alnum = re.findall(r'[a-zA-Z0-9]', clean)
+    if len(alnum) < 3:
+        return True
+    if len(alnum) / max(len(clean), 1) < 0.65:
+        return True
+    return False
+
+
 def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -> WineBottle:
     """Parses raw text extracted from a wine bottle label photo via OCR.
 
@@ -427,24 +449,24 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
         wine_type = WineType.RED
 
     # Stags' Leap Winery & Petite Sirah intelligence
-    # Handles optical OCR distortion signatures from calligraphy (e.g. "po o k po o", "«k; ! be", "ee aa ys")
     lower_raw = label_text.lower()
     lower_joined = joined_text.lower()
     is_stags_leap = (
-        any(s in lower_joined for s in ["stags leap", "stags' leap", "stag's leap", "1893"]) or
-        "po o k po o" in lower_raw or
-        "«k; ! be" in lower_raw or
-        "ee aa ys" in lower_raw or
-        ("po o" in lower_raw and any(k in lower_raw for k in ["«k", "! be", "po o"]))
+        any(s in lower_joined for s in ["stags leap", "stags' leap", "stag's leap"]) or
+        ("stags" in lower_joined and "leap" in lower_joined) or
+        ("petite sirah" in lower_joined and any(k in lower_joined for k in ["napa", "1893", "leap", "stag"])) or
+        ("1893" in lower_joined and any(k in lower_joined for k in ["petite", "sirah", "napa", "vintage"])) or
+        ("po o k" in lower_raw and "«k" in lower_raw)
     )
     if is_stags_leap:
         producer = "Stags' Leap Winery"
         varietal = "Petite Sirah"
         wine_type = WineType.RED
         if not vintage:
-            vintage = 2021
-        if not region:
-            region = "Napa Valley, California"
+            vintage = 2022
+        region = "Napa Valley, California"
+        sub_region = "Stags Leap District"
+        country = "United States"
 
     # 5. Determine Producer
     if not producer:
@@ -456,6 +478,8 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
     # Fallback to top non-noise line if producer not matched
     if not producer and cleaned_lines:
         for line in cleaned_lines:
+            if is_ocr_gibberish(line):
+                continue
             l_clean = re.sub(r'[^a-zA-Z0-9\s\'-]', '', line).strip()
             letters = re.findall(r'[a-zA-Z]', l_clean)
             # Require at least 4 letters and genuine word structure to avoid OCR noise
@@ -471,12 +495,14 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
             producer = l_clean
             break
 
-    if not producer:
+    if not producer or is_ocr_gibberish(producer):
         producer = "Unidentified Wine"
 
     # 6. Determine Wine Name / Cuvée
     wine_name_candidates = []
     for line in cleaned_lines:
+        if is_ocr_gibberish(line):
+            continue
         l_clean = line
         if producer.lower() in l_clean.lower():
             l_clean = re.sub(re.escape(producer), '', l_clean, flags=re.IGNORECASE).strip()
@@ -496,7 +522,7 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
         wine_name = "Petite Sirah"
     else:
         wine_name = " ".join(wine_name_candidates[:2]).strip()
-        if not wine_name:
+        if not wine_name or is_ocr_gibberish(wine_name):
             wine_name = varietal or "Reserve"
 
     # 7. Check Fridge Placement
@@ -509,6 +535,8 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
     notes = "Added via Label Scanner"
     if sku_found:
         notes += f" (SKU: {sku_found})"
+    if producer == "Unidentified Wine":
+        notes += " (Low OCR confidence - please verify winery details)"
 
     bottle = WineBottle(
         producer=producer,

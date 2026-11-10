@@ -874,9 +874,112 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         self.assertEqual(bottle.wine_name, "Petite Sirah")
         self.assertEqual(bottle.varietal, "Petite Sirah")
         self.assertEqual(bottle.region, "Napa Valley, California")
+        self.assertEqual(bottle.vintage, 2022)
         self.assertEqual(bottle.wine_type, WineType.RED)
         self.assertIsNotNone(bottle.drinking_window)
-        self.assertEqual(bottle.drinking_window.peak_start, 2028)
+        self.assertEqual(bottle.drinking_window.peak_start, 2029)
+
+    def test_ocr_gibberish_rejection(self):
+        from wine_agent.natural_language import is_ocr_gibberish, parse_wine_label
+        self.assertTrue(is_ocr_gibberish("Po o K Po o «K; ! be"))
+        self.assertTrue(is_ocr_gibberish("` ~ ! @ # $ % ^ & * ( ) _ +"))
+        self.assertFalse(is_ocr_gibberish("Stags' Leap Winery"))
+        self.assertFalse(is_ocr_gibberish("Cabernet Sauvignon"))
+
+        # Pure random OCR noise should never become the producer name
+        pure_noise = "«K; ! be\n~ _ ^ | \\\n¢ @"
+        b = parse_wine_label(pure_noise)
+        self.assertEqual(b.producer, "Unidentified Wine")
+        self.assertNotIn("«", b.producer)
+        self.assertNotIn("!", b.producer)
+
+    def test_move_bottle_database_full_and_partial_split(self):
+        """Tests moving a bottle entry in full or splitting lots across storage locations."""
+        b = WineBottle(
+            producer="Stonestreet",
+            wine_name="Estate Cabernet",
+            vintage=2018,
+            varietal="Cabernet Sauvignon",
+            region="Alexander Valley, California",
+            wine_type=WineType.RED,
+            quantity=3,
+            location_rack="Basement Fridge",
+            location_bin="Shelf 1",
+            user_id=1
+        )
+        b_id = self.db.add_bottle(b, user_id=1)
+
+        # 1. Partial move: move 1 bottle from Basement Fridge to Upstairs Fridge
+        moved = self.db.move_bottle(b_id, new_rack="Upstairs Fridge", new_bin="Shelf 2", count=1, user_id=1)
+        self.assertIsNotNone(moved)
+        self.assertEqual(moved.location_rack, "Upstairs Fridge")
+        self.assertEqual(moved.location_bin, "Shelf 2")
+        self.assertEqual(moved.quantity, 1)
+
+        # Original bottle in Basement Fridge should now have quantity 2
+        orig = self.db.get_bottle(b_id, user_id=1)
+        self.assertEqual(orig.quantity, 2)
+        self.assertEqual(orig.location_rack, "Basement Fridge")
+
+        # 2. Verify Upstairs Fridge was automatically registered as a sticky storage location
+        locs = self.db.get_storage_locations(user_id=1)
+        self.assertIn("Upstairs Fridge", locs)
+
+        # 3. Full move: move remaining 2 bottles from Basement Fridge to Upstairs Fridge Shelf 2 (should merge)
+        merged = self.db.move_bottle(b_id, new_rack="Upstairs Fridge", new_bin="Shelf 2", count=2, user_id=1)
+        self.assertIsNotNone(merged)
+        self.assertEqual(merged.quantity, 3)
+        self.assertEqual(merged.location_rack, "Upstairs Fridge")
+
+    def test_move_bottle_server_endpoint(self):
+        """Tests the POST /api/move-bottle endpoint."""
+        from wine_agent.agent import SommelierAgent
+        from wine_agent.server import WineRequestHandler
+        import io
+        import json
+        from unittest.mock import MagicMock
+
+        agent = SommelierAgent(db=self.db)
+        b = WineBottle(
+            producer="Shafer",
+            wine_name="One Point Five",
+            vintage=2019,
+            varietal="Cabernet Sauvignon",
+            region="Stags Leap District",
+            wine_type=WineType.RED,
+            quantity=2,
+            location_rack="Basement Fridge",
+            location_bin="Shelf 1",
+            user_id=1
+        )
+        b_id = self.db.add_bottle(b, user_id=1)
+
+        req_handler = WineRequestHandler.__new__(WineRequestHandler)
+        req_handler.agent = agent
+        req_handler.path = "/api/move-bottle"
+        req_handler.headers = {"Content-Type": "application/json"}
+        payload = {
+            "bottle_id": b_id,
+            "location_rack": "Wine Cooler",
+            "location_bin": "Bin 3",
+            "count": 2
+        }
+        body_bytes = json.dumps(payload).encode("utf-8")
+        req_handler.headers["Content-Length"] = str(len(body_bytes))
+        req_handler.rfile = io.BytesIO(body_bytes)
+        wfile = io.BytesIO()
+        req_handler.wfile = wfile
+        req_handler.send_response = MagicMock()
+        req_handler.send_header = MagicMock()
+        req_handler.end_headers = MagicMock()
+
+        req_handler.do_POST()
+        wfile.seek(0)
+        res = json.loads(wfile.read().decode("utf-8"))
+        self.assertTrue(res.get("success"))
+        self.assertEqual(res["bottle"]["location_rack"], "Wine Cooler")
+        self.assertEqual(res["bottle"]["location_bin"], "Bin 3")
+        self.assertEqual(res["bottle"]["quantity"], 2)
 
     def test_zero_bottle_wine_moves_to_archive_and_restock(self):
         """Verifies that once a wine drops to 0 bottles, it leaves the active cellar and moves to archive, and can be restocked."""

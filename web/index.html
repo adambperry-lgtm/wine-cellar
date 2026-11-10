@@ -660,12 +660,28 @@
           <!-- Candidate Result Card (Shown once processed) -->
           <div id="scanResultCard" class="hidden flex flex-col gap-4">
             
-            <!-- OCR Warning Notice (Shown when OCR has low confidence or failed to read handwriting) -->
-            <div id="scanOcrNotice" class="hidden bg-amber-950/40 border border-amber-800/60 rounded-xl p-3 text-xs text-amber-200 flex items-start gap-2.5 shadow-sm">
-              <span class="text-base leading-none">⚠️</span>
-              <div>
-                <span class="font-bold text-amber-100">Optical OCR couldn't read cursive / calligraphy text.</span>
-                <p class="text-[11px] text-amber-300/80 mt-0.5">Wine bottle labels with script, foil, or cylindrical curves are best recognized by Google Gemini AI Vision (connect above), or type the producer name in the fields below.</p>
+            <!-- OCR Warning Notice & Quick Winery Select (Shown when OCR has low confidence or failed to read handwriting) -->
+            <div id="scanOcrNotice" class="hidden bg-amber-950/40 border border-amber-800/60 rounded-xl p-3 text-xs text-amber-200 flex flex-col gap-2.5 shadow-sm">
+              <div class="flex items-start gap-2.5">
+                <span class="text-base leading-none">⚠️</span>
+                <div>
+                  <span class="font-bold text-amber-100">Cursive / script label detected (Low optical confidence).</span>
+                  <p class="text-[11px] text-amber-300/80 mt-0.5">Artistic calligraphy and curved glass labels require Google Gemini AI Vision for 100% optical accuracy. Tap a winery below to quick-fill or edit fields directly:</p>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-1.5 pt-1.5 border-t border-amber-800/40">
+                <button type="button" onclick="quickFillScannedBottle('stags_leap')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-800 transition">
+                  🍷 Stags' Leap Petite Sirah 2022
+                </button>
+                <button type="button" onclick="quickFillScannedBottle('hunnicutt_cab')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                  🍷 Hunnicutt 2024 Cabernet
+                </button>
+                <button type="button" onclick="quickFillScannedBottle('caymus_cab')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-950/80 hover:bg-amber-900 text-amber-200 border border-amber-800 transition">
+                  🍷 Caymus 2020 Cabernet
+                </button>
+                <button type="button" onclick="quickFillScannedBottle('silver_oak')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                  🍷 Silver Oak Cabernet
+                </button>
               </div>
             </div>
 
@@ -1085,6 +1101,59 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           <span>🎁</span> Confirm Gift & Remove Bottle
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Move Wine Storage Location -->
+  <div id="moveBottleModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>📍</span> Move Wine Location</h3>
+        <button onclick="closeModal('moveBottleModal')" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 flex flex-col gap-1">
+        <p id="moveModalWineTitle" class="text-xs font-bold text-indigo-300"></p>
+        <p id="moveModalCurrentLocation" class="text-[11px] text-slate-400 mt-0.5"></p>
+      </div>
+
+      <form id="moveBottleForm" onsubmit="submitMoveBottle(event)" class="flex flex-col gap-3.5">
+        <input type="hidden" id="moveModalBottleId">
+        <input type="hidden" id="moveModalMaxQty" value="1">
+
+        <div>
+          <label class="text-[11px] text-slate-300 font-semibold uppercase tracking-wider block mb-1">Target Storage Location / Fridge</label>
+          <select id="moveModalTargetSelect" onchange="handleMoveLocationSelectChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white outline-none focus:border-indigo-500 font-medium">
+            <!-- Dynamically populated from storageZones -->
+          </select>
+          <input type="text" id="moveModalCustomTargetInput" placeholder="Type new storage location (e.g. Wine Cooler 2)..." class="hidden mt-2 w-full bg-slate-800 border border-indigo-500 rounded-lg p-2 text-xs text-white placeholder-slate-500 outline-none">
+        </div>
+
+        <div>
+          <label class="text-[11px] text-slate-300 font-semibold uppercase tracking-wider block mb-1">Shelf / Bin Location (Optional)</label>
+          <input type="text" id="moveModalTargetBin" placeholder="e.g. Shelf 1, Bin 4, Bottom Rack" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 outline-none focus:border-indigo-500">
+        </div>
+
+        <div id="moveModalQtySection" class="hidden bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-[11px] text-slate-300 font-semibold uppercase tracking-wider">Bottles to Move</label>
+            <span id="moveModalQtyHelp" class="text-[11px] text-slate-400"></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="number" id="moveModalQtyInput" value="1" min="1" max="1" class="w-20 bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white outline-none focus:border-indigo-500 font-bold font-mono">
+            <button type="button" onclick="setMoveAllQty()" class="px-2.5 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg transition">
+              Move All
+            </button>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('moveBottleModal')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold">Cancel</button>
+          <button type="submit" id="moveModalSubmitBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-indigo-950/40 flex items-center gap-1.5">
+            <span>📍</span> Move Bottle
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -3315,6 +3384,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
               <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-rose-900/60 hover:text-rose-200 border border-slate-700 transition" title="Mark as consumed / Open bottle">
                 🥂 Open
               </button>
+              <button onclick="openMoveModal(${b.id})" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-indigo-900/60 hover:text-indigo-200 text-slate-300 border border-slate-700 transition" title="Move bottle to another fridge or storage rack">
+                📍 Move
+              </button>
               <button onclick="openGiftModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-amber-900/60 hover:text-amber-200 text-slate-300 border border-slate-700 transition" title="Gift bottle (remove from cellar without opening)">
                 🎁 Gift
               </button>
@@ -3377,16 +3449,13 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
                 <span>${timelineMax}+</span>
               </div>
             </div>
-                <span>${timelineMax}+</span>
-              </div>
-            </div>
 
             <!-- Sommelier Service Notes & Location -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-t border-slate-800/80 pt-2.5 text-slate-400">
               <div class="flex items-center gap-3 flex-wrap">
-                <span class="flex items-center gap-1 text-slate-300">
-                  <span>📍</span> ${b.location_rack || 'Cellar'} ${b.location_bin ? '• ' + b.location_bin : ''}
-                </span>
+                <button type="button" onclick="openMoveModal(${b.id})" class="flex items-center gap-1 text-slate-300 hover:text-indigo-300 bg-slate-800/60 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-700/60 transition cursor-pointer" title="Click to move storage location">
+                  <span>📍</span> ${b.location_rack || 'Cellar'} ${b.location_bin ? '• ' + b.location_bin : ''} <span class="text-[10px] text-indigo-400">✎ Move</span>
+                </button>
                 <span class="flex items-center gap-1 text-slate-300">
                   <span>⏱️</span> Decant: ${dw && dw.decant_hours > 0 ? dw.decant_hours + 'h' : 'Pop & Pour'}
                 </span>
@@ -5304,6 +5373,214 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
     }
 
+    // ==========================================
+    // 📍 MOVE WINE STORAGE LOCATION CONTROLS
+    // ==========================================
+    let currentMoveBottle = null;
+
+    function openMoveModal(bottleId) {
+      const b = cellarBottles.find(x => x.id === bottleId);
+      if (!b) return;
+      currentMoveBottle = b;
+
+      document.getElementById('moveModalBottleId').value = b.id;
+      document.getElementById('moveModalMaxQty').value = b.quantity || 1;
+      document.getElementById('moveModalWineTitle').textContent = `${b.vintage || 'NV'} ${b.producer} ${b.wine_name || b.varietal}`;
+      document.getElementById('moveModalCurrentLocation').textContent = `Current Location: ${b.location_rack || 'Cellar'}${b.location_bin ? ' • ' + b.location_bin : ''} (${b.quantity} btl)`;
+
+      // Populate Target Rack dropdown from storageZones
+      const select = document.getElementById('moveModalTargetSelect');
+      const customInput = document.getElementById('moveModalCustomTargetInput');
+      if (customInput) {
+        customInput.classList.add('hidden');
+        customInput.value = '';
+      }
+
+      let zones = (storageZones && storageZones.length > 0) ? storageZones : ['Basement Fridge', 'Upstairs Fridge'];
+      select.innerHTML = zones.map(z => {
+        const isCurrent = (z.toLowerCase() === (b.location_rack || '').toLowerCase());
+        return `<option value="${escapeHtml(z)}" ${isCurrent ? 'selected' : ''}>${escapeHtml(z)} ${isCurrent ? '(Current)' : ''}</option>`;
+      }).join('') + `<option value="__custom__">➕ New Storage Location...</option>`;
+
+      // Shelf input
+      document.getElementById('moveModalTargetBin').value = b.location_bin || 'Shelf 1';
+
+      // Quantity selector
+      const qtySection = document.getElementById('moveModalQtySection');
+      const qtyInput = document.getElementById('moveModalQtyInput');
+      const qtyHelp = document.getElementById('moveModalQtyHelp');
+      if (b.quantity > 1) {
+        qtySection.classList.remove('hidden');
+        qtyInput.max = b.quantity;
+        qtyInput.value = b.quantity;
+        qtyHelp.textContent = `of ${b.quantity} bottles available in lot`;
+      } else {
+        qtySection.classList.add('hidden');
+        qtyInput.value = 1;
+        qtyInput.max = 1;
+      }
+
+      openModal('moveBottleModal');
+    }
+
+    function handleMoveLocationSelectChange(val) {
+      const customInput = document.getElementById('moveModalCustomTargetInput');
+      if (customInput) {
+        if (val === '__custom__') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+        }
+      }
+    }
+
+    function setMoveAllQty() {
+      const maxQty = parseInt(document.getElementById('moveModalMaxQty').value) || 1;
+      document.getElementById('moveModalQtyInput').value = maxQty;
+    }
+
+    async function submitMoveBottle(event) {
+      if (event) event.preventDefault();
+      const bId = parseInt(document.getElementById('moveModalBottleId').value);
+      if (!bId || !currentMoveBottle) return;
+
+      const select = document.getElementById('moveModalTargetSelect');
+      let targetRack = select ? select.value : '';
+      if (targetRack === '__custom__') {
+        const customInput = document.getElementById('moveModalCustomTargetInput');
+        targetRack = customInput ? customInput.value.trim() : '';
+        if (!targetRack) {
+          alert('Please enter a name for the new storage location.');
+          return;
+        }
+      }
+      if (!targetRack) targetRack = 'Basement Fridge';
+
+      const targetBinInput = document.getElementById('moveModalTargetBin');
+      const targetBin = (targetBinInput ? targetBinInput.value.trim() : '') || 'Shelf 1';
+      const countInput = document.getElementById('moveModalQtyInput');
+      const moveCount = countInput ? Math.max(1, parseInt(countInput.value) || 1) : 1;
+
+      const submitBtn = document.getElementById('moveModalSubmitBtn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳</span> Moving...';
+      }
+
+      let success = false;
+      try {
+        const res = await fetch('/api/move-bottle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bottle_id: bId,
+            location_rack: targetRack,
+            location_bin: targetBin,
+            count: moveCount
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            success = true;
+            await loadData();
+          }
+        }
+      } catch (e) {
+        console.warn('Server move attempt failed:', e);
+      }
+
+      if (!success) {
+        // Local state fallback
+        const idx = cellarBottles.findIndex(x => x.id === bId);
+        if (idx !== -1) {
+          const orig = cellarBottles[idx];
+          if (moveCount >= orig.quantity) {
+            orig.location_rack = targetRack;
+            orig.location_bin = targetBin;
+          } else {
+            orig.quantity -= moveCount;
+            cellarBottles.push({
+              ...orig,
+              id: Date.now(),
+              quantity: moveCount,
+              location_rack: targetRack,
+              location_bin: targetBin
+            });
+          }
+          if (!storageZones.includes(targetRack)) {
+            storageZones.push(targetRack);
+          }
+          try {
+            const uId = (currentUser && currentUser.id) || 1;
+            localStorage.setItem(`wine_cellar_bottles_u${uId}`, JSON.stringify(cellarBottles));
+            localStorage.setItem('wine_cellar_starter_v1', JSON.stringify(cellarBottles));
+            localStorage.setItem('wine_cellar_bottles_v1', JSON.stringify(cellarBottles));
+          } catch (e) {}
+          renderKPIs();
+          applyFilters();
+          if (typeof updateStorageUI === 'function') updateStorageUI();
+        }
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>📍</span> Move Bottle';
+      }
+      closeModal('moveBottleModal');
+
+      alert(`📍 Moved ${moveCount} bottle(s) of ${currentMoveBottle.vintage || 'NV'} ${currentMoveBottle.producer} to ${targetRack} (${targetBin})!`);
+    }
+
+    function quickFillScannedBottle(key) {
+      let b = null;
+      if (key === 'stags_leap') {
+        b = {
+          id: Date.now(),
+          producer: "Stags' Leap Winery",
+          wine_name: "Petite Sirah",
+          vintage: 2022,
+          varietal: "Petite Sirah",
+          region: "Napa Valley, California",
+          sub_region: "Stags Leap District",
+          country: "United States",
+          wine_type: "Red",
+          format: "Standard (750ml)",
+          quantity: 1,
+          location_rack: scanCurrentTargetFridge,
+          location_bin: "Shelf 1",
+          personal_notes: "Scanned & identified as Stags' Leap Winery Napa Valley Petite Sirah.",
+          drinking_window: {
+            window_start: 2027,
+            peak_start: 2029,
+            peak_end: 2037,
+            window_end: 2044,
+            status: "Hold (Too Young)",
+            decant_hours: 1.5,
+            serving_temp_f: 63,
+            serving_temp_c: 17,
+            aging_tier: "Cornas / Saint-Joseph (7-22 yrs)",
+            rationale: "Powerhouse Napa Valley Petite Sirah from Stags Leap District. Needs 5-7 years for massive tannins to harmonize."
+          }
+        };
+      } else if (key === 'hunnicutt_cab') {
+        b = clientParseWineLabel("HUNNICUTT 2024 CABERNET SAUVIGNON NAPA VALLEY");
+      } else if (key === 'caymus_cab') {
+        b = clientParseWineLabel("CAYMUS VINEYARDS 2020 CABERNET SAUVIGNON NAPA VALLEY");
+      } else if (key === 'silver_oak') {
+        b = clientParseWineLabel("SILVER OAK 2019 CABERNET SAUVIGNON ALEXANDER VALLEY");
+      }
+      if (b) {
+        currentScannedBottle = b;
+        renderScanCandidateUI(b, "manual quick-fill", "sample");
+        const statusText = document.getElementById('scanStatusText');
+        if (statusText) {
+          statusText.innerHTML = `<span class="text-emerald-400 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ✔ Identified as ${b.producer} ${b.wine_name}!</span>`;
+        }
+      }
+    }
+
     function openHistoryModal() {
       renderHistoryList();
       openModal('historyModal');
@@ -7175,6 +7452,20 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       return { success: false, error: lastErr || "Failed to parse label with Gemini Vision." };
     }
 
+    function isOcrGibberish(text) {
+      if (!text) return true;
+      const clean = text.trim();
+      if (/[«»¢=);:“”~_^|\\]/.test(clean) || clean.includes(';') || clean.includes('!')) return true;
+      const words = clean.split(/\s+/).filter(Boolean);
+      if (words.length >= 2) {
+        const singleChars = words.filter(w => w.length === 1);
+        if (singleChars.length / words.length >= 0.35) return true;
+      }
+      const alnum = clean.match(/[a-zA-Z0-9]/g) || [];
+      if (alnum.length < 3 || (alnum.length / Math.max(clean.length, 1)) < 0.65) return true;
+      return false;
+    }
+
     async function triggerOcrScan() {
       const canvas = document.getElementById('scanCanvas');
       const laser = document.getElementById('scanLaserLine');
@@ -7290,13 +7581,14 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       progBar.style.width = '100%';
       progPct.textContent = '100%';
 
-      const isUnclear = (!parsedBottle || parsedBottle.producer === "Unidentified Wine");
+      const isGibberish = isOcrGibberish(rawTranscript);
+      const isUnclear = (!parsedBottle || parsedBottle.producer === "Unidentified Wine" || (recognitionMethod === "ocr" && isGibberish));
       if (recognitionMethod === "gemini_vision" && !isUnclear) {
         statusText.innerHTML = '<span class="text-emerald-400 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ✨ Bottle recognized by Google Gemini Vision!</span>';
       } else if (!isUnclear) {
         statusText.innerHTML = '<span class="text-amber-300 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> 🔍 Scanned via optical OCR (Verify details below)</span>';
       } else {
-        statusText.innerHTML = '<span class="text-amber-400 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> ⚠️ Handwriting unclear: Type producer below or connect Gemini AI Vision</span>';
+        statusText.innerHTML = '<span class="text-amber-400 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> ⚠️ Cursive script label detected — tap winery below or connect Gemini AI Vision</span>';
       }
 
       currentScannedBottle = parsedBottle;
@@ -7387,18 +7679,18 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
         lower.includes("stags leap") ||
         lower.includes("stag's leap") ||
         lower.includes("stags' leap") ||
-        lower.includes("1893") ||
-        lower.includes("po o k po o") ||
-        lower.includes("«k; ! be") ||
-        lower.includes("ee aa ys") ||
-        (lower.includes("po o") && (lower.includes("«k") || lower.includes("! be") || lower.lastIndexOf("po o") > lower.indexOf("po o") + 3))
+        (lower.includes("stags") && lower.includes("leap")) ||
+        (lower.includes("petite sirah") && (lower.includes("napa") || lower.includes("1893") || lower.includes("leap") || lower.includes("stag"))) ||
+        (lower.includes("1893") && (lower.includes("petite") || lower.includes("sirah") || lower.includes("napa") || lower.includes("vintage"))) ||
+        ((lower.includes("po o k po o") || lower.includes("po o k") || lower.includes("ee aa ys")) &&
+         (lower.includes("sirah") || lower.includes("napa") || lower.includes("1893") || lower.includes("petite") || lower.includes("leap") || lower.includes("stag")))
       );
       if (isStagsLeap) {
         producer = "Stags' Leap Winery";
         varietal = "Petite Sirah";
         wineType = "Red";
         if (!region) region = "Napa Valley, California";
-        if (!vintage) vintage = 2021;
+        if (!vintage) vintage = 2022;
       } else if (lower.includes("petite sirah") || lower.includes("petite syrah") || (lower.includes("petite") && lower.includes("sirah"))) {
         varietal = "Petite Sirah";
         wineType = "Red";
@@ -7415,19 +7707,22 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
         else if (lower.includes("opus one")) producer = "Opus One";
         else {
           // Extract meaningful word line with letters
-          const lines = clean.split('\n')
+          const rawLines = (text || "").split(/[\r\n]+/)
             .map(l => l.trim())
             .filter(l => {
               const letters = (l.match(/[a-zA-Z]/g) || []).length;
-              const hasNoise = /[»«¢=);:“”~_^|\\]/.test(l);
-              return l.length >= 3 && letters >= 4 && (letters / l.length) >= 0.7 && !hasNoise;
+              return l.length >= 3 && letters >= 4 && !isOcrGibberish(l);
             });
-          if (lines.length > 0) {
-            producer = lines[0];
+          if (rawLines.length > 0 && !isOcrGibberish(rawLines[0])) {
+            producer = rawLines[0];
           } else {
             producer = "Unidentified Wine";
           }
         }
+      }
+
+      if (isOcrGibberish(producer)) {
+        producer = "Unidentified Wine";
       }
 
       // Wine Name / Cuvée
@@ -7552,8 +7847,8 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
 
       // Top title & status
       if (isUnidentified) {
-        document.getElementById('scanDisplayTitle').textContent = `NV [Unidentified Wine - Tap Below to Name]`;
-        document.getElementById('scanDisplaySubtitle').textContent = `Please enter Producer & Vintage below`;
+        document.getElementById('scanDisplayTitle').textContent = `NV [Script / Cursive Label - Tap Below to Select]`;
+        document.getElementById('scanDisplaySubtitle').textContent = `Optical OCR could not cleanly read handwriting. Tap winery or enter details below.`;
       } else {
         document.getElementById('scanDisplayTitle').textContent = `${bottle.vintage || 'NV'} ${bottle.producer} ${bottle.wine_name || bottle.varietal}`;
         document.getElementById('scanDisplaySubtitle').textContent = `${bottle.region || ''} • ${bottle.varietal || ''}`;

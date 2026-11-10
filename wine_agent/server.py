@@ -459,6 +459,36 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._send_json({"error": "Bottle not found"}, status=404)
 
+        elif path == "/api/move-bottle":
+            b_id = payload.get("bottle_id") or payload.get("id")
+            if not b_id:
+                self._send_json({"error": "bottle_id is required"}, status=400)
+                return
+            rack = payload.get("location_rack") or payload.get("rack")
+            if not rack:
+                self._send_json({"error": "location_rack is required"}, status=400)
+                return
+            bin_loc = payload.get("location_bin") or payload.get("bin")
+            raw_count = payload.get("count") or payload.get("quantity")
+            count = None
+            if raw_count is not None:
+                try:
+                    count = int(raw_count)
+                except (ValueError, TypeError):
+                    count = None
+
+            moved = self.agent.move_bottle(
+                bottle_id=int(b_id),
+                location_rack=str(rack).strip(),
+                location_bin=str(bin_loc).strip() if bin_loc else None,
+                count=count,
+                user_id=current_user.id
+            )
+            if moved:
+                self._send_json({"success": True, "bottle": moved.to_dict()})
+            else:
+                self._send_json({"error": "Bottle not found or failed to move"}, status=404)
+
         elif path.startswith("/api/bottles/") and path[len("/api/bottles/"):].split("/")[0].isdigit():
             # Update existing bottle
             b_id = int(path[len("/api/bottles/"):].split("/")[0])
