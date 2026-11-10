@@ -370,14 +370,14 @@
   </div>
 
   <!-- Top Navigation Bar: Cellar & Canvas Header -->
-  <header class="sticky top-0 z-30 px-3 sm:px-6 py-3 sm:py-4 border-b transition-all" style="background-color: rgba(244, 240, 230, 0.96); border-color: #D3CBB8; backdrop-filter: blur(10px); padding-top: max(12px, env(safe-area-inset-top));">
-    <div class="max-w-7xl mx-auto flex flex-col gap-3">
+  <header class="sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3.5 border-b transition-all" style="background-color: rgba(244, 240, 230, 0.96); border-color: #D3CBB8; backdrop-filter: blur(10px); padding-top: max(10px, env(safe-area-inset-top));">
+    <div class="max-w-7xl mx-auto flex flex-col gap-2.5">
       <!-- TOP ROW: The "Digital Grape" Logo & Brand Lockup on Left, Account & AI Controls on Right -->
-      <div class="flex items-center justify-between w-full gap-3">
-        <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-          <!-- LOGO CONCEPT: The "Digital Grape" (Interconnected Burgundy Data Nodes + Central Burnished Gold AI Node + Brand Wordmark Below) -->
-          <div class="flex flex-col items-center justify-center px-2.5 py-1.5 rounded-2xl border shrink-0 shadow-sm" style="background-color: #E8E3D3; border-color: #D3CBB8;" title="The Digital Grape — VinoVeritas AI">
-            <svg class="w-10 h-10 sm:w-11 sm:h-11" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VinoVeritas AI Digital Grape Logo">
+      <div class="flex items-center justify-between w-full gap-2 sm:gap-3">
+        <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+          <!-- LOGO CONCEPT: The "Digital Grape" (Interconnected Burgundy Data Nodes + Central Burnished Gold AI Node) -->
+          <div class="flex flex-col items-center justify-center px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl sm:rounded-2xl border shrink-0 shadow-sm" style="background-color: #E8E3D3; border-color: #D3CBB8;" title="The Digital Grape — VinoVeritas AI">
+            <svg class="w-8 h-8 sm:w-10 sm:h-10" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VinoVeritas AI Digital Grape Logo">
               <!-- Vine Stem & Stylized Leaf in Deep Burgundy -->
               <path d="M32 6V16" stroke="#6A0F23" stroke-width="2.2" stroke-linecap="round"/>
               <path d="M24 9C27 6 35 6 40 9" stroke="#6A0F23" stroke-width="2" stroke-linecap="round"/>
@@ -424,63 +424,63 @@
               <circle cx="32" cy="33" r="6.8" fill="#6A0F23" stroke="#CCA43B" stroke-width="2"/>
               <circle cx="32" cy="33" r="4.2" class="digital-grape-ai-node"/>
             </svg>
-            <div class="leading-none mt-0.5 text-center whitespace-nowrap">
+            <div class="hidden sm:block leading-none mt-0.5 text-center whitespace-nowrap">
               <span class="brand-vinoveritas text-[10px] tracking-tight">VinoVeritas</span>
               <span class="brand-ai-badge text-[8.5px] ml-0.5 px-1 py-0.2 rounded" style="background-color: rgba(204, 164, 59, 0.25); color: #2C2C2C;">AI</span>
             </div>
           </div>
 
           <!-- Brand Headline & Value Proposition -->
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h1 class="text-lg sm:text-2xl tracking-tight truncate flex items-baseline gap-1.5">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <h1 class="text-base sm:text-2xl tracking-tight truncate flex items-baseline gap-1 sm:gap-1.5">
                 <span class="brand-vinoveritas">VinoVeritas</span>
-                <span class="brand-ai-badge text-xs sm:text-sm px-2 py-0.5 rounded-md border" style="background-color: #E8E3D3; border-color: #CCA43B; color: #2C2C2C;">AI</span>
+                <span class="brand-ai-badge text-[11px] sm:text-sm px-1.5 sm:px-2 py-0.5 rounded-md border" style="background-color: #E8E3D3; border-color: #CCA43B; color: #2C2C2C;">AI</span>
               </h1>
               <span class="hidden md:inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-semibold" style="background-color: rgba(204, 164, 59, 0.18); color: #6A0F23; border: 1px solid rgba(204, 164, 59, 0.5);">
                 <svg class="w-3 h-3 ai-spark-pulse" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/></svg>
                 In Wine, There Is Truth
               </span>
             </div>
-            <p class="text-[11px] sm:text-xs truncate mt-0.5" style="color: #746F69;">
+            <p class="text-[10px] sm:text-xs line-clamp-1 mt-0.5" style="color: #746F69;">
               Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI.
             </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <!-- Burnished Gold High-Value AI Action -->
           <button onclick="openSommelierModal('open')" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs btn-gold-accent shadow-sm" title="Consult VinoVeritas AI Sommelier">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#6A0F23"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/></svg>
             <span>Unlock AI Sommelier</span>
           </button>
 
-          <button onclick="checkForAppUpdate(true)" title="Force Reload & Sync Collection" class="inline-flex items-center justify-center w-8 h-8 rounded-xl btn-parchment transition shadow-sm active:scale-95" aria-label="Refresh and update app">
+          <button onclick="checkForAppUpdate(true)" title="Force Reload & Sync Collection" class="inline-flex items-center justify-center w-8 h-8 rounded-xl btn-parchment transition shadow-sm active:scale-95 shrink-0" aria-label="Refresh and update app">
             <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
           </button>
 
-          <!-- Prominent User Account / Sign In Pill -->
+          <!-- Prominent User Account / My Cellar Pill (Cellar & Canvas Palette) -->
           <div class="relative inline-block text-left shrink-0" id="userMenuContainer">
-            <button onclick="toggleUserDropdown()" id="userProfileBtn" class="group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl transition-all shadow-sm" style="background-color: #E8E3D3; border: 1px solid #6A0F23; color: #2C2C2C;">
+            <button onclick="toggleUserDropdown()" id="userProfileBtn" class="group inline-flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl transition-all shadow-sm" style="background-color: #E8E3D3 !important; background-image: none !important; border: 1px solid #6A0F23 !important; color: #2C2C2C !important;">
               <div class="relative shrink-0 flex items-center justify-center">
                 <img id="userAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border" style="background-color: #F4F0E6; border-color: #CCA43B;" alt="Avatar">
-                <span id="userStatusDot" class="hidden absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full" style="background-color: #6A0F23; box-shadow: 0 0 0 2px #E8E3D3;"></span>
+                <span id="userStatusDot" class="hidden absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full" style="background-color: #CCA43B; box-shadow: 0 0 0 2px #E8E3D3;"></span>
               </div>
               <div class="flex flex-col text-left leading-tight min-w-0">
-                <span id="userBadgeText" class="text-[9px] font-bold uppercase tracking-wider truncate" style="color: #6A0F23;">Cellar Account</span>
-                <span id="userNameLabel" class="text-xs font-bold max-w-[95px] sm:max-w-[130px] truncate" style="color: #2C2C2C;">Sign In / Register</span>
+                <span id="userBadgeText" class="text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider truncate" style="color: #6A0F23;">My Cellar</span>
+                <span id="userNameLabel" class="text-[11px] sm:text-xs font-bold max-w-[78px] sm:max-w-[130px] truncate" style="color: #2C2C2C;">Sign In</span>
               </div>
-              <span class="text-[10px] transition shrink-0" style="color: #6A0F23;">▼</span>
+              <span class="text-[9px] sm:text-[10px] transition shrink-0" style="color: #6A0F23;">▼</span>
             </button>
 
-            <!-- Dropdown Menu: Aged Parchment & High-Contrast Charcoal -->
-            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-24px)] rounded-2xl border shadow-2xl py-2.5 z-50 text-xs" style="background-color: #E8E3D3 !important; border-color: #D3CBB8 !important; opacity: 1 !important;">
+            <!-- Dropdown Menu: Strictly Aligned with Cellar & Canvas Palette (#E8E3D3, #F4F0E6, #6A0F23, #CCA43B, #2C2C2C, #746F69, #B33A3A) -->
+            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-20px)] rounded-2xl border shadow-2xl py-2.5 z-50 text-xs" style="background-color: #E8E3D3 !important; border-color: #6A0F23 !important; box-shadow: 0 14px 32px rgba(44, 44, 44, 0.22) !important;">
               <!-- Guest Card (shown when NOT signed in) -->
-              <div id="dropdownGuestCard" class="px-3.5 py-3 border rounded-xl mx-2 mb-2" style="background-color: #F4F0E6 !important; border-color: #D3CBB8 !important;">
+              <div id="dropdownGuestCard" class="px-3.5 py-3 border rounded-xl mx-2.5 mb-2" style="background-color: #F4F0E6 !important; border-color: #D3CBB8 !important;">
                 <div class="font-serif-title font-bold text-xs flex items-center gap-1.5" style="color: #6A0F23;">
                   <span>🍇</span> VinoVeritas AI Private Cellar
                 </div>
-                <p class="text-[11px] mt-1" style="color: #746F69;">Sign in with Google or Email to manage private bottles, AI insights &amp; drinking windows.</p>
+                <p class="text-[11px] mt-1 leading-snug" style="color: #746F69;">Sign in with Google or Email to manage private bottles, AI insights &amp; drinking windows.</p>
                 <div class="grid grid-cols-2 gap-2 mt-2.5">
                   <button onclick="openAuthModal('login')" class="py-2 px-2.5 rounded-lg btn-burgundy font-bold text-center transition shadow-sm flex items-center justify-center gap-1.5 text-xs">
                     <span>🔑</span> Sign In
@@ -492,13 +492,13 @@
               </div>
 
               <!-- Active User Card (shown when signed in) -->
-              <div id="dropdownUserCard" class="hidden px-3.5 py-2.5 border rounded-xl mx-2 mb-2" style="background-color: #F4F0E6 !important; border-color: #D3CBB8 !important;">
+              <div id="dropdownUserCard" class="hidden px-3.5 py-2.5 border rounded-xl mx-2.5 mb-2" style="background-color: #F4F0E6 !important; border-color: #D3CBB8 !important;">
                 <div class="flex items-center gap-2.5">
                   <img id="dropdownAvatarImg" class="w-8 h-8 rounded-full object-cover border shrink-0" style="background-color: #E8E3D3; border-color: #CCA43B;" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" alt="">
                   <div class="min-w-0 flex-1">
-                    <div class="font-bold text-xs truncate flex items-center gap-1.5" style="color: #2C2C2C;">
-                      <span id="dropdownUserName">Adambperry</span>
-                      <span class="text-[9px] px-1.5 py-0.2 rounded-full border font-semibold" style="background-color: rgba(106, 15, 35, 0.1); color: #6A0F23; border-color: #6A0F23;">Active</span>
+                    <div class="font-serif-title font-bold text-xs truncate flex items-center gap-1.5" style="color: #2C2C2C;">
+                      <span id="dropdownUserName" class="truncate">Adambperry</span>
+                      <span class="text-[9px] font-sans px-1.5 py-0.5 rounded-full font-bold shrink-0" style="background-color: #6A0F23; color: #F4F0E6;">Active</span>
                     </div>
                     <div class="text-[11px] truncate font-mono mt-0.5" style="color: #746F69;" id="dropdownUserEmail">adambperry@gmail.com</div>
                   </div>
@@ -506,21 +506,26 @@
               </div>
 
               <!-- Menu Navigation Links -->
-              <div class="py-1 px-1 flex flex-col gap-0.5">
-                <button id="adminActivityDropdownBtn" onclick="openModal('adminModal'); toggleUserDropdown();" class="hidden w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition font-medium hover:bg-[#F4F0E6]" style="color: #6A0F23;">
-                  <span>👥</span> Cellar Network Activity
+              <div class="py-1 px-2 flex flex-col gap-1">
+                <button id="adminActivityDropdownBtn" onclick="openModal('adminModal'); toggleUserDropdown();" class="hidden w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 transition font-semibold" style="background-color: #F4F0E6; color: #6A0F23; border: 1px solid #D3CBB8;">
+                  <svg class="w-3.5 h-3.5 shrink-0 vv-icon-burgundy" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <span>Cellar Network Activity</span>
                 </button>
-                <button onclick="checkForAppUpdate(true)" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition font-medium hover:bg-[#F4F0E6]" style="color: #2C2C2C;">
-                  <span>🔄</span> Reload App &amp; Clear Cache
+                <button onclick="checkForAppUpdate(true)" class="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 transition font-semibold" style="background-color: #F4F0E6; color: #2C2C2C; border: 1px solid #D3CBB8;">
+                  <svg class="w-3.5 h-3.5 shrink-0 vv-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                  <span>Reload App &amp; Clear Cache</span>
                 </button>
-                <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition font-medium hover:bg-[#F4F0E6]" style="color: #2C2C2C;">
-                  <span>👤</span> Switch Cellar Account
+                <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 transition font-semibold" style="background-color: #F4F0E6; color: #2C2C2C; border: 1px solid #D3CBB8;">
+                  <svg class="w-3.5 h-3.5 shrink-0 vv-icon" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span>Switch Cellar Account</span>
                 </button>
-                <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition font-medium hover:bg-[#F4F0E6]" style="color: #6A0F23;">
-                  <span>✨</span> Create New Cellar
+                <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 transition font-bold" style="background-color: rgba(204, 164, 59, 0.22); color: #6A0F23; border: 1px solid #CCA43B;">
+                  <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="#CCA43B" stroke="#6A0F23" stroke-width="1.2"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
+                  <span>Create New Cellar</span>
                 </button>
-                <button id="dropdownSignOutBtn" onclick="logoutUser()" class="hidden w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 border-t mt-1 transition font-medium hover:bg-[#F4F0E6]" style="color: #B33A3A; border-color: #D3CBB8;">
-                  <span>🚪</span> Sign Out
+                <button id="dropdownSignOutBtn" onclick="logoutUser()" class="hidden w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 mt-1 transition font-bold" style="background-color: rgba(179, 58, 58, 0.12); color: #B33A3A; border: 1px solid #B33A3A;">
+                  <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#B33A3A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                  <span>Sign Out</span>
                 </button>
               </div>
             </div>
@@ -528,10 +533,10 @@
         </div>
       </div>
 
-      <!-- ROW 2: Minimalist Line-Art Navigation & Action Bar -->
-      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 sm:flex-wrap">
+      <!-- ROW 2: Minimalist Line-Art Navigation & Action Bar (Smooth horizontal scroll on iPhone) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
         <!-- Scan Label: Magnifying glass over a bottle metaphor -->
-        <button onclick="openModal('scanLabelModal')" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-burgundy shadow-sm">
+        <button onclick="openModal('scanLabelModal')" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-burgundy shadow-sm">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#F4F0E6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 2h4v4l2 3v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9l2-3V2z"/>
             <circle cx="15.5" cy="14.5" r="3.5" fill="#6A0F23" stroke="#CCA43B" stroke-width="1.8"/>
@@ -541,7 +546,7 @@
         </button>
 
         <!-- Enter Wine: Minimalist Bottle Outline -->
-        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
+        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
             <path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/>
             <path d="M12 12v6"/><path d="M9 15h6"/>
@@ -550,7 +555,7 @@
         </button>
 
         <!-- What to Open: Small Star Cluster for AI Recommendation -->
-        <button onclick="openSommelierModal('open')" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-gold-accent shadow-sm">
+        <button onclick="openSommelierModal('open')" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-gold-accent shadow-sm">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#6A0F23" stroke="#6A0F23" stroke-width="1.4">
             <path d="M11 3L12.8 8.2L18 10L12.8 11.8L11 17L9.2 11.8L4 10L9.2 8.2L11 3Z"/>
             <path d="M19 14L19.8 16.2L22 17L19.8 17.8L19 20L18.2 17.8L16 17L18.2 16.2L19 14Z"/>
@@ -559,7 +564,7 @@
         </button>
 
         <!-- What to Buy: Stemmed Glass + Star Cluster -->
-        <button onclick="openSommelierModal('buy')" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
+        <button onclick="openSommelierModal('buy')" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
             <path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/><path d="M7.5 7.5h9"/>
           </svg>
@@ -567,7 +572,7 @@
         </button>
 
         <!-- Cellar Analysis / Audit: Magnifying Glass over Bottle -->
-        <button onclick="openModal('auditModal')" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
+        <button onclick="openModal('auditModal')" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
             <path d="M8 2h4v4l2 3v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9l2-3V2z"/>
             <circle cx="15" cy="14" r="4"/><path d="M18 17l3 3"/>
@@ -576,7 +581,7 @@
         </button>
 
         <!-- Tasting Log: Stylized Grape Leaf & Journal -->
-        <button onclick="openHistoryModal()" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Review opened bottles, star ratings, and tasting notes">
+        <button onclick="openHistoryModal()" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Review opened bottles, star ratings, and tasting notes">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
             <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
           </svg>
@@ -584,7 +589,7 @@
         </button>
 
         <!-- Archive -->
-        <button onclick="openArchiveModal()" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Review depleted wines (0 bottles) in your archive and restock">
+        <button onclick="openArchiveModal()" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Review depleted wines (0 bottles) in your archive and restock">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
             <rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>
           </svg>
@@ -592,21 +597,21 @@
           <span id="archiveHeaderBadge" class="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold" style="background-color: #F4F0E6; color: #6A0F23; border: 1px solid #D3CBB8;">0</span>
         </button>
 
-        <!-- Smart Storage -->
-        <button onclick="openStorageModal()" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Edit storage options, fridges, and racks">
+        <!-- Storage -->
+        <button onclick="openStorageModal()" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Edit storage options, fridges, and racks">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
             <rect width="14" height="20" x="5" y="2" rx="2"/><path d="M5 10h14"/><path d="M9 6v2"/><path d="M9 14v3"/>
           </svg>
-          <span>Smart Storage</span>
+          <span>Storage Zones</span>
         </button>
 
         <!-- Admin Network Activity -->
-        <button id="adminActivityHeaderBtn" onclick="openModal('adminModal')" class="hidden nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="View users, bottle counts, and network cellar activity">
+        <button id="adminActivityHeaderBtn" onclick="openModal('adminModal')" class="hidden nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="View users, bottle counts, and network cellar activity">
           <span>👥</span> Network Activity
         </button>
 
         <!-- Export CSV -->
-        <button onclick="exportCellarDatabase()" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
+        <button onclick="exportCellarDatabase()" class="nav-action-btn shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
           </svg>
@@ -617,267 +622,158 @@
   </header>
 
   <!-- Main Content Layout: Linen White Canvas (#F4F0E6) -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-5 sm:py-7 flex flex-col gap-6 safe-bottom-padding">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-5 safe-bottom-padding">
 
     <!-- KPI Summary Cards on Aged Parchment (#E8E3D3) -->
-    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-      <div onclick="setFilter('all')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md">
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
+      <div onclick="setFilter('all')" class="cursor-pointer surface-parchment border rounded-xl p-3 sm:p-3.5 flex flex-col transition-all hover:shadow-md">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Total Bottles</span>
-          <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/></svg>
+          <span class="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Total Bottles</span>
+          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 vv-icon" viewBox="0 0 24 24"><path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/></svg>
         </div>
-        <span id="kpiTotal" class="font-serif-title text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
-        <span id="kpiUnique" class="text-[11px] mt-0.5" style="color: #746F69;">-- unique wines</span>
+        <span id="kpiTotal" class="font-serif-title text-xl sm:text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
+        <span id="kpiUnique" class="text-[10px] sm:text-[11px] mt-0.5 truncate" style="color: #746F69;">-- unique wines</span>
       </div>
 
-      <div class="surface-parchment border rounded-xl p-3.5 flex flex-col">
+      <div class="surface-parchment border rounded-xl p-3 sm:p-3.5 flex flex-col">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Cellar Value</span>
+          <span class="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Cellar Value</span>
           <span class="text-xs font-bold" style="color: #CCA43B;">✦</span>
         </div>
-        <span id="kpiValue" class="font-serif-title text-2xl font-bold mt-1" style="color: #6A0F23;">--</span>
-        <span class="text-[11px] mt-0.5" style="color: #746F69;">estimated market</span>
+        <span id="kpiValue" class="font-serif-title text-xl sm:text-2xl font-bold mt-1" style="color: #6A0F23;">--</span>
+        <span class="text-[10px] sm:text-[11px] mt-0.5 truncate" style="color: #746F69;">estimated market</span>
       </div>
 
-      <div onclick="setFilter('peak')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md" style="border-left: 3px solid #6A0F23 !important;">
+      <div onclick="setFilter('peak')" class="cursor-pointer surface-parchment border rounded-xl p-3 sm:p-3.5 flex flex-col transition-all hover:shadow-md" style="border-left: 3px solid #6A0F23 !important;">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #6A0F23;">Ready (Peak)</span>
+          <span class="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style="color: #6A0F23;">Ready (Peak)</span>
           <span class="w-2.5 h-2.5 rounded-full ai-spark-pulse" style="background-color: #CCA43B;"></span>
         </div>
-        <span id="kpiPeak" class="font-serif-title text-2xl font-bold mt-1" style="color: #6A0F23;">--</span>
-        <span class="text-[11px] mt-0.5" style="color: #746F69;">prime maturity</span>
+        <span id="kpiPeak" class="font-serif-title text-xl sm:text-2xl font-bold mt-1" style="color: #6A0F23;">--</span>
+        <span class="text-[10px] sm:text-[11px] mt-0.5 truncate" style="color: #746F69;">prime maturity</span>
       </div>
 
-      <div onclick="setFilter('approaching')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md">
+      <div onclick="setFilter('approaching')" class="cursor-pointer surface-parchment border rounded-xl p-3 sm:p-3.5 flex flex-col transition-all hover:shadow-md">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #2C2C2C;">Approaching</span>
-          <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>
+          <span class="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style="color: #2C2C2C;">Approaching</span>
+          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 vv-icon" viewBox="0 0 24 24"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>
         </div>
-        <span id="kpiApproaching" class="font-serif-title text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
-        <span class="text-[11px] mt-0.5" style="color: #746F69;">early window / decant</span>
+        <span id="kpiApproaching" class="font-serif-title text-xl sm:text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
+        <span class="text-[10px] sm:text-[11px] mt-0.5 truncate" style="color: #746F69;">early window / decant</span>
       </div>
 
-      <div onclick="setFilter('urgent')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md" style="border-left: 3px solid #B33A3A !important;">
+      <div onclick="setFilter('urgent')" class="cursor-pointer surface-parchment border rounded-xl p-3 sm:p-3.5 flex flex-col transition-all hover:shadow-md" style="border-left: 3px solid #B33A3A !important;">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #B33A3A;">Drink Soon</span>
+          <span class="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style="color: #B33A3A;">Drink Soon</span>
           <span class="text-xs" style="color: #B33A3A;">⚠️</span>
         </div>
-        <span id="kpiUrgent" class="font-serif-title text-2xl font-bold mt-1" style="color: #B33A3A;">--</span>
-        <span class="text-[11px] mt-0.5" style="color: #746F69;">late peak / fading</span>
+        <span id="kpiUrgent" class="font-serif-title text-xl sm:text-2xl font-bold mt-1" style="color: #B33A3A;">--</span>
+        <span class="text-[10px] sm:text-[11px] mt-0.5 truncate" style="color: #746F69;">late peak / fading</span>
       </div>
 
-      <div onclick="setFilter('hold')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md">
+      <div onclick="setFilter('hold')" class="cursor-pointer surface-parchment border rounded-xl p-3 sm:p-3.5 flex flex-col transition-all hover:shadow-md">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Cellar Hold</span>
-          <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+          <span class="text-[10px] sm:text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Cellar Hold</span>
+          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 vv-icon" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
         </div>
-        <span id="kpiHold" class="font-serif-title text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
-        <span class="text-[11px] mt-0.5" style="color: #746F69;">keep aging (too young)</span>
+        <span id="kpiHold" class="font-serif-title text-xl sm:text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
+        <span class="text-[10px] sm:text-[11px] mt-0.5 truncate" style="color: #746F69;">keep aging (too young)</span>
       </div>
     </section>
 
-    <!-- ==========================================================================
-         AI BRANDING & UI ELEMENTS: AI INSIGHT CARDS + SMART STORAGE + SERVING GUIDE
-         ========================================================================== -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-      <!-- 1. AI "Insight Card": Peak Maturity & Sommelier Recommendation -->
-      <div class="ai-insight-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <!-- Small Golden Spark Icon next to title "AI Insight" -->
-              <svg class="w-4 h-4 ai-spark-pulse shrink-0" viewBox="0 0 24 24" fill="#CCA43B" stroke="#6A0F23" stroke-width="1">
-                <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/>
-              </svg>
-              <span class="font-serif-title text-sm font-bold tracking-wide" style="color: #2C2C2C;">AI Insight</span>
-            </div>
+    <!-- AI "Insight Card": Peak Maturity & Sommelier Recommendation -->
+    <section>
+      <div class="ai-insight-card rounded-2xl p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex flex-col gap-1.5 min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <!-- Small Golden Spark Icon next to title "AI Insight" -->
+            <svg class="w-4 h-4 ai-spark-pulse shrink-0" viewBox="0 0 24 24" fill="#CCA43B" stroke="#6A0F23" stroke-width="1">
+              <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/>
+            </svg>
+            <span class="font-serif-title text-xs sm:text-sm font-bold tracking-wide" style="color: #2C2C2C;">AI Insight</span>
             <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background-color: rgba(204, 164, 59, 0.22); color: #6A0F23;">Peak Maturity</span>
           </div>
 
-          <h3 id="aiInsightHeadline" class="font-serif-title text-base font-bold leading-snug" style="color: #6A0F23;">
+          <h3 id="aiInsightHeadline" class="font-serif-title text-sm sm:text-base font-bold leading-snug" style="color: #6A0F23;">
             "Open this 2018 Cabernet now for peak flavor"
           </h3>
 
           <p id="aiInsightBody" class="text-xs leading-relaxed" style="color: #2C2C2C;">
-            Tannin polymerization has reached harmonious equilibrium. Aeration for <span class="burgundy-highlight">1.5–2.0 hours</span> and serving at <span class="burgundy-highlight">60-65°F (Cellar Temp)</span> will revealtertiary cedar, cassis, and velvet structure.
+            Tannin polymerization has reached harmonious equilibrium. Aeration for <span class="burgundy-highlight">1.5–2.0 hours</span> and serving at <span class="burgundy-highlight">60-65°F (Cellar Temp)</span> will reveal tertiary cedar, cassis, and velvet structure.
           </p>
         </div>
 
-        <div class="flex items-center justify-between pt-2.5 border-t" style="border-color: #D3CBB8;">
+        <div class="flex items-center justify-between md:flex-col md:items-end gap-2 pt-2.5 md:pt-0 border-t md:border-t-0 shrink-0" style="border-color: #D3CBB8;">
           <div class="text-[11px]" style="color: #746F69;">
             Ideal Pairing: <span id="aiInsightPairing" class="burgundy-highlight">Prime Ribeye or Herb-Crusted Lamb</span>
           </div>
-          <button onclick="openSommelierModal('open')" class="px-3 py-1 rounded-lg text-xs font-semibold btn-burgundy">
+          <button onclick="openSommelierModal('open')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold btn-burgundy shrink-0">
             Ask Sommelier
           </button>
         </div>
       </div>
-
-      <!-- 2. Serving Recommendations & AI Chilling Time Calculator -->
-      <div class="ai-insight-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
-        <div class="flex flex-col gap-2.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 ai-spark-pulse shrink-0" viewBox="0 0 24 24" fill="#CCA43B" stroke="#6A0F23" stroke-width="1">
-                <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/>
-              </svg>
-              <span class="font-serif-title text-sm font-bold tracking-wide" style="color: #2C2C2C;">Serving Recommendations</span>
-            </div>
-            <select id="chillTargetTimeSelect" onchange="updateChillingAlertUI()" class="text-[11px] font-semibold rounded-lg px-2 py-0.5 border outline-none" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #6A0F23;">
-              <option value="7:00 PM" selected>Serve by 7:00 PM</option>
-              <option value="6:30 PM">Serve by 6:30 PM</option>
-              <option value="7:30 PM">Serve by 7:30 PM</option>
-              <option value="8:00 PM">Serve by 8:00 PM</option>
-            </select>
-          </div>
-
-          <!-- Distinct Red (Cellar Icon) vs White (Fridge Icon) Serving Guidance -->
-          <div class="grid grid-cols-2 gap-2">
-            <!-- Red Wine: Cellar Icon -->
-            <div class="p-2.5 rounded-xl border flex items-start gap-2" style="background-color: #F4F0E6; border-color: #D3CBB8;">
-              <svg class="w-5 h-5 shrink-0 mt-0.5 vv-icon-burgundy" viewBox="0 0 24 24" aria-label="Cellar Icon">
-                <path d="M4 21V11a8 8 0 0 1 16 0v10"/><path d="M2 21h20"/><path d="M8 14h8"/><path d="M8 17.5h8"/><path d="M12 7v14"/>
-              </svg>
-              <div class="min-w-0">
-                <span class="text-[10px] font-bold uppercase tracking-wider block" style="color: #746F69;">Red Wines</span>
-                <span class="text-xs font-bold leading-tight block burgundy-highlight">Serve at 60-65°F (Cellar Temp)</span>
-              </div>
-            </div>
-
-            <!-- White Wine: Fridge Icon -->
-            <div class="p-2.5 rounded-xl border flex items-start gap-2" style="background-color: #F4F0E6; border-color: #D3CBB8;">
-              <svg class="w-5 h-5 shrink-0 mt-0.5 vv-icon" viewBox="0 0 24 24" aria-label="Fridge Icon">
-                <rect width="14" height="20" x="5" y="2" rx="2"/><path d="M5 10h14"/><path d="M9 6v2"/><path d="M9 14v3"/>
-              </svg>
-              <div class="min-w-0">
-                <span class="text-[10px] font-bold uppercase tracking-wider block" style="color: #746F69;">White &amp; Rosé</span>
-                <span class="text-xs font-bold leading-tight block burgundy-highlight">Chill to 45-50°F</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- AI Chilling Alert Notification Box -->
-        <div class="p-2.5 rounded-xl border flex items-center gap-2.5" style="background-color: rgba(204, 164, 59, 0.16); border-color: #CCA43B;">
-          <span class="w-2 h-2 rounded-full ai-spark-pulse shrink-0" style="background-color: #CCA43B;"></span>
-          <p id="aiChillingAlertText" class="text-[11px] font-medium leading-snug" style="color: #2C2C2C;">
-            <strong class="burgundy-highlight">AI Alert:</strong> Pop your <span id="aiChillBottleLabel" class="burgundy-highlight">Chardonnay</span> in the fridge now to reach perfect serving temp (<span class="burgundy-highlight">45-50°F</span>) by <span id="aiChillTimeLabel" class="burgundy-highlight">7:00 PM</span>.
-          </p>
-        </div>
-      </div>
-
-      <!-- 3. Smart Storage Interface (Visual Bottle Slider between Too Cold / Ideal 55°F / Too Warm) -->
-      <div class="ai-insight-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 vv-icon-burgundy shrink-0" viewBox="0 0 24 24">
-                <path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/>
-              </svg>
-              <span class="font-serif-title text-sm font-bold tracking-wide" style="color: #2C2C2C;">Smart Storage Interface</span>
-            </div>
-            <span id="smartStorageTempBadge" class="text-xs font-bold font-mono px-2 py-0.5 rounded-full" style="background-color: #6A0F23; color: #F4F0E6;">55°F • Ideal</span>
-          </div>
-
-          <!-- Visual Zone Slider with Bottle Icon Marker -->
-          <div class="relative pt-2 pb-1">
-            <!-- Three Labeled Zones Track -->
-            <div class="grid grid-cols-3 h-8 rounded-xl overflow-hidden border text-[10px] font-bold" style="border-color: #D3CBB8;">
-              <div onclick="updateSmartStorageTemp(44)" class="cursor-pointer flex items-center justify-center px-1 text-center transition" style="background-color: #F4F0E6; color: #746F69;">
-                Too Cold
-              </div>
-              <div onclick="updateSmartStorageTemp(55)" class="cursor-pointer flex items-center justify-center px-1 text-center transition shadow-inner" style="background-color: #6A0F23; color: #F4F0E6; box-shadow: inset 0 0 12px rgba(204, 164, 59, 0.35);">
-                Ideal Cellar Temp (55°F)
-              </div>
-              <div onclick="updateSmartStorageTemp(66)" class="cursor-pointer flex items-center justify-center px-1 text-center transition" style="background-color: rgba(179, 58, 58, 0.14); color: #B33A3A;">
-                Too Warm
-              </div>
-            </div>
-
-            <!-- Interactive Range Input -->
-            <input type="range" id="smartStorageSlider" min="40" max="70" value="55" oninput="updateSmartStorageTemp(this.value)" class="storage-slider-input mt-2" aria-label="Cellar Temperature Slider">
-
-            <!-- Floating Bottle Icon Indicator -->
-            <div class="flex items-center justify-between text-[10px] mt-0.5" style="color: #746F69;">
-              <span>40°F (Over-chilled)</span>
-              <span id="smartStorageBottleIndicator" class="inline-flex items-center gap-1 font-bold burgundy-highlight">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#6A0F23"><path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/></svg>
-                <span>Bottle at 55°F</span>
-              </span>
-              <span>70°F (Heat Risk)</span>
-            </div>
-          </div>
-        </div>
-
-        <div id="smartStorageStatusBox" class="p-2 rounded-xl border text-[11px] flex items-center justify-between" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;">
-          <span id="smartStorageAdviceText">✔ Optimal 55°F equilibrium for long-term tannin &amp; cork preservation.</span>
-          <button onclick="openStorageModal()" class="text-[11px] font-bold underline shrink-0 ml-2" style="color: #6A0F23;">Zones</button>
-        </div>
-      </div>
-
     </section>
 
     <!-- Spiced Brick (#B33A3A) Sommelier Priority / Warning Alert Banner -->
-    <div id="urgentAlertBox" class="hidden rounded-xl p-4 flex items-center justify-between gap-4 border" style="background-color: rgba(179, 58, 58, 0.10); border-color: #B33A3A;">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl" style="color: #B33A3A;">⚠️</span>
+    <div id="urgentAlertBox" class="hidden rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border" style="background-color: rgba(179, 58, 58, 0.10); border-color: #B33A3A;">
+      <div class="flex items-start sm:items-center gap-2.5">
+        <span class="text-xl sm:text-2xl shrink-0" style="color: #B33A3A;">⚠️</span>
         <div>
-          <h2 class="font-serif-title text-sm font-bold" style="color: #B33A3A;">Spiced Brick Priority Alert • Drink Soon</h2>
+          <h2 class="font-serif-title text-xs sm:text-sm font-bold" style="color: #B33A3A;">Spiced Brick Priority Alert • Drink Soon</h2>
           <p id="urgentAlertText" class="text-xs mt-0.5" style="color: #2C2C2C;">Bottles are entering their final maturity window.</p>
         </div>
       </div>
-      <button onclick="setFilter('urgent')" class="shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors" style="background-color: #B33A3A; color: #F4F0E6;">
+      <button onclick="setFilter('urgent')" class="self-end sm:self-auto shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors" style="background-color: #B33A3A; color: #F4F0E6;">
         Review Bottles
       </button>
     </div>
 
     <!-- Filter & Search Controls on Aged Parchment (#E8E3D3) -->
-    <div class="surface-parchment border rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
-      <!-- Status Pills with Minimalist Icons (Fill with Deep Burgundy when selected) -->
-      <div class="flex items-center gap-1.5 flex-wrap w-full md:w-auto">
-        <button onclick="setFilter('all')" id="btnFilterAll" class="filter-pill active btn-burgundy px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
+    <div class="surface-parchment border rounded-2xl p-3 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-sm">
+      <!-- Status Pills with Minimalist Icons (Single-row horizontal scroll on iPhone, wraps on desktop) -->
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 pb-0.5 md:pb-0 md:flex-wrap w-full md:w-auto">
+        <button onclick="setFilter('all')" id="btnFilterAll" class="filter-pill active btn-burgundy shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/></svg>
           <span>All Bottles</span>
         </button>
-        <button onclick="setFilter('ready')" id="btnFilterReady" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
+        <button onclick="setFilter('ready')" id="btnFilterReady" class="filter-pill btn-parchment shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>
-          <span>Ready to Drink (Peak)</span>
+          <span>Ready (Peak)</span>
         </button>
-        <button onclick="setFilter('approaching')" id="btnFilterApproaching" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
+        <button onclick="setFilter('approaching')" id="btnFilterApproaching" class="filter-pill btn-parchment shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/></svg>
-          <span>Approaching Peak</span>
+          <span>Approaching</span>
         </button>
-        <button onclick="setFilter('aging')" id="btnFilterAging" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
+        <button onclick="setFilter('aging')" id="btnFilterAging" class="filter-pill btn-parchment shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
           <span>Needs to Age</span>
         </button>
-        <button onclick="setFilter('urgent')" id="btnFilterUrgent" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5" style="color: #B33A3A !important;">
+        <button onclick="setFilter('urgent')" id="btnFilterUrgent" class="filter-pill btn-parchment shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5" style="color: #B33A3A !important;">
           <span>⚠️ Drink Soon</span>
         </button>
-        <button onclick="setFilter('archive')" id="btnFilterArchive" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5" title="View depleted wines at zero bottles">
+        <button onclick="setFilter('archive')" id="btnFilterArchive" class="filter-pill btn-parchment shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5" title="View depleted wines at zero bottles">
           <span>📦 Archive (<span id="archiveFilterCount">0</span>)</span>
         </button>
-        <span id="dynamicStorageFilterButtons" class="inline-flex items-center gap-2 flex-wrap">
-          <button onclick="setFilter('basement')" id="btnFilterBasement" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-medium rounded-lg transition-all">
+        <span id="dynamicStorageFilterButtons" class="inline-flex items-center gap-1.5 shrink-0 md:flex-wrap">
+          <button onclick="setFilter('basement')" id="btnFilterBasement" class="filter-pill btn-parchment shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-medium rounded-lg transition-all">
             Basement Fridge
           </button>
-          <button onclick="setFilter('upstairs')" id="btnFilterUpstairs" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-medium rounded-lg transition-all">
+          <button onclick="setFilter('upstairs')" id="btnFilterUpstairs" class="filter-pill btn-parchment shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-medium rounded-lg transition-all">
             Upstairs Fridge
           </button>
         </span>
       </div>
 
       <!-- Search & Wine Type Dropdown -->
-      <div class="flex items-center gap-3 w-full md:w-auto">
-        <select id="typeSelect" onchange="applyFilters()" class="rounded-lg text-xs px-3 py-2 border outline-none">
+      <div class="flex items-center gap-2 w-full md:w-auto">
+        <select id="typeSelect" onchange="applyFilters()" class="rounded-lg text-xs px-2.5 py-2 border outline-none shrink-0 max-w-[130px] sm:max-w-none">
           <option value="all">All Styles</option>
           <option value="red">Reds</option>
           <option value="white">Whites</option>
-          <option value="sparkling">Champagne / Sparkling</option>
-          <option value="dessert">Dessert / Sweet</option>
+          <option value="sparkling">Sparkling</option>
+          <option value="dessert">Dessert</option>
         </select>
-        <div class="relative flex-1 md:w-64">
+        <div class="relative flex-1 min-w-0 md:w-64">
           <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search producer, varietal, rack..." class="w-full rounded-lg text-xs pl-8 pr-3 py-2 border outline-none">
           <span class="absolute left-2.5 top-2.5 text-xs" style="color: #746F69;">🔍</span>
         </div>
@@ -885,15 +781,15 @@
     </div>
 
     <!-- Wine Bottles List & Timeline Visualizer -->
-    <div class="flex flex-col gap-4">
-      <div class="flex items-center justify-between text-xs px-1 flex-wrap gap-2" style="color: #746F69;">
+    <div class="flex flex-col gap-3.5 sm:gap-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs px-1 gap-1.5" style="color: #746F69;">
         <span id="resultsCount" class="font-semibold" style="color: #2C2C2C;">Showing 0 bottles</span>
-        <div class="flex items-center gap-4 text-[11px]">
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #746F69; opacity: 0.45;"></span> Hold</span>
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #CCA43B; opacity: 0.65;"></span> Approaching</span>
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #6A0F23;"></span> Prime Peak</span>
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #B33A3A;"></span> Drink Soon</span>
-          <span class="flex items-center gap-1.5"><span class="w-1 h-3" style="background-color: #CCA43B;"></span> 2026 Today</span>
+        <div class="flex items-center gap-x-3 gap-y-1 flex-wrap text-[10px] sm:text-[11px]">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #746F69; opacity: 0.45;"></span> Hold</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #CCA43B; opacity: 0.65;"></span> Approaching</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #6A0F23;"></span> Prime Peak</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #B33A3A;"></span> Drink Soon</span>
+          <span class="flex items-center gap-1"><span class="w-1 h-3" style="background-color: #CCA43B;"></span> 2026 Today</span>
         </div>
       </div>
 
@@ -3327,17 +3223,23 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         if (badgeTextEl) badgeTextEl.textContent = "My Cellar";
         if (statusDotEl) statusDotEl.classList.remove('hidden');
         if (btnEl) {
-          btnEl.className = "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-950/70 via-slate-800 to-slate-900 hover:from-emerald-900/80 hover:to-slate-800 text-white border border-emerald-500/50 hover:border-emerald-400 transition-all shadow-md shadow-emerald-950/30";
+          btnEl.className = "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl transition-all shadow-sm";
+          btnEl.style.backgroundColor = "#E8E3D3";
+          btnEl.style.border = "1px solid #6A0F23";
+          btnEl.style.color = "#2C2C2C";
         }
         if (guestCardEl) guestCardEl.classList.add('hidden');
         if (userCardEl) userCardEl.classList.remove('hidden');
         if (signOutBtnEl) signOutBtnEl.classList.remove('hidden');
       } else {
         if (nameEl) nameEl.textContent = "Sign In / Register";
-        if (badgeTextEl) badgeTextEl.textContent = "Cellar Account";
+        if (badgeTextEl) badgeTextEl.textContent = "My Cellar";
         if (statusDotEl) statusDotEl.classList.add('hidden');
         if (btnEl) {
-          btnEl.className = "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-rose-950/90 via-rose-900/40 to-slate-900 hover:from-rose-900 hover:to-slate-800 text-white border border-rose-500/70 hover:border-rose-400 transition-all shadow-md shadow-rose-950/40 ring-1 ring-rose-500/30";
+          btnEl.className = "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl transition-all shadow-sm";
+          btnEl.style.backgroundColor = "#E8E3D3";
+          btnEl.style.border = "1px solid #6A0F23";
+          btnEl.style.color = "#2C2C2C";
         }
         if (guestCardEl) guestCardEl.classList.remove('hidden');
         if (userCardEl) userCardEl.classList.add('hidden');
@@ -3417,32 +3319,52 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       if (regForm) regForm.classList.add('hidden');
       if (switchForm) switchForm.classList.add('hidden');
 
-      if (loginBtn) loginBtn.className = "pb-2 text-slate-400 hover:text-slate-200";
-      if (regBtn) regBtn.className = "pb-2 text-slate-400 hover:text-slate-200";
-      if (switchBtn) switchBtn.className = "pb-2 text-slate-400 hover:text-slate-200";
+      [loginBtn, regBtn, switchBtn].forEach(btn => {
+        if (btn) {
+          btn.className = "pb-2 font-medium transition";
+          btn.style.color = "#746F69";
+          btn.style.borderBottom = "2px solid transparent";
+        }
+      });
 
       if (tab === 'register') {
         if (regForm) regForm.classList.remove('hidden');
-        if (regBtn) regBtn.className = "pb-2 text-emerald-400 border-b-2 border-emerald-500 font-bold";
+        if (regBtn) {
+          regBtn.className = "pb-2 font-bold transition";
+          regBtn.style.color = "#6A0F23";
+          regBtn.style.borderBottom = "2px solid #6A0F23";
+        }
       } else if (tab === 'switch') {
         if (switchForm) switchForm.classList.remove('hidden');
-        if (switchBtn) switchBtn.className = "pb-2 text-amber-400 border-b-2 border-amber-500 font-bold";
+        if (switchBtn) {
+          switchBtn.className = "pb-2 font-bold transition";
+          switchBtn.style.color = "#6A0F23";
+          switchBtn.style.borderBottom = "2px solid #CCA43B";
+        }
         loadAccountsList();
       } else {
         if (loginForm) loginForm.classList.remove('hidden');
-        if (loginBtn) loginBtn.className = "pb-2 text-rose-400 border-b-2 border-rose-500 font-bold";
+        if (loginBtn) {
+          loginBtn.className = "pb-2 font-bold transition";
+          loginBtn.style.color = "#6A0F23";
+          loginBtn.style.borderBottom = "2px solid #6A0F23";
+        }
       }
     }
 
     function showAuthFeedback(msg, isError = true) {
       const fb = document.getElementById('authFeedback');
       if (!fb) return;
-      fb.classList.remove('hidden', 'bg-rose-950/60', 'border-rose-700', 'text-rose-200', 'bg-emerald-950/60', 'border-emerald-700', 'text-emerald-200');
+      fb.classList.remove('hidden');
       if (isError) {
-        fb.classList.add('bg-rose-950/60', 'border-rose-700', 'text-rose-200');
+        fb.style.backgroundColor = "rgba(179, 58, 58, 0.12)";
+        fb.style.borderColor = "#B33A3A";
+        fb.style.color = "#B33A3A";
         fb.innerHTML = `⚠️ <span>${msg}</span>`;
       } else {
-        fb.classList.add('bg-emerald-950/60', 'border-emerald-700', 'text-emerald-200');
+        fb.style.backgroundColor = "rgba(204, 164, 59, 0.18)";
+        fb.style.borderColor = "#CCA43B";
+        fb.style.color = "#6A0F23";
         fb.innerHTML = `✔ <span>${msg}</span>`;
       }
     }
@@ -3548,7 +3470,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     async function loadAccountsList() {
       const container = document.getElementById('accountsListContainer');
       if (!container) return;
-      container.innerHTML = '<div class="text-slate-500 text-xs py-2">Loading registered cellars...</div>';
+      container.innerHTML = '<div class="text-xs py-2" style="color: #746F69;">Loading registered cellars...</div>';
       try {
         const res = await fetch('/api/auth/users');
         if (res.ok) {
@@ -3556,30 +3478,30 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           container.innerHTML = users.map(u => {
             const isCurrent = currentUser && currentUser.id === u.id;
             return `
-              <div class="flex items-center justify-between p-2.5 rounded-xl border ${isCurrent ? 'bg-rose-950/30 border-rose-700/60' : 'bg-slate-800/60 border-slate-700/60 hover:border-slate-600'} transition">
+              <div class="flex items-center justify-between p-2.5 rounded-xl border transition" style="${isCurrent ? 'background-color: #F4F0E6; border-color: #6A0F23;' : 'background-color: #F4F0E6; border-color: #D3CBB8;'}">
                 <div class="flex items-center gap-2.5 min-w-0">
-                  <img src="${u.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + u.email}" class="w-7 h-7 rounded-full bg-slate-700 shrink-0" alt="">
+                  <img src="${u.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + u.email}" class="w-7 h-7 rounded-full shrink-0 border" style="background-color: #E8E3D3; border-color: #CCA43B;" alt="">
                   <div class="min-w-0">
-                    <div class="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                    <div class="text-xs font-bold truncate flex items-center gap-1.5" style="color: #2C2C2C;">
                       <span>${escapeHtml(u.name)}</span>
-                      ${isCurrent ? '<span class="text-[10px] px-1.5 py-0.2 bg-rose-900 text-rose-300 rounded-full font-normal">Active</span>' : ''}
+                      ${isCurrent ? '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style="background-color: #6A0F23; color: #F4F0E6;">Active</span>' : ''}
                     </div>
-                    <div class="text-[11px] text-slate-400 truncate">${escapeHtml(u.email)}</div>
+                    <div class="text-[11px] truncate" style="color: #746F69;">${escapeHtml(u.email)}</div>
                   </div>
                 </div>
                 ${!isCurrent ? `
-                  <button type="button" onclick="switchAccount(${u.id})" class="px-3 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold shrink-0 transition">
+                  <button type="button" onclick="switchAccount(${u.id})" class="px-3 py-1 rounded-lg text-xs font-bold shrink-0 transition" style="background-color: #E8E3D3; color: #6A0F23; border: 1px solid #6A0F23;">
                     Switch
                   </button>
                 ` : `
-                  <span class="text-emerald-400 text-xs font-semibold px-2">Current</span>
+                  <span class="text-xs font-bold px-2" style="color: #6A0F23;">Current</span>
                 `}
               </div>
             `;
           }).join('');
         }
       } catch (e) {
-        container.innerHTML = `<div class="text-rose-400 text-xs py-2">${escapeHtml(e.message)}</div>`;
+        container.innerHTML = `<div class="text-xs py-2" style="color: #B33A3A;">${escapeHtml(e.message)}</div>`;
       }
     }
 
@@ -4011,12 +3933,12 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const lateWidth = Math.max(1, endPct - peakEndPct);
 
         const actionsHtml = isArchive ? `
-          <div class="flex items-center gap-3 self-end md:self-auto">
-            <div class="text-right">
+          <div class="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 pt-2.5 md:pt-0 border-t md:border-t-0" style="border-color: #D3CBB8;">
+            <div class="text-left md:text-right flex md:block items-center gap-1.5">
               <span class="text-xs" style="color: #746F69;">Inventory:</span>
-              <span class="text-xs font-bold px-2 py-0.5 rounded border block" style="background-color: #F4F0E6; color: #6A0F23; border-color: #D3CBB8;">0 btl</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded border inline-block md:block" style="background-color: #F4F0E6; color: #6A0F23; border-color: #D3CBB8;">0 btl</span>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 flex-wrap justify-end">
               <button onclick="promptRestockBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg btn-burgundy transition flex items-center gap-1 shadow-sm" title="Restock / add bottles back to active cellar">
                 <span>➕</span> Restock
               </button>
@@ -4029,20 +3951,20 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             </div>
           </div>
         ` : `
-          <div class="flex items-center gap-3 self-end md:self-auto">
-            <div class="text-right">
+          <div class="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 pt-2.5 md:pt-0 border-t md:border-t-0" style="border-color: #D3CBB8;">
+            <div class="text-left md:text-right flex md:block items-center gap-1.5 shrink-0">
               <span class="text-xs" style="color: #746F69;">Qty:</span>
               <span class="text-xs font-bold px-2 py-0.5 rounded border" style="background-color: #F4F0E6; color: #2C2C2C; border-color: #D3CBB8;">${b.quantity} btl</span>
-              ${b.purchase_price ? `<span class="text-[11px] font-bold block" style="color: #6A0F23;">$${b.purchase_price}/ea</span>` : ''}
+              ${b.purchase_price ? `<span class="text-[11px] font-bold md:block" style="color: #6A0F23;">$${b.purchase_price}/ea</span>` : ''}
             </div>
-            <div class="flex items-center gap-1.5">
-              <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg btn-burgundy transition shadow-sm" title="Mark as consumed / Open bottle">
+            <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-end">
+              <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg btn-burgundy transition shadow-sm" title="Mark as consumed / Open bottle">
                 🥂 Open
               </button>
-              <button onclick="openMoveModal(${b.id})" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Move bottle to another fridge or storage rack">
+              <button onclick="openMoveModal(${b.id})" class="px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Move bottle to another fridge or storage rack">
                 📍 Move
               </button>
-              <button onclick="openGiftModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Gift bottle (remove from cellar without opening)">
+              <button onclick="openGiftModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Gift bottle (remove from cellar without opening)">
                 🎁 Gift
               </button>
               <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #B33A3A;" title="Remove / Delete from cellar">
@@ -4053,21 +3975,21 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         `;
 
         return `
-          <div class="surface-parchment border rounded-2xl p-4 sm:p-5 transition-all flex flex-col gap-3.5 shadow-sm hover:shadow-md">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
-              <div class="flex items-start gap-3">
+          <div class="surface-parchment border rounded-2xl p-3.5 sm:p-5 transition-all flex flex-col gap-3 shadow-sm hover:shadow-md overflow-hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+              <div class="flex items-start gap-2.5 sm:gap-3 min-w-0">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border" style="background-color: #F4F0E6; border-color: #D3CBB8;">
                   ${getWineIcon(b.wine_type)}
                 </div>
-                <div>
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="font-serif-title text-base font-bold" style="color: #2C2C2C;">${vintage} ${escapeHtml(b.producer)}</h3>
-                    ${b.wine_name ? `<span class="font-serif-title text-sm font-bold" style="color: #6A0F23;">${escapeHtml(b.wine_name)}</span>` : ''}
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <h3 class="font-serif-title text-sm sm:text-base font-bold leading-snug" style="color: #2C2C2C;">${vintage} ${escapeHtml(b.producer)}</h3>
+                    ${b.wine_name ? `<span class="font-serif-title text-xs sm:text-sm font-bold leading-snug" style="color: #6A0F23;">${escapeHtml(b.wine_name)}</span>` : ''}
                     ${statusBadge}
                     ${b.user_rating ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1 shadow-sm" style="background-color: rgba(204, 164, 59, 0.25); color: #6A0F23; border: 1px solid #CCA43B;" title="Your Rating"><span style="color: #CCA43B;">★</span> ${b.user_rating}/5</span>` : ''}
                     ${getCriticBadgesHtml(b)}
                   </div>
-                  <p class="text-xs mt-0.5" style="color: #746F69;">
+                  <p class="text-xs mt-0.5 break-words" style="color: #746F69;">
                     ${escapeHtml(b.region)} ${b.sub_region ? '• ' + escapeHtml(b.sub_region) : ''} |
                     <span class="font-semibold" style="color: #2C2C2C;">${escapeHtml(b.varietal)}</span>
                   </p>
@@ -4078,10 +4000,10 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             </div>
 
             <!-- Drinking Window Timeline Visualizer on Linen White (#F4F0E6) -->
-            <div class="rounded-xl p-3 flex flex-col gap-2 border" style="background-color: #F4F0E6; border-color: #D3CBB8;">
-              <div class="flex items-center justify-between text-[11px]" style="color: #746F69;">
-                <span>Aging Curve: <strong style="color: #2C2C2C;">${dw ? dw.aging_tier : 'Standard'}</strong></span>
-                <span class="font-mono font-bold" style="color: #6A0F23;">Peak Window: ${dw ? dw.peak_start : '?'}-${dw ? dw.peak_end : '?'}</span>
+            <div class="rounded-xl p-2.5 sm:p-3 flex flex-col gap-2 border" style="background-color: #F4F0E6; border-color: #D3CBB8;">
+              <div class="flex items-center justify-between gap-2 text-[11px] flex-wrap" style="color: #746F69;">
+                <span class="truncate">Aging Curve: <strong style="color: #2C2C2C;">${dw ? dw.aging_tier : 'Standard'}</strong></span>
+                <span class="font-mono font-bold shrink-0" style="color: #6A0F23;">Peak Window: ${dw ? dw.peak_start : '?'}-${dw ? dw.peak_end : '?'}</span>
               </div>
 
               <!-- Visual Bar -->
@@ -4108,22 +4030,22 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             </div>
 
             <!-- Sommelier Service Notes, Serving Recommendations & AI Insight -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-t pt-2.5" style="border-color: #D3CBB8; color: #746F69;">
-              <div class="flex items-center gap-2.5 flex-wrap">
-                <button type="button" onclick="openMoveModal(${b.id})" class="flex items-center gap-1 px-2.5 py-0.5 rounded-lg border transition cursor-pointer font-medium" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Click to move storage location">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-t pt-2.5 min-w-0" style="border-color: #D3CBB8; color: #746F69;">
+              <div class="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+                <button type="button" onclick="openMoveModal(${b.id})" class="flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-lg border transition cursor-pointer font-medium" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Click to move storage location">
                   <span>📍</span> ${b.location_rack || 'Cellar'} <span class="text-[10px] font-bold" style="color: #6A0F23;">✎ Move</span>
                 </button>
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg border font-medium" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;">
+                <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-lg border font-medium" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;">
                   <span>⏱️</span> Decant: <strong class="burgundy-highlight">${dw && dw.decant_hours > 0 ? dw.decant_hours + 'h' : 'Pop & Pour'}</strong>
                 </span>
                 ${getServingRecommendationHtml(b, dw)}
               </div>
 
-              <div class="flex items-center gap-1.5 text-[11px] max-w-lg truncate" style="color: #2C2C2C;" title="${escapeHtml(dw ? dw.rationale : '')}">
+              <div class="flex items-center gap-1.5 text-[11px] w-full sm:w-auto sm:max-w-md min-w-0 truncate" style="color: #2C2C2C;" title="${escapeHtml(dw ? dw.rationale : '')}">
                 <svg class="w-3.5 h-3.5 shrink-0 ai-spark-pulse" viewBox="0 0 24 24" fill="#CCA43B" stroke="#6A0F23" stroke-width="1.2">
                   <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
                 </svg>
-                <span class="font-bold" style="color: #6A0F23;">AI Insight:</span>
+                <span class="font-bold shrink-0" style="color: #6A0F23;">AI Insight:</span>
                 <span class="italic truncate" style="color: #746F69;">"${escapeHtml(dw ? dw.rationale : '')}"</span>
               </div>
             </div>
