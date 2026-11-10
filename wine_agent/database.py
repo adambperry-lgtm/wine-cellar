@@ -645,7 +645,7 @@ class WineDatabase:
         clean_rack = (new_rack or "").strip()
         if not clean_rack:
             clean_rack = "Basement Fridge"
-        clean_bin = (new_bin or "").strip() if new_bin is not None else (bottle.location_bin or "Shelf 1")
+        clean_bin = (new_bin or "").strip() if new_bin is not None else (bottle.location_bin or "")
 
         # Automatically register target rack in user's sticky storage locations
         self.add_storage_location(user_id=uid, name=clean_rack)
@@ -1722,7 +1722,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=3,
                 location_rack="Upstairs Fridge",
-                location_bin="Shelf 1",
+                location_bin="",
                 purchase_date="2021-12-05",
                 purchase_price=220.0,
                 market_value=270.0,

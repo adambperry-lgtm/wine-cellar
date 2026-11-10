@@ -313,7 +313,7 @@ def parse_wine_natural_language(text: str) -> WineBottle:
         format=b_format,
         quantity=qty,
         location_rack=rack or "Basement Fridge",
-        location_bin=bin_loc or "Unassigned",
+        location_bin=bin_loc or "",
         purchase_price=price,
         personal_notes=f"Quick added: '{text}'"
     )
@@ -550,7 +550,7 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
         format=detected_format,
         quantity=1,
         location_rack=fridge,
-        location_bin="Shelf 1",
+        location_bin="",
         purchase_price=None,
         personal_notes=notes
     )

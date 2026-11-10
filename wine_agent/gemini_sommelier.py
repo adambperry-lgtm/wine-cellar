@@ -458,7 +458,7 @@ def analyze_wine_label_image(
                 format=bottle_fmt,
                 quantity=1,
                 location_rack=default_fridge,
-                location_bin="Shelf 1",
+                location_bin="",
                 critic_score=critic_score,
                 personal_notes=notes or "Scanned via Gemini AI Vision"
             )
@@ -641,7 +641,7 @@ INSTRUCTIONS:
 2. PRIORITIZE bottles whose Drinking Status is "In Peak Window" or "Approaching Peak" or "Drink Soon (Late Peak)". If a wine is "Hold (Too Young)", explain why it should be held unless the user specifically wants to open a youthful powerhouse.
 3. For each recommended bottle, specify:
    - Full Name & Vintage
-   - Storage location (e.g. Basement Fridge Shelf 1)
+   - Storage location (e.g. Basement Fridge)
    - Why its acid, tannins, and flavor profile harmonize with the food/occasion
    - Service guidance: Exact decanting duration and ideal serving temperature
 4. Use a polished, evocative, master sommelier tone. Format with clear Markdown headings and bullet points.

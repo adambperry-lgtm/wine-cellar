@@ -981,6 +981,32 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         self.assertEqual(res["bottle"]["location_bin"], "Bin 3")
         self.assertEqual(res["bottle"]["quantity"], 2)
 
+    def test_move_bottle_without_shelf(self):
+        """Verifies moving a bottle without a shelf location preserves empty shelf and does not default to Shelf 1."""
+        b = WineBottle(
+            producer="Caymus",
+            wine_name="Special Selection",
+            vintage=2018,
+            varietal="Cabernet Sauvignon",
+            region="Napa Valley",
+            wine_type=WineType.RED,
+            quantity=3,
+            location_rack="Basement Fridge",
+            location_bin="",
+            user_id=1
+        )
+        b_id = self.db.add_bottle(b, user_id=1)
+
+        moved = self.db.move_bottle(b_id, new_rack="Upstairs Fridge", new_bin="", count=1, user_id=1)
+        self.assertIsNotNone(moved)
+        self.assertEqual(moved.location_rack, "Upstairs Fridge")
+        self.assertEqual(moved.location_bin, "")
+        self.assertEqual(moved.quantity, 1)
+
+        orig = self.db.get_bottle(b_id, user_id=1)
+        self.assertEqual(orig.quantity, 2)
+        self.assertEqual(orig.location_bin, "")
+
     def test_zero_bottle_wine_moves_to_archive_and_restock(self):
         """Verifies that once a wine drops to 0 bottles, it leaves the active cellar and moves to archive, and can be restocked."""
         b = WineBottle(

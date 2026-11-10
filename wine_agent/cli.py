@@ -63,6 +63,14 @@ def print_table(headers: list, rows: list):
     print()
 
 
+def format_bottle_loc(b) -> str:
+    if not b:
+        return "-"
+    if getattr(b, 'location_bin', None) and b.location_bin.strip() and b.location_bin != "Unassigned":
+        return f"{b.location_rack} / {b.location_bin}" if b.location_rack else b.location_bin
+    return getattr(b, 'location_rack', None) or "-"
+
+
 def cmd_list(agent: SommelierAgent, args):
     status_filter = None
     if args.status:
@@ -87,7 +95,7 @@ def cmd_list(agent: SommelierAgent, args):
         dw = b.drinking_window
         win_str = f"{dw.peak_start}-{dw.peak_end}" if dw else "N/A"
         st = status_badge(dw.status) if dw else "N/A"
-        loc = f"{b.location_rack} / {b.location_bin}" if b.location_rack or b.location_bin else "-"
+        loc = format_bottle_loc(b)
         dec = f"{dw.decant_hours}h" if dw and dw.decant_hours > 0 else "None"
         rows.append([
             str(b.id),
@@ -120,7 +128,7 @@ def cmd_peak(agent: SommelierAgent, args):
             f"{dw.peak_start}-{dw.peak_end}",
             f"{dw.decant_hours}h",
             f"{dw.serving_temp_f}°F",
-            f"{b.location_rack} {b.location_bin}"
+            format_bottle_loc(b)
         ])
     print(f"\n{C_GREEN}{C_BOLD}🌟 BOTTLES IN PRIME DRINKING WINDOW (READY NOW){C_RESET}")
     print_table(headers, rows)
@@ -142,7 +150,7 @@ def cmd_approaching(agent: SommelierAgent, args):
             f"{dw.peak_start}-{dw.peak_end}",
             f"{dw.decant_hours}h",
             f"{dw.serving_temp_f}°F",
-            f"{b.location_rack} {b.location_bin}"
+            format_bottle_loc(b)
         ])
     print(f"\n{C_CYAN}{C_BOLD}🌊 BOTTLES APPROACHING PEAK (EARLY WINDOW / DECANT){C_RESET}")
     print_table(headers, rows)
@@ -166,7 +174,7 @@ def cmd_urgent(agent: SommelierAgent, args):
             str(b.quantity),
             status_badge(dw.status),
             str(dw.window_end),
-            f"{b.location_rack} {b.location_bin}",
+            format_bottle_loc(b),
             b.personal_notes[:35] if b.personal_notes else "Drink soon before tertiary fade"
         ])
     print(f"\n{C_YELLOW}{C_BOLD}⚠️  DRINK SOON / URGENT CONSUMPTION LIST{C_RESET}")
@@ -190,7 +198,7 @@ def cmd_hold(agent: SommelierAgent, args):
             str(dw.window_start),
             str(dw.peak_start),
             dw.aging_tier[:30],
-            f"{b.location_rack} {b.location_bin}"
+            format_bottle_loc(b)
         ])
     print(f"\n{C_BLUE}{C_BOLD}⏳ CELLAR HOLD / PATIENCE REQUIRED (AGING){C_RESET}")
     print_table(headers, rows)
@@ -245,7 +253,7 @@ def cmd_recommend(agent: SommelierAgent, args):
         b = item["bottle"]
         dw = b.drinking_window
         print(f"\n{C_BOLD}#{i}. {b.display_name}{C_RESET} ({status_badge(dw.status)})")
-        print(f"   • Location    : {b.location_rack} | {b.location_bin}")
+        print(f"   • Location    : {format_bottle_loc(b)}")
         print(f"   • Service     : {item['decant_advice']} | Serve at {item['serving_temp']}")
         print(f"   • Peak Window : {dw.peak_start} - {dw.peak_end} (Tier: {dw.aging_tier})")
         print(f"   • Notes       : {dw.rationale}")
@@ -263,7 +271,7 @@ def cmd_parse(agent: SommelierAgent, args):
     print(f"  • Region     : {bottle.region} ({bottle.country})")
     print(f"  • Varietal   : {bottle.varietal}")
     print(f"  • Quantity   : {bottle.quantity} ({bottle.format.value})")
-    print(f"  • Location   : {bottle.location_rack} / {bottle.location_bin}")
+    print(f"  • Location   : {format_bottle_loc(bottle)}")
     print(f"  • Price      : ${bottle.purchase_price:.2f}" if bottle.purchase_price else "  • Price      : N/A")
     print(f"  • Window     : {dw.peak_start} - {dw.peak_end} ({status_badge(dw.status)})")
     print(f"  • Service    : Decant {dw.decant_hours}h | Serve at {dw.serving_temp_f}°F")
@@ -302,7 +310,7 @@ def cmd_scan(agent: SommelierAgent, args):
     print(f"  • Vintage    : {bottle.vintage or 'Non-Vintage'}")
     print(f"  • Varietal   : {bottle.varietal} ({bottle.wine_type.value})")
     print(f"  • Region     : {bottle.region} {f'({bottle.sub_region})' if bottle.sub_region else ''}")
-    print(f"  • Location   : {bottle.location_rack} / {bottle.location_bin}")
+    print(f"  • Location   : {format_bottle_loc(bottle)}")
     print(f"  • Status     : {status_badge(dw.status)}")
     print(f"  • Peak Window: {dw.peak_start} - {dw.peak_end} (Window: {dw.window_start}-{dw.window_end})")
     print(f"  • Service    : Decant {dw.decant_hours}h | Serve at {dw.serving_temp_f}°F")
@@ -432,7 +440,7 @@ def cmd_batch(agent: SommelierAgent, args):
     for b in added:
         dw = b.drinking_window
         st = status_badge(dw.status) if dw else ""
-        print(f"  • {b.quantity}x {C_BOLD}{b.display_name}{C_RESET} | {b.location_rack} ({b.location_bin}) | {st}")
+        print(f"  • {b.quantity}x {C_BOLD}{b.display_name}{C_RESET} | {format_bottle_loc(b)} | {st}")
     print()
 
 

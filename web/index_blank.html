@@ -741,16 +741,10 @@
                 </button>
               </div>
 
-              <!-- Shelf & Quantity -->
-              <div class="grid grid-cols-3 gap-2.5 mt-1">
-                <div class="col-span-2">
-                  <label class="text-[11px] text-slate-400">Shelf / Bin Location</label>
-                  <input type="text" id="scanInputShelf" value="Shelf 1" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1 outline-none focus:border-rose-500">
-                </div>
-                <div>
-                  <label class="text-[11px] text-slate-400">Quantity</label>
-                  <input type="number" id="scanInputQuantity" value="1" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1 outline-none focus:border-rose-500">
-                </div>
+              <!-- Quantity -->
+              <div class="mt-1">
+                <label class="text-[11px] text-slate-400">Quantity</label>
+                <input type="number" id="scanInputQuantity" value="1" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white mt-1 outline-none focus:border-rose-500">
               </div>
 
               <!-- Editable Attributes Toggle -->
@@ -942,7 +936,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         <p class="text-xs text-slate-400 leading-relaxed">
           Type or dictate any single bottle description with quantity and fridge location:
         </p>
-        <textarea id="nlpInput" rows="3" placeholder="e.g. 2 bottles of 2018 Caymus Cabernet in Fridge 1 Shelf 2" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500"></textarea>
+        <textarea id="nlpInput" rows="3" placeholder="e.g. 2 bottles of 2018 Caymus Cabernet in Fridge 1" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs text-white placeholder-slate-500 outline-none focus:border-rose-500"></textarea>
         <div class="flex justify-end gap-2">
           <button onclick="submitNLP()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5">
             <span>✨</span> Process & Add
@@ -1129,10 +1123,6 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           <input type="text" id="moveModalCustomTargetInput" placeholder="Type new storage location (e.g. Wine Cooler 2)..." class="hidden mt-2 w-full bg-slate-800 border border-indigo-500 rounded-lg p-2 text-xs text-white placeholder-slate-500 outline-none">
         </div>
 
-        <div>
-          <label class="text-[11px] text-slate-300 font-semibold uppercase tracking-wider block mb-1">Shelf / Bin Location (Optional)</label>
-          <input type="text" id="moveModalTargetBin" placeholder="e.g. Shelf 1, Bin 4, Bottom Rack" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 outline-none focus:border-indigo-500">
-        </div>
 
         <div id="moveModalQtySection" class="hidden bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col gap-1.5">
           <div class="flex items-center justify-between">
@@ -1672,6 +1662,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         archivedBottles = cachedArch ? JSON.parse(cachedArch) : [];
       }
 
+      cellarBottles.forEach(b => { b.location_bin = ''; });
+      archivedBottles.forEach(b => { b.location_bin = ''; });
+
       await initStorageZones();
       renderKPIs();
       applyFilters();
@@ -1791,7 +1784,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
         // Search text
         if (searchVal) {
-          const hay = `${b.producer} ${b.wine_name} ${b.vintage} ${b.varietal} ${b.region} ${b.location_rack} ${b.location_bin}`.toLowerCase();
+          const hay = `${b.producer} ${b.wine_name} ${b.vintage} ${b.varietal} ${b.region} ${b.location_rack}`.toLowerCase();
           if (!hay.includes(searchVal)) return false;
         }
 
@@ -1972,7 +1965,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-t border-slate-800/80 pt-2.5 text-slate-400">
               <div class="flex items-center gap-3 flex-wrap">
                 <button type="button" onclick="openMoveModal(${b.id})" class="flex items-center gap-1 text-slate-300 hover:text-indigo-300 bg-slate-800/60 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-700/60 transition cursor-pointer" title="Click to move storage location">
-                  <span>📍</span> ${b.location_rack || 'Cellar'} ${b.location_bin ? '• ' + b.location_bin : ''} <span class="text-[10px] text-indigo-400">✎ Move</span>
+                  <span>📍</span> ${b.location_rack || 'Cellar'} <span class="text-[10px] text-indigo-400">✎ Move</span>
                 </button>
                 <span class="flex items-center gap-1 text-slate-300">
                   <span>⏱️</span> Decant: ${dw && dw.decant_hours > 0 ? dw.decant_hours + 'h' : 'Pop & Pour'}
@@ -2964,7 +2957,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           format: "Standard (750ml)",
           quantity: qty,
           location_rack: activeFridge,
-          location_bin: "Shelf 1",
+          location_bin: "",
           purchase_price: null,
           critic_score: null,
           personal_notes: "Added via quick bookmark view",
@@ -3074,7 +3067,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           escapeCsv(b.format || 'Standard (750ml)'),
           escapeCsv(b.quantity ?? 1),
           escapeCsv(b.location_rack || 'Basement Fridge'),
-          escapeCsv(b.location_bin || 'Shelf 1'),
+          escapeCsv(b.location_bin || ''),
           escapeCsv(b.purchase_price ?? ''),
           escapeCsv(b.critic_score ?? ''),
           escapeCsv(b.user_rating ?? ''),
@@ -3264,7 +3257,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         if (qtyRaw === '0') continue; // Skip consumed CellarTracker bottles
         const quantity = (qtyRaw && !isNaN(parseInt(qtyRaw.replace(/[^\d]/g, '')))) ? Math.max(1, parseInt(qtyRaw.replace(/[^\d]/g, ''))) : 1;
         const rack = getVal('location_rack') || 'Basement Fridge';
-        const binLoc = getVal('location_bin') || 'Shelf 1';
+        const binLoc = getVal('location_bin') || '';
 
         const priceRaw = getVal('purchase_price').replace(/[^0-9.]/g, '');
         const purchasePrice = (priceRaw && !isNaN(parseFloat(priceRaw))) ? parseFloat(priceRaw) : null;
@@ -3803,7 +3796,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       document.getElementById('giftBottleName').textContent = name;
       const target = cellarBottles.find(b => b.id == id);
       const qty = target ? (target.quantity || 1) : 1;
-      const loc = target ? `${target.location_rack || 'Cellar'}${target.location_bin ? ' (' + target.location_bin + ')' : ''}` : '';
+      const loc = target ? (target.location_rack || 'Cellar') : '';
 
       document.getElementById('giftBottleLocation').textContent = loc ? `Location: ${loc}` : '';
       document.getElementById('giftBottleMaxQty').textContent = `In cellar: ${qty} btl`;
@@ -3904,7 +3897,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       document.getElementById('moveModalBottleId').value = b.id;
       document.getElementById('moveModalMaxQty').value = b.quantity || 1;
       document.getElementById('moveModalWineTitle').textContent = `${b.vintage || 'NV'} ${b.producer} ${b.wine_name || b.varietal}`;
-      document.getElementById('moveModalCurrentLocation').textContent = `Current Location: ${b.location_rack || 'Cellar'}${b.location_bin ? ' • ' + b.location_bin : ''} (${b.quantity} btl)`;
+      document.getElementById('moveModalCurrentLocation').textContent = `Current Location: ${b.location_rack || 'Cellar'} (${b.quantity} btl)`;
 
       // Populate Target Rack dropdown from storageZones
       const select = document.getElementById('moveModalTargetSelect');
@@ -3919,9 +3912,6 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const isCurrent = (z.toLowerCase() === (b.location_rack || '').toLowerCase());
         return `<option value="${escapeHtml(z)}" ${isCurrent ? 'selected' : ''}>${escapeHtml(z)} ${isCurrent ? '(Current)' : ''}</option>`;
       }).join('') + `<option value="__custom__">➕ New Storage Location...</option>`;
-
-      // Shelf input
-      document.getElementById('moveModalTargetBin').value = b.location_bin || 'Shelf 1';
 
       // Quantity selector
       const qtySection = document.getElementById('moveModalQtySection');
@@ -3976,7 +3966,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       if (!targetRack) targetRack = 'Basement Fridge';
 
       const targetBinInput = document.getElementById('moveModalTargetBin');
-      const targetBin = (targetBinInput ? targetBinInput.value.trim() : '') || 'Shelf 1';
+      const targetBin = targetBinInput ? targetBinInput.value.trim() : '';
       const countInput = document.getElementById('moveModalQtyInput');
       const moveCount = countInput ? Math.max(1, parseInt(countInput.value) || 1) : 1;
 
@@ -4067,7 +4057,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           format: "Standard (750ml)",
           quantity: 1,
           location_rack: scanCurrentTargetFridge,
-          location_bin: "Shelf 1",
+          location_bin: "",
           personal_notes: "Scanned & identified as Stags' Leap Winery Napa Valley Petite Sirah.",
           drinking_window: {
             window_start: 2027,
@@ -4930,7 +4920,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       const inStock = cellarBottles.filter(b => (b.quantity || 1) > 0);
       const cellarLines = inStock.map(b => {
         const dw = b.drinking_window || {};
-        return `- [ID ${b.id}] ${b.vintage || 'NV'} ${b.producer} '${b.wine_name || ''}' (${b.varietal}, ${b.region}) | Qty: ${b.quantity} | Status: ${dw.status || 'Approaching Peak'} | Decant: ${dw.decant_hours || 0}h | Serve: ${dw.serving_temp_f || 60}°F | Location: ${b.location_rack || 'Cellar'} ${b.location_bin || ''}${b.critic_score ? ' | Score: ' + b.critic_score : ''}${b.personal_notes ? ' | Notes: ' + b.personal_notes : ''}`;
+        return `- [ID ${b.id}] ${b.vintage || 'NV'} ${b.producer} '${b.wine_name || ''}' (${b.varietal}, ${b.region}) | Qty: ${b.quantity} | Status: ${dw.status || 'Approaching Peak'} | Decant: ${dw.decant_hours || 0}h | Serve: ${dw.serving_temp_f || 60}°F | Location: ${b.location_rack || 'Cellar'}${b.critic_score ? ' | Score: ' + b.critic_score : ''}${b.personal_notes ? ' | Notes: ' + b.personal_notes : ''}`;
       }).join('\n');
 
       const hasHistory = Boolean(history && history.length > 0);
@@ -5595,7 +5585,7 @@ USER QUERY: "${query}"`;
               ${getCriticBadgesHtml(b)}
             </div>
             <div class="flex items-center gap-4 text-[11px] text-slate-400">
-              <span>📍 ${b.location_rack} ${b.location_bin || ''}</span>
+              <span>📍 ${b.location_rack || 'Cellar'}</span>
               <span>⏱️ ${r.decant_advice}</span>
               <span>🌡️ Serve: ${r.serving_temp}</span>
             </div>
@@ -5943,7 +5933,7 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
             format: parsed.format || "Standard (750ml)",
             quantity: 1,
             location_rack: scanCurrentTargetFridge,
-            location_bin: "Shelf 1",
+            location_bin: "",
             critic_score: parsed.critic_score ? parseInt(parsed.critic_score) : null,
             personal_notes: parsed.personal_notes || "Identified via Gemini AI Vision",
             drinking_window: {
@@ -6328,7 +6318,7 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
         format: "Standard (750ml)",
         quantity: 1,
         location_rack: scanCurrentTargetFridge,
-        location_bin: "Shelf 1",
+        location_bin: "",
         purchase_price: null,
         personal_notes: sku ? `Added via Label Scanner (SKU: ${sku})` : "Added via Label Scanner",
         drinking_window: {
@@ -6449,7 +6439,7 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       const vintage = vintageVal ? parseInt(vintageVal) : currentScannedBottle.vintage;
       const varietal = document.getElementById('scanEditVarietal').value.trim() || currentScannedBottle.varietal;
       const region = document.getElementById('scanEditRegion').value.trim() || currentScannedBottle.region;
-      const shelf = document.getElementById('scanInputShelf').value.trim() || 'Shelf 1';
+      const shelf = document.getElementById('scanInputShelf') ? document.getElementById('scanInputShelf').value.trim() : '';
       const qty = parseInt(document.getElementById('scanInputQuantity').value) || 1;
       const priceVal = document.getElementById('scanEditPrice').value;
       const price = priceVal ? parseFloat(priceVal) : null;
@@ -6493,7 +6483,7 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       }
 
       closeModal('scanLabelModal');
-      alert(`✔ Added ${qty}x ${vintage || 'NV'} ${producer} ${wineName} to ${scanCurrentTargetFridge} (${shelf})!`);
+      alert(`✔ Added ${qty}x ${vintage || 'NV'} ${producer} ${wineName} to ${scanCurrentTargetFridge}!`);
     }
 
     function loadSampleLabel(sampleKey) {
