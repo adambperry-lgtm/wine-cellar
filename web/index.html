@@ -4,30 +4,305 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Cellar Agent">
-  <meta name="theme-color" content="#0f1117">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="VinoVeritas AI">
+  <meta name="theme-color" content="#F4F0E6">
+  <meta name="description" content="VinoVeritas AI — Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI.">
   <meta name="format-detection" content="telephone=no">
-  <title>Cellar Sommelier Agent | Wine Collection & Drinking Windows</title>
+  <title>VinoVeritas AI | Old-World Knowledge Meets New-World Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
+    /* ==========================================================================
+       VINOVERITAS AI — "CELLAR & CANVAS" BRAND DESIGN SYSTEM
+       ========================================================================== */
     :root {
-      --bg-dark: #0f1117;
-      --card-dark: #181c26;
-      --card-border: #262c3d;
-      --accent-wine: #9e2a2b;
-      --accent-gold: #d4af37;
+      --primary-burgundy: #6A0F23;
+      --primary-burgundy-hover: #520B1B;
+      --primary-burgundy-light: rgba(106, 15, 35, 0.10);
+      --primary-burgundy-border: rgba(106, 15, 35, 0.28);
+      --bg-linen: #F4F0E6;
+      --bg-parchment: #E8E3D3;
+      --bg-parchment-hover: #DFD9C6;
+      --border-parchment: #D3CBB8;
+      --accent-gold: #CCA43B;
+      --accent-gold-hover: #B8912E;
+      --accent-gold-light: rgba(204, 164, 59, 0.16);
+      --text-charcoal: #2C2C2C;
+      --text-taupe: #746F69;
+      --error-brick: #B33A3A;
+      --error-brick-light: rgba(179, 58, 58, 0.12);
     }
+
     html, body {
       overscroll-behavior-y: contain;
+      background-color: var(--bg-linen);
+      color: var(--text-charcoal);
+      font-family: 'Lato', 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    body {
-      background-color: var(--bg-dark);
-      color: #e2e8f0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    /* Typography Hierarchy: Playfair Display for Headlines & Titles, Lato/Montserrat for Body & UI */
+    h1, h2, h3, h4, .font-serif-title {
+      font-family: 'Playfair Display', Georgia, Cambria, "Times New Roman", serif;
+      color: var(--text-charcoal);
+      letter-spacing: -0.01em;
     }
+
+    .font-sans-ui {
+      font-family: 'Montserrat', 'Lato', sans-serif;
+    }
+
+    .brand-vinoveritas {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      color: var(--primary-burgundy);
+    }
+
+    .brand-ai-badge {
+      font-family: 'Montserrat', 'Lato', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-charcoal);
+    }
+
+    /* Minimalist Line Art Iconography (Charcoal default, Deep Burgundy fill when active) */
+    .vv-icon {
+      stroke: var(--text-charcoal);
+      fill: none;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: all 0.22s ease;
+    }
+    .vv-icon-burgundy {
+      stroke: var(--primary-burgundy);
+      fill: none;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .vv-icon-filled-active,
+    .filter-pill.active .vv-icon,
+    button.active .vv-icon,
+    .nav-action-btn:hover .vv-icon {
+      fill: var(--primary-burgundy);
+      stroke: var(--primary-burgundy);
+    }
+    .filter-pill.active .vv-icon {
+      fill: var(--accent-gold);
+      stroke: #F4F0E6;
+    }
+
+    /* AI Visual Metaphor: Subtle glowing "spark" or "pulse" in Burnished Gold (#CCA43B) */
+    @keyframes aiGoldPulse {
+      0%, 100% {
+        filter: drop-shadow(0 0 3px rgba(204, 164, 59, 0.55));
+        transform: scale(1);
+        opacity: 0.92;
+      }
+      50% {
+        filter: drop-shadow(0 0 10px rgba(204, 164, 59, 0.95)) drop-shadow(0 0 18px rgba(204, 164, 59, 0.45));
+        transform: scale(1.12);
+        opacity: 1;
+      }
+    }
+    .ai-spark-pulse {
+      color: var(--accent-gold);
+      animation: aiGoldPulse 2.6s ease-in-out infinite;
+    }
+
+    @keyframes centralNodeGlow {
+      0%, 100% {
+        r: 4.2px;
+        filter: drop-shadow(0 0 3px rgba(204, 164, 59, 0.7));
+      }
+      50% {
+        r: 5px;
+        filter: drop-shadow(0 0 9px rgba(204, 164, 59, 1));
+      }
+    }
+    .digital-grape-ai-node {
+      fill: var(--accent-gold);
+      animation: centralNodeGlow 2.8s ease-in-out infinite;
+    }
+
+    /* Cellar & Canvas Surface Components */
+    .surface-linen {
+      background-color: var(--bg-linen) !important;
+      color: var(--text-charcoal) !important;
+    }
+    .surface-parchment {
+      background-color: var(--bg-parchment) !important;
+      border-color: var(--border-parchment) !important;
+      color: var(--text-charcoal) !important;
+    }
+    .ai-insight-card {
+      background-color: var(--bg-parchment);
+      border: 1px solid var(--border-parchment);
+      border-left: 4px solid var(--accent-gold);
+      box-shadow: 0 6px 20px -4px rgba(44, 44, 44, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .ai-insight-card:hover {
+      box-shadow: 0 10px 26px -4px rgba(106, 15, 35, 0.10);
+    }
+    .burgundy-highlight {
+      color: var(--primary-burgundy) !important;
+      font-weight: 700;
+    }
+    .btn-burgundy {
+      background-color: var(--primary-burgundy) !important;
+      color: #F4F0E6 !important;
+      border: 1px solid var(--primary-burgundy) !important;
+      transition: all 0.2s ease;
+    }
+    .btn-burgundy:hover {
+      background-color: var(--primary-burgundy-hover) !important;
+      box-shadow: 0 4px 12px rgba(106, 15, 35, 0.25);
+    }
+    .btn-gold-accent {
+      background-color: var(--accent-gold) !important;
+      color: var(--text-charcoal) !important;
+      border: 1px solid #B58E2B !important;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+    .btn-gold-accent:hover {
+      background-color: var(--accent-gold-hover) !important;
+      box-shadow: 0 4px 14px rgba(204, 164, 59, 0.35);
+    }
+    .btn-parchment {
+      background-color: var(--bg-parchment) !important;
+      color: var(--text-charcoal) !important;
+      border: 1px solid var(--border-parchment) !important;
+      transition: all 0.2s ease;
+    }
+    .btn-parchment:hover {
+      background-color: var(--bg-parchment-hover) !important;
+      border-color: var(--primary-burgundy) !important;
+      color: var(--primary-burgundy) !important;
+    }
+
+    /* Smart Storage Slider Custom Styling */
+    .storage-slider-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 10px;
+      background: transparent;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+      z-index: 20;
+    }
+    .storage-slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      background: #6A0F23;
+      border: 2px solid #CCA43B;
+      box-shadow: 0 2px 8px rgba(44, 44, 44, 0.3);
+      cursor: grab;
+      transition: transform 0.15s ease;
+    }
+    .storage-slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+    }
+
+    /* Comprehensive Harmonization of Legacy Dark Utility Classes into "Cellar & Canvas" Palette */
+    .bg-slate-900, .bg-slate-900\/95, .bg-slate-900\/90, .bg-slate-900\/80, .bg-slate-900\/70, .bg-slate-900\/60,
+    .bg-slate-800, .bg-slate-800\/90, .bg-slate-800\/85, .bg-slate-800\/80, .bg-slate-800\/60, .bg-slate-800\/40 {
+      background-color: var(--bg-parchment) !important;
+      color: var(--text-charcoal) !important;
+    }
+    .bg-slate-950, .bg-slate-950\/95, .bg-slate-950\/80, .bg-slate-950\/70, .bg-slate-950\/60, .bg-slate-950\/50, .bg-slate-950\/40, .bg-slate-950\/30 {
+      background-color: var(--bg-linen) !important;
+      color: var(--text-charcoal) !important;
+    }
+    .border-slate-800, .border-slate-800\/80, .border-slate-800\/60, .border-slate-800\/50,
+    .border-slate-700, .border-slate-700\/80, .border-slate-700\/60, .border-slate-600 {
+      border-color: var(--border-parchment) !important;
+    }
+    .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) {
+      border-color: var(--border-parchment) !important;
+    }
+    .text-white, .text-slate-100, .text-slate-200 {
+      color: var(--text-charcoal) !important;
+    }
+    .text-slate-300, .text-slate-400, .text-slate-500 {
+      color: var(--text-taupe) !important;
+    }
+    /* Keep white text on solid primary buttons */
+    .bg-rose-600, .bg-rose-700, .btn-burgundy,
+    .bg-emerald-600, .bg-emerald-700, .bg-indigo-600, .bg-violet-600, .bg-amber-600 {
+      color: #F4F0E6 !important;
+    }
+    .bg-rose-600, .bg-rose-700 {
+      background-color: var(--primary-burgundy) !important;
+      border-color: var(--primary-burgundy) !important;
+    }
+    .bg-rose-600:hover, .bg-rose-500:hover {
+      background-color: var(--primary-burgundy-hover) !important;
+    }
+    .text-rose-300, .text-rose-400, .text-rose-200 {
+      color: var(--primary-burgundy) !important;
+    }
+    .border-rose-500, .border-rose-600, .border-rose-700, .border-rose-800, .focus\:border-rose-500:focus {
+      border-color: var(--primary-burgundy) !important;
+    }
+    .bg-rose-950, .bg-rose-950\/80, .bg-rose-950\/60, .bg-rose-950\/40, .bg-rose-950\/30, .bg-rose-900\/50 {
+      background-color: rgba(106, 15, 35, 0.10) !important;
+      color: var(--primary-burgundy) !important;
+    }
+    .text-amber-300, .text-amber-400, .text-amber-200 {
+      color: #8A6914 !important;
+    }
+    .bg-amber-950, .bg-amber-950\/80, .bg-amber-950\/60, .bg-amber-950\/40, .bg-amber-950\/30, .bg-amber-950\/20 {
+      background-color: rgba(204, 164, 59, 0.18) !important;
+      border-color: rgba(204, 164, 59, 0.5) !important;
+    }
+    .text-emerald-300, .text-emerald-400, .text-emerald-500\/80 {
+      color: var(--primary-burgundy) !important;
+    }
+    .bg-emerald-950, .bg-emerald-950\/80, .bg-emerald-950\/70, .bg-emerald-950\/60, .bg-emerald-950\/20 {
+      background-color: rgba(106, 15, 35, 0.09) !important;
+      border-color: rgba(106, 15, 35, 0.28) !important;
+    }
+    .text-cyan-300, .text-cyan-400, .text-indigo-300, .text-indigo-400, .text-indigo-200, .text-violet-300 {
+      color: var(--primary-burgundy) !important;
+    }
+    .bg-cyan-950, .bg-cyan-950\/20, .bg-indigo-950, .bg-indigo-950\/80, .bg-indigo-950\/70, .bg-indigo-950\/40, .bg-indigo-950\/20, .bg-violet-950, .bg-violet-950\/70 {
+      background-color: rgba(204, 164, 59, 0.14) !important;
+      border-color: rgba(106, 15, 35, 0.24) !important;
+    }
+    .text-red-300, .text-red-400 {
+      color: var(--error-brick) !important;
+    }
+    .bg-red-950, .bg-red-950\/40 {
+      background-color: var(--error-brick-light) !important;
+      border-color: var(--error-brick) !important;
+      color: var(--error-brick) !important;
+    }
+    input, select, textarea {
+      background-color: var(--bg-linen) !important;
+      color: var(--text-charcoal) !important;
+      border-color: var(--border-parchment) !important;
+    }
+    input::placeholder, textarea::placeholder {
+      color: var(--text-taupe) !important;
+      opacity: 0.75;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary-burgundy) !important;
+      box-shadow: 0 0 0 2px rgba(106, 15, 35, 0.12);
+    }
+
     /* Mobile PWA & Responsive Utilities */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -37,7 +312,6 @@
       scrollbar-width: none;
     }
     @media screen and (max-width: 768px) {
-      /* Prevent iOS Safari auto-zoom on input focus */
       input, select, textarea {
         font-size: 16px !important;
       }
@@ -60,7 +334,7 @@
       height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
+      background: #B8B09C;
       border-radius: 4px;
     }
     @keyframes scanlaser {
@@ -73,112 +347,179 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, transparent, #10b981, #34d399, #10b981, transparent);
-      box-shadow: 0 0 16px #10b981, 0 0 4px #34d399;
+      background: linear-gradient(90deg, transparent, #6A0F23, #CCA43B, #6A0F23, transparent);
+      box-shadow: 0 0 16px #CCA43B, 0 0 4px #6A0F23;
       animation: scanlaser 2.4s ease-in-out infinite;
     }
     .dropzone-active {
-      border-color: #10b981 !important;
-      background-color: rgba(16, 185, 129, 0.12) !important;
+      border-color: #6A0F23 !important;
+      background-color: rgba(106, 15, 35, 0.08) !important;
     }
   </style>
 </head>
-<body class="h-full flex flex-col antialiased">
+<body class="h-full flex flex-col antialiased surface-linen">
 
   <!-- Pulldown-to-Refresh Indicator (Mobile / iPhone Web App Mode) -->
   <div id="pullToRefreshBar" class="fixed top-0 left-0 right-0 z-50 pointer-events-none flex items-center justify-center -translate-y-full transition-transform ease-out will-change-transform">
-    <div id="pullToRefreshPill" class="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl rounded-full px-4 py-2 mt-2 flex items-center gap-2.5 text-xs text-white transition-all shadow-rose-950/40">
-      <div id="pullSpinnerIcon" class="w-5 h-5 flex items-center justify-center text-sm transition-transform text-rose-400">
-        🍷
+    <div id="pullToRefreshPill" class="surface-parchment backdrop-blur-md border shadow-xl rounded-full px-4 py-2 mt-2 flex items-center gap-2.5 text-xs transition-all">
+      <div id="pullSpinnerIcon" class="w-5 h-5 flex items-center justify-center text-sm transition-transform" style="color: #6A0F23;">
+        🍇
       </div>
-      <span id="pullStatusText" class="font-semibold text-slate-200">Pull down to refresh cellar</span>
+      <span id="pullStatusText" class="font-semibold" style="color: #2C2C2C;">Pull down to refresh VinoVeritas AI</span>
     </div>
   </div>
 
-  <!-- Top Navigation Bar -->
-  <header class="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3.5" style="padding-top: max(10px, env(safe-area-inset-top));">
-    <div class="max-w-7xl mx-auto flex flex-col gap-2.5">
-      <!-- TOP ROW: Brand on left, Prominent User Account / Sign In Pill on right -->
-      <div class="flex items-center justify-between w-full gap-2">
-        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-rose-900 to-red-600 flex items-center justify-center shadow-lg shadow-red-950/50 shrink-0">
-            <span class="text-lg sm:text-xl">🍷</span>
-          </div>
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5 sm:gap-2">
-              <h1 class="text-sm sm:text-lg font-bold text-white tracking-wide truncate">Cellar Sommelier Agent</h1>
-              <span class="text-[9px] sm:text-xs bg-rose-950 text-rose-300 border border-rose-800 px-1.5 py-0.2 rounded-full font-medium shrink-0">2026</span>
+  <!-- Top Navigation Bar: Cellar & Canvas Header -->
+  <header class="sticky top-0 z-30 px-3 sm:px-6 py-3 sm:py-4 border-b transition-all" style="background-color: rgba(244, 240, 230, 0.96); border-color: #D3CBB8; backdrop-filter: blur(10px); padding-top: max(12px, env(safe-area-inset-top));">
+    <div class="max-w-7xl mx-auto flex flex-col gap-3">
+      <!-- TOP ROW: The "Digital Grape" Logo & Brand Lockup on Left, Account & AI Controls on Right -->
+      <div class="flex items-center justify-between w-full gap-3">
+        <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+          <!-- LOGO CONCEPT: The "Digital Grape" (Interconnected Burgundy Data Nodes + Central Burnished Gold AI Node + Brand Wordmark Below) -->
+          <div class="flex flex-col items-center justify-center px-2.5 py-1.5 rounded-2xl border shrink-0 shadow-sm" style="background-color: #E8E3D3; border-color: #D3CBB8;" title="The Digital Grape — VinoVeritas AI">
+            <svg class="w-10 h-10 sm:w-11 sm:h-11" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VinoVeritas AI Digital Grape Logo">
+              <!-- Vine Stem & Stylized Leaf in Deep Burgundy -->
+              <path d="M32 6V16" stroke="#6A0F23" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M24 9C27 6 35 6 40 9" stroke="#6A0F23" stroke-width="2" stroke-linecap="round"/>
+              <path d="M32 11C37 7 43 9 44 13C40 15 35 14 32 11Z" fill="#6A0F23" opacity="0.88"/>
+              <path d="M32 11C26 8 22 11 24 14" stroke="#6A0F23" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Circuit Board / Interconnected Data Node Lines in Deep Burgundy -->
+              <g stroke="#6A0F23" stroke-width="1.6" stroke-linecap="round">
+                <line x1="22" y1="22" x2="32" y2="21"/>
+                <line x1="32" y1="21" x2="42" y2="22"/>
+                <line x1="22" y1="22" x2="18" y2="32"/>
+                <line x1="22" y1="22" x2="32" y2="33"/>
+                <line x1="32" y1="21" x2="32" y2="33"/>
+                <line x1="42" y1="22" x2="32" y2="33"/>
+                <line x1="42" y1="22" x2="46" y2="32"/>
+                <line x1="18" y1="32" x2="32" y2="33"/>
+                <line x1="46" y1="32" x2="32" y2="33"/>
+                <line x1="18" y1="32" x2="25" y2="44"/>
+                <line x1="32" y1="33" x2="25" y2="44"/>
+                <line x1="32" y1="33" x2="39" y2="44"/>
+                <line x1="46" y1="32" x2="39" y2="44"/>
+                <line x1="25" y1="44" x2="39" y2="44"/>
+                <line x1="25" y1="44" x2="32" y2="55"/>
+                <line x1="39" y1="44" x2="32" y2="55"/>
+                <line x1="32" y1="33" x2="32" y2="55"/>
+              </g>
+              <!-- Outer Grape Data Nodes in Deep Burgundy (#6A0F23) -->
+              <circle cx="22" cy="22" r="4.2" fill="#F4F0E6" stroke="#6A0F23" stroke-width="2.2"/>
+              <circle cx="22" cy="22" r="1.6" fill="#6A0F23"/>
+              <circle cx="32" cy="21" r="4.2" fill="#F4F0E6" stroke="#6A0F23" stroke-width="2.2"/>
+              <circle cx="32" cy="21" r="1.6" fill="#6A0F23"/>
+              <circle cx="42" cy="22" r="4.2" fill="#F4F0E6" stroke="#6A0F23" stroke-width="2.2"/>
+              <circle cx="42" cy="22" r="1.6" fill="#6A0F23"/>
+              <circle cx="18" cy="32" r="4.2" fill="#F4F0E6" stroke="#6A0F23" stroke-width="2.2"/>
+              <circle cx="18" cy="32" r="1.6" fill="#6A0F23"/>
+              <circle cx="46" cy="32" r="4.2" fill="#F4F0E6" stroke="#6A0F23" stroke-width="2.2"/>
+              <circle cx="46" cy="32" r="1.6" fill="#6A0F23"/>
+              <circle cx="25" cy="44" r="4.2" fill="#F4F0E6" stroke="#6A0F23" stroke-width="2.2"/>
+              <circle cx="25" cy="44" r="1.6" fill="#6A0F23"/>
+              <circle cx="39" cy="44" r="4.2" fill="#F4F0E6" stroke="#6A0F23" stroke-width="2.2"/>
+              <circle cx="39" cy="44" r="1.6" fill="#6A0F23"/>
+              <circle cx="32" cy="55" r="4.2" fill="#F4F0E6" stroke="#6A0F23" stroke-width="2.2"/>
+              <circle cx="32" cy="55" r="1.6" fill="#6A0F23"/>
+              <!-- Central Intelligence "Grape" Node Highlighted in Burnished Gold (#CCA43B) -->
+              <circle cx="32" cy="33" r="6.8" fill="#6A0F23" stroke="#CCA43B" stroke-width="2"/>
+              <circle cx="32" cy="33" r="4.2" class="digital-grape-ai-node"/>
+            </svg>
+            <div class="leading-none mt-0.5 text-center whitespace-nowrap">
+              <span class="brand-vinoveritas text-[10px] tracking-tight">VinoVeritas</span>
+              <span class="brand-ai-badge text-[8.5px] ml-0.5 px-1 py-0.2 rounded" style="background-color: rgba(204, 164, 59, 0.25); color: #2C2C2C;">AI</span>
             </div>
-            <p class="text-[10px] sm:text-xs text-slate-400 truncate hidden xs:block">Drinking Window Engine & Collection Manager</p>
+          </div>
+
+          <!-- Brand Headline & Value Proposition -->
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="text-lg sm:text-2xl tracking-tight truncate flex items-baseline gap-1.5">
+                <span class="brand-vinoveritas">VinoVeritas</span>
+                <span class="brand-ai-badge text-xs sm:text-sm px-2 py-0.5 rounded-md border" style="background-color: #E8E3D3; border-color: #CCA43B; color: #2C2C2C;">AI</span>
+              </h1>
+              <span class="hidden md:inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-semibold" style="background-color: rgba(204, 164, 59, 0.18); color: #6A0F23; border: 1px solid rgba(204, 164, 59, 0.5);">
+                <svg class="w-3 h-3 ai-spark-pulse" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/></svg>
+                In Wine, There Is Truth
+              </span>
+            </div>
+            <p class="text-[11px] sm:text-xs truncate mt-0.5" style="color: #746F69;">
+              Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI.
+            </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="checkForAppUpdate(true)" title="Force Reload & Update App" class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 transition shadow-sm active:scale-95" aria-label="Refresh and update app">
-            <span class="text-xs">🔄</span>
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Burnished Gold High-Value AI Action -->
+          <button onclick="openSommelierModal('open')" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs btn-gold-accent shadow-sm" title="Consult VinoVeritas AI Sommelier">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#6A0F23"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/></svg>
+            <span>Unlock AI Sommelier</span>
           </button>
 
-          <!-- Prominent User Account / Sign In Pill (Always Top-Right!) -->
+          <button onclick="checkForAppUpdate(true)" title="Force Reload & Sync Collection" class="inline-flex items-center justify-center w-8 h-8 rounded-xl btn-parchment transition shadow-sm active:scale-95" aria-label="Refresh and update app">
+            <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          </button>
+
+          <!-- Prominent User Account / Sign In Pill -->
           <div class="relative inline-block text-left shrink-0" id="userMenuContainer">
-            <button onclick="toggleUserDropdown()" id="userProfileBtn" class="group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-rose-950/80 to-slate-900 hover:from-rose-900 hover:to-slate-800 text-white border border-rose-500/50 hover:border-rose-400 transition-all shadow-md shadow-rose-950/30">
+            <button onclick="toggleUserDropdown()" id="userProfileBtn" class="group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl transition-all shadow-sm" style="background-color: #E8E3D3; border: 1px solid #6A0F23; color: #2C2C2C;">
               <div class="relative shrink-0 flex items-center justify-center">
-                <img id="userAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-700 object-cover border border-rose-400/50" alt="Avatar">
-                <span id="userStatusDot" class="hidden absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-900"></span>
+                <img id="userAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border" style="background-color: #F4F0E6; border-color: #CCA43B;" alt="Avatar">
+                <span id="userStatusDot" class="hidden absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full" style="background-color: #6A0F23; box-shadow: 0 0 0 2px #E8E3D3;"></span>
               </div>
               <div class="flex flex-col text-left leading-tight min-w-0">
-                <span id="userBadgeText" class="text-[9px] font-bold text-rose-300 uppercase tracking-wider truncate">Cellar Account</span>
-                <span id="userNameLabel" class="text-xs font-bold text-white max-w-[95px] sm:max-w-[130px] truncate">Sign In / Register</span>
+                <span id="userBadgeText" class="text-[9px] font-bold uppercase tracking-wider truncate" style="color: #6A0F23;">Cellar Account</span>
+                <span id="userNameLabel" class="text-xs font-bold max-w-[95px] sm:max-w-[130px] truncate" style="color: #2C2C2C;">Sign In / Register</span>
               </div>
-              <span class="text-[10px] text-rose-300 group-hover:text-white transition shrink-0">▼</span>
+              <span class="text-[10px] transition shrink-0" style="color: #6A0F23;">▼</span>
             </button>
 
-            <!-- Dropdown Menu: Solid Opaque & High-Contrast (No Translucency) -->
-            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-24px)] rounded-2xl border border-slate-700 shadow-2xl shadow-black py-2.5 z-50 text-xs" style="background-color: #0f172a !important; opacity: 1 !important;">
+            <!-- Dropdown Menu: Aged Parchment & High-Contrast Charcoal -->
+            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-24px)] rounded-2xl border shadow-2xl py-2.5 z-50 text-xs" style="background-color: #E8E3D3 !important; border-color: #D3CBB8 !important; opacity: 1 !important;">
               <!-- Guest Card (shown when NOT signed in) -->
-              <div id="dropdownGuestCard" class="px-3.5 py-3 border border-slate-800 rounded-xl mx-2 mb-2" style="background-color: #1e293b !important;">
-                <div class="font-bold text-white text-xs flex items-center gap-1.5">
-                  <span>🍷</span> Personal Wine Cellar
+              <div id="dropdownGuestCard" class="px-3.5 py-3 border rounded-xl mx-2 mb-2" style="background-color: #F4F0E6 !important; border-color: #D3CBB8 !important;">
+                <div class="font-serif-title font-bold text-xs flex items-center gap-1.5" style="color: #6A0F23;">
+                  <span>🍇</span> VinoVeritas AI Private Cellar
                 </div>
-                <p class="text-[11px] text-slate-300 mt-1">Sign in with Google or Email to manage private bottles & drinking windows.</p>
+                <p class="text-[11px] mt-1" style="color: #746F69;">Sign in with Google or Email to manage private bottles, AI insights &amp; drinking windows.</p>
                 <div class="grid grid-cols-2 gap-2 mt-2.5">
-                  <button onclick="openAuthModal('login')" class="py-2 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-center transition shadow-md shadow-rose-950/40 flex items-center justify-center gap-1.5 text-xs">
+                  <button onclick="openAuthModal('login')" class="py-2 px-2.5 rounded-lg btn-burgundy font-bold text-center transition shadow-sm flex items-center justify-center gap-1.5 text-xs">
                     <span>🔑</span> Sign In
                   </button>
-                  <button onclick="openAuthModal('register')" class="py-2 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-center transition shadow-md shadow-emerald-950/40 flex items-center justify-center gap-1.5 text-xs">
+                  <button onclick="openAuthModal('register')" class="py-2 px-2.5 rounded-lg btn-gold-accent font-bold text-center transition shadow-sm flex items-center justify-center gap-1.5 text-xs">
                     <span>✨</span> Register
                   </button>
                 </div>
               </div>
 
               <!-- Active User Card (shown when signed in) -->
-              <div id="dropdownUserCard" class="hidden px-3.5 py-2.5 border border-slate-700/80 rounded-xl mx-2 mb-2" style="background-color: #1e293b !important;">
+              <div id="dropdownUserCard" class="hidden px-3.5 py-2.5 border rounded-xl mx-2 mb-2" style="background-color: #F4F0E6 !important; border-color: #D3CBB8 !important;">
                 <div class="flex items-center gap-2.5">
-                  <img id="dropdownAvatarImg" class="w-8 h-8 rounded-full bg-slate-700 object-cover border border-emerald-500/50 shrink-0" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" alt="">
+                  <img id="dropdownAvatarImg" class="w-8 h-8 rounded-full object-cover border shrink-0" style="background-color: #E8E3D3; border-color: #CCA43B;" src="https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" alt="">
                   <div class="min-w-0 flex-1">
-                    <div class="font-bold text-white text-xs truncate flex items-center gap-1.5">
+                    <div class="font-bold text-xs truncate flex items-center gap-1.5" style="color: #2C2C2C;">
                       <span id="dropdownUserName">Adambperry</span>
-                      <span class="text-[9px] bg-emerald-950 text-emerald-300 px-1.5 py-0.2 rounded-full border border-emerald-700 font-semibold">Active</span>
+                      <span class="text-[9px] px-1.5 py-0.2 rounded-full border font-semibold" style="background-color: rgba(106, 15, 35, 0.1); color: #6A0F23; border-color: #6A0F23;">Active</span>
                     </div>
-                    <div class="text-[11px] text-slate-300 truncate font-mono mt-0.5" id="dropdownUserEmail">adambperry@gmail.com</div>
+                    <div class="text-[11px] truncate font-mono mt-0.5" style="color: #746F69;" id="dropdownUserEmail">adambperry@gmail.com</div>
                   </div>
                 </div>
               </div>
 
               <!-- Menu Navigation Links -->
               <div class="py-1 px-1 flex flex-col gap-0.5">
-                <button id="adminActivityDropdownBtn" onclick="openModal('adminModal'); toggleUserDropdown();" class="hidden w-full text-left px-3 py-2 text-indigo-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition font-medium">
+                <button id="adminActivityDropdownBtn" onclick="openModal('adminModal'); toggleUserDropdown();" class="hidden w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition font-medium hover:bg-[#F4F0E6]" style="color: #6A0F23;">
                   <span>👥</span> Cellar Network Activity
                 </button>
-                <button onclick="checkForAppUpdate(true)" class="w-full text-left px-3 py-2 text-cyan-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition font-medium">
-                  <span>🔄</span> Reload App & Clear Cache
+                <button onclick="checkForAppUpdate(true)" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition font-medium hover:bg-[#F4F0E6]" style="color: #2C2C2C;">
+                  <span>🔄</span> Reload App &amp; Clear Cache
                 </button>
-                <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 text-slate-200 hover:bg-slate-800 hover:text-white rounded-lg flex items-center gap-2 transition font-medium">
+                <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition font-medium hover:bg-[#F4F0E6]" style="color: #2C2C2C;">
                   <span>👤</span> Switch Cellar Account
                 </button>
-                <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 text-emerald-400 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition font-medium">
+                <button onclick="openAuthModal('register')" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition font-medium hover:bg-[#F4F0E6]" style="color: #6A0F23;">
                   <span>✨</span> Create New Cellar
                 </button>
-                <button id="dropdownSignOutBtn" onclick="logoutUser()" class="hidden w-full text-left px-3 py-2 text-rose-300 hover:text-rose-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 border-t border-slate-800 mt-1 transition font-medium">
+                <button id="dropdownSignOutBtn" onclick="logoutUser()" class="hidden w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 border-t mt-1 transition font-medium hover:bg-[#F4F0E6]" style="color: #B33A3A; border-color: #D3CBB8;">
                   <span>🚪</span> Sign Out
                 </button>
               </div>
@@ -187,139 +528,349 @@
         </div>
       </div>
 
-      <!-- ROW 2: Action Buttons Bar (Smooth horizontal swipe on mobile, wrap on desktop) -->
+      <!-- ROW 2: Minimalist Line-Art Navigation & Action Bar -->
       <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 sm:flex-wrap">
-        <button onclick="openModal('scanLabelModal')" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950/40">
-          <span>📸</span> Scan Label
+        <!-- Scan Label: Magnifying glass over a bottle metaphor -->
+        <button onclick="openModal('scanLabelModal')" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-burgundy shadow-sm">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#F4F0E6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 2h4v4l2 3v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9l2-3V2z"/>
+            <circle cx="15.5" cy="14.5" r="3.5" fill="#6A0F23" stroke="#CCA43B" stroke-width="1.8"/>
+            <path d="M18.2 17.2L21 20" stroke="#CCA43B" stroke-width="2"/>
+          </svg>
+          <span>Scan Label</span>
         </button>
-        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-900/30">
-          <span>➕</span> Enter Wine
+
+        <!-- Enter Wine: Minimalist Bottle Outline -->
+        <button onclick="openModal('addBottleModal'); switchAddTab('batch');" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
+            <path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/>
+            <path d="M12 12v6"/><path d="M9 15h6"/>
+          </svg>
+          <span>Enter Wine</span>
         </button>
-        <button onclick="openSommelierModal('open')" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-all shadow-sm">
-          <span>✨</span> What to Open
+
+        <!-- What to Open: Small Star Cluster for AI Recommendation -->
+        <button onclick="openSommelierModal('open')" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-gold-accent shadow-sm">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#6A0F23" stroke="#6A0F23" stroke-width="1.4">
+            <path d="M11 3L12.8 8.2L18 10L12.8 11.8L11 17L9.2 11.8L4 10L9.2 8.2L11 3Z"/>
+            <path d="M19 14L19.8 16.2L22 17L19.8 17.8L19 20L18.2 17.8L16 17L18.2 16.2L19 14Z"/>
+          </svg>
+          <span>AI Sommelier: What to Open</span>
         </button>
-        <button onclick="openSommelierModal('buy')" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-500/15 border border-indigo-500/35 text-indigo-300 hover:bg-indigo-500/25 transition-all shadow-sm">
-          <span>🛒</span> What to Buy
+
+        <!-- What to Buy: Stemmed Glass + Star Cluster -->
+        <button onclick="openSommelierModal('buy')" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
+            <path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/><path d="M7.5 7.5h9"/>
+          </svg>
+          <span>What to Buy</span>
         </button>
-        <button onclick="openModal('auditModal')" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all">
-          <span>📊</span> Cellar Audit
+
+        <!-- Cellar Analysis / Audit: Magnifying Glass over Bottle -->
+        <button onclick="openModal('auditModal')" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
+            <path d="M8 2h4v4l2 3v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9l2-3V2z"/>
+            <circle cx="15" cy="14" r="4"/><path d="M18 17l3 3"/>
+          </svg>
+          <span>Cellar Analysis</span>
         </button>
-        <button onclick="openHistoryModal()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition-all" title="Review opened bottles, star ratings, and tasting notes">
-          <span>📖</span> Tasting Log
+
+        <!-- Tasting Log: Stylized Grape Leaf & Journal -->
+        <button onclick="openHistoryModal()" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Review opened bottles, star ratings, and tasting notes">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+          <span>Tasting Log</span>
         </button>
-        <button onclick="openArchiveModal()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all shadow-sm" title="Review depleted wines (0 bottles) in your archive and restock">
-          <span>📦</span> Archive <span id="archiveHeaderBadge" class="ml-0.5 px-1.5 py-0.2 rounded-full bg-slate-900 text-slate-300 border border-slate-700 text-[10px] font-mono">0</span>
+
+        <!-- Archive -->
+        <button onclick="openArchiveModal()" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Review depleted wines (0 bottles) in your archive and restock">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
+            <rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>
+          </svg>
+          <span>Archive</span>
+          <span id="archiveHeaderBadge" class="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold" style="background-color: #F4F0E6; color: #6A0F23; border: 1px solid #D3CBB8;">0</span>
         </button>
-        <button onclick="openStorageModal()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all shadow-sm" title="Edit storage options, fridges, and racks">
-          <span>🧊</span> Edit Storage
+
+        <!-- Smart Storage -->
+        <button onclick="openStorageModal()" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Edit storage options, fridges, and racks">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
+            <rect width="14" height="20" x="5" y="2" rx="2"/><path d="M5 10h14"/><path d="M9 6v2"/><path d="M9 14v3"/>
+          </svg>
+          <span>Smart Storage</span>
         </button>
-        <button id="adminActivityHeaderBtn" onclick="openModal('adminModal')" class="hidden shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-indigo-950/70 hover:bg-indigo-900/90 text-indigo-200 border border-indigo-700/60 transition-all shadow-sm" title="View users, bottle counts, and network cellar activity">
+
+        <!-- Admin Network Activity -->
+        <button id="adminActivityHeaderBtn" onclick="openModal('adminModal')" class="hidden nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="View users, bottle counts, and network cellar activity">
           <span>👥</span> Network Activity
         </button>
-        <button onclick="exportCellarDatabase()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 transition-all shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
-          <span>📥</span> Export CSV
+
+        <!-- Export CSV -->
+        <button onclick="exportCellarDatabase()" class="nav-action-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg btn-parchment shadow-sm" title="Export complete cellar database to Excel / Google Sheets CSV">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+          </svg>
+          <span>Export CSV</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main Content Layout -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-6 flex flex-col gap-6 safe-bottom-padding">
+  <!-- Main Content Layout: Linen White Canvas (#F4F0E6) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-5 sm:py-7 flex flex-col gap-6 safe-bottom-padding">
 
-    <!-- KPI Summary Cards -->
+    <!-- KPI Summary Cards on Aged Parchment (#E8E3D3) -->
     <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-      <div class="bg-slate-800/60 border border-slate-800 rounded-xl p-3.5 flex flex-col">
-        <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Total Bottles</span>
-        <span id="kpiTotal" class="text-2xl font-bold text-white mt-1">--</span>
-        <span id="kpiUnique" class="text-[11px] text-slate-500 mt-0.5">-- unique wines</span>
-      </div>
-
-      <div class="bg-slate-800/60 border border-slate-800 rounded-xl p-3.5 flex flex-col">
-        <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Cellar Value</span>
-        <span id="kpiValue" class="text-2xl font-bold text-emerald-400 mt-1">--</span>
-        <span class="text-[11px] text-slate-500 mt-0.5">estimated market</span>
-      </div>
-
-      <div onclick="setFilter('peak')" class="cursor-pointer bg-emerald-950/20 border border-emerald-800/40 hover:border-emerald-700 rounded-xl p-3.5 flex flex-col transition-all">
+      <div onclick="setFilter('all')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md">
         <div class="flex items-center justify-between">
-          <span class="text-xs text-emerald-300 uppercase tracking-wider font-medium">Ready (Peak)</span>
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Total Bottles</span>
+          <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/></svg>
         </div>
-        <span id="kpiPeak" class="text-2xl font-bold text-emerald-300 mt-1">--</span>
-        <span class="text-[11px] text-emerald-500/80 mt-0.5">prime maturity</span>
+        <span id="kpiTotal" class="font-serif-title text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
+        <span id="kpiUnique" class="text-[11px] mt-0.5" style="color: #746F69;">-- unique wines</span>
       </div>
 
-      <div onclick="setFilter('approaching')" class="cursor-pointer bg-cyan-950/20 border border-cyan-800/40 hover:border-cyan-700 rounded-xl p-3.5 flex flex-col transition-all">
-        <span class="text-xs text-cyan-300 uppercase tracking-wider font-medium">Approaching</span>
-        <span id="kpiApproaching" class="text-2xl font-bold text-cyan-300 mt-1">--</span>
-        <span class="text-[11px] text-cyan-500/80 mt-0.5">early window / decant</span>
-      </div>
-
-      <div onclick="setFilter('urgent')" class="cursor-pointer bg-amber-950/20 border border-amber-800/40 hover:border-amber-700 rounded-xl p-3.5 flex flex-col transition-all">
+      <div class="surface-parchment border rounded-xl p-3.5 flex flex-col">
         <div class="flex items-center justify-between">
-          <span class="text-xs text-amber-300 uppercase tracking-wider font-medium">Drink Soon</span>
-          <span class="text-xs">⚠️</span>
+          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Cellar Value</span>
+          <span class="text-xs font-bold" style="color: #CCA43B;">✦</span>
         </div>
-        <span id="kpiUrgent" class="text-2xl font-bold text-amber-300 mt-1">--</span>
-        <span class="text-[11px] text-amber-500/80 mt-0.5">late peak / fading</span>
+        <span id="kpiValue" class="font-serif-title text-2xl font-bold mt-1" style="color: #6A0F23;">--</span>
+        <span class="text-[11px] mt-0.5" style="color: #746F69;">estimated market</span>
       </div>
 
-      <div onclick="setFilter('hold')" class="cursor-pointer bg-indigo-950/20 border border-indigo-800/40 hover:border-indigo-700 rounded-xl p-3.5 flex flex-col transition-all">
-        <span class="text-xs text-indigo-300 uppercase tracking-wider font-medium">Cellar Hold</span>
-        <span id="kpiHold" class="text-2xl font-bold text-indigo-300 mt-1">--</span>
-        <span class="text-[11px] text-indigo-500/80 mt-0.5">keep aging (too young)</span>
+      <div onclick="setFilter('peak')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md" style="border-left: 3px solid #6A0F23 !important;">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #6A0F23;">Ready (Peak)</span>
+          <span class="w-2.5 h-2.5 rounded-full ai-spark-pulse" style="background-color: #CCA43B;"></span>
+        </div>
+        <span id="kpiPeak" class="font-serif-title text-2xl font-bold mt-1" style="color: #6A0F23;">--</span>
+        <span class="text-[11px] mt-0.5" style="color: #746F69;">prime maturity</span>
+      </div>
+
+      <div onclick="setFilter('approaching')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #2C2C2C;">Approaching</span>
+          <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>
+        </div>
+        <span id="kpiApproaching" class="font-serif-title text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
+        <span class="text-[11px] mt-0.5" style="color: #746F69;">early window / decant</span>
+      </div>
+
+      <div onclick="setFilter('urgent')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md" style="border-left: 3px solid #B33A3A !important;">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #B33A3A;">Drink Soon</span>
+          <span class="text-xs" style="color: #B33A3A;">⚠️</span>
+        </div>
+        <span id="kpiUrgent" class="font-serif-title text-2xl font-bold mt-1" style="color: #B33A3A;">--</span>
+        <span class="text-[11px] mt-0.5" style="color: #746F69;">late peak / fading</span>
+      </div>
+
+      <div onclick="setFilter('hold')" class="cursor-pointer surface-parchment border rounded-xl p-3.5 flex flex-col transition-all hover:shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase tracking-wider font-bold" style="color: #746F69;">Cellar Hold</span>
+          <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+        </div>
+        <span id="kpiHold" class="font-serif-title text-2xl font-bold mt-1" style="color: #2C2C2C;">--</span>
+        <span class="text-[11px] mt-0.5" style="color: #746F69;">keep aging (too young)</span>
       </div>
     </section>
 
-    <!-- Sommelier Alert Banner (if urgent bottles exist) -->
-    <div id="urgentAlertBox" class="hidden bg-amber-950/30 border border-amber-800/60 rounded-xl p-4 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">⏳</span>
-        <div>
-          <h2 class="text-sm font-semibold text-amber-200">Drinking Priority Alert</h2>
-          <p id="urgentAlertText" class="text-xs text-amber-300/80 mt-0.5">Bottles are entering their final maturity window.</p>
+    <!-- ==========================================================================
+         AI BRANDING & UI ELEMENTS: AI INSIGHT CARDS + SMART STORAGE + SERVING GUIDE
+         ========================================================================== -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+      <!-- 1. AI "Insight Card": Peak Maturity & Sommelier Recommendation -->
+      <div class="ai-insight-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <!-- Small Golden Spark Icon next to title "AI Insight" -->
+              <svg class="w-4 h-4 ai-spark-pulse shrink-0" viewBox="0 0 24 24" fill="#CCA43B" stroke="#6A0F23" stroke-width="1">
+                <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/>
+              </svg>
+              <span class="font-serif-title text-sm font-bold tracking-wide" style="color: #2C2C2C;">AI Insight</span>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background-color: rgba(204, 164, 59, 0.22); color: #6A0F23;">Peak Maturity</span>
+          </div>
+
+          <h3 id="aiInsightHeadline" class="font-serif-title text-base font-bold leading-snug" style="color: #6A0F23;">
+            "Open this 2018 Cabernet now for peak flavor"
+          </h3>
+
+          <p id="aiInsightBody" class="text-xs leading-relaxed" style="color: #2C2C2C;">
+            Tannin polymerization has reached harmonious equilibrium. Aeration for <span class="burgundy-highlight">1.5–2.0 hours</span> and serving at <span class="burgundy-highlight">60-65°F (Cellar Temp)</span> will revealtertiary cedar, cassis, and velvet structure.
+          </p>
+        </div>
+
+        <div class="flex items-center justify-between pt-2.5 border-t" style="border-color: #D3CBB8;">
+          <div class="text-[11px]" style="color: #746F69;">
+            Ideal Pairing: <span id="aiInsightPairing" class="burgundy-highlight">Prime Ribeye or Herb-Crusted Lamb</span>
+          </div>
+          <button onclick="openSommelierModal('open')" class="px-3 py-1 rounded-lg text-xs font-semibold btn-burgundy">
+            Ask Sommelier
+          </button>
         </div>
       </div>
-      <button onclick="setFilter('urgent')" class="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-black transition-colors">
+
+      <!-- 2. Serving Recommendations & AI Chilling Time Calculator -->
+      <div class="ai-insight-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
+        <div class="flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 ai-spark-pulse shrink-0" viewBox="0 0 24 24" fill="#CCA43B" stroke="#6A0F23" stroke-width="1">
+                <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/>
+              </svg>
+              <span class="font-serif-title text-sm font-bold tracking-wide" style="color: #2C2C2C;">Serving Recommendations</span>
+            </div>
+            <select id="chillTargetTimeSelect" onchange="updateChillingAlertUI()" class="text-[11px] font-semibold rounded-lg px-2 py-0.5 border outline-none" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #6A0F23;">
+              <option value="7:00 PM" selected>Serve by 7:00 PM</option>
+              <option value="6:30 PM">Serve by 6:30 PM</option>
+              <option value="7:30 PM">Serve by 7:30 PM</option>
+              <option value="8:00 PM">Serve by 8:00 PM</option>
+            </select>
+          </div>
+
+          <!-- Distinct Red (Cellar Icon) vs White (Fridge Icon) Serving Guidance -->
+          <div class="grid grid-cols-2 gap-2">
+            <!-- Red Wine: Cellar Icon -->
+            <div class="p-2.5 rounded-xl border flex items-start gap-2" style="background-color: #F4F0E6; border-color: #D3CBB8;">
+              <svg class="w-5 h-5 shrink-0 mt-0.5 vv-icon-burgundy" viewBox="0 0 24 24" aria-label="Cellar Icon">
+                <path d="M4 21V11a8 8 0 0 1 16 0v10"/><path d="M2 21h20"/><path d="M8 14h8"/><path d="M8 17.5h8"/><path d="M12 7v14"/>
+              </svg>
+              <div class="min-w-0">
+                <span class="text-[10px] font-bold uppercase tracking-wider block" style="color: #746F69;">Red Wines</span>
+                <span class="text-xs font-bold leading-tight block burgundy-highlight">Serve at 60-65°F (Cellar Temp)</span>
+              </div>
+            </div>
+
+            <!-- White Wine: Fridge Icon -->
+            <div class="p-2.5 rounded-xl border flex items-start gap-2" style="background-color: #F4F0E6; border-color: #D3CBB8;">
+              <svg class="w-5 h-5 shrink-0 mt-0.5 vv-icon" viewBox="0 0 24 24" aria-label="Fridge Icon">
+                <rect width="14" height="20" x="5" y="2" rx="2"/><path d="M5 10h14"/><path d="M9 6v2"/><path d="M9 14v3"/>
+              </svg>
+              <div class="min-w-0">
+                <span class="text-[10px] font-bold uppercase tracking-wider block" style="color: #746F69;">White &amp; Rosé</span>
+                <span class="text-xs font-bold leading-tight block burgundy-highlight">Chill to 45-50°F</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Chilling Alert Notification Box -->
+        <div class="p-2.5 rounded-xl border flex items-center gap-2.5" style="background-color: rgba(204, 164, 59, 0.16); border-color: #CCA43B;">
+          <span class="w-2 h-2 rounded-full ai-spark-pulse shrink-0" style="background-color: #CCA43B;"></span>
+          <p id="aiChillingAlertText" class="text-[11px] font-medium leading-snug" style="color: #2C2C2C;">
+            <strong class="burgundy-highlight">AI Alert:</strong> Pop your <span id="aiChillBottleLabel" class="burgundy-highlight">Chardonnay</span> in the fridge now to reach perfect serving temp (<span class="burgundy-highlight">45-50°F</span>) by <span id="aiChillTimeLabel" class="burgundy-highlight">7:00 PM</span>.
+          </p>
+        </div>
+      </div>
+
+      <!-- 3. Smart Storage Interface (Visual Bottle Slider between Too Cold / Ideal 55°F / Too Warm) -->
+      <div class="ai-insight-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 vv-icon-burgundy shrink-0" viewBox="0 0 24 24">
+                <path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/>
+              </svg>
+              <span class="font-serif-title text-sm font-bold tracking-wide" style="color: #2C2C2C;">Smart Storage Interface</span>
+            </div>
+            <span id="smartStorageTempBadge" class="text-xs font-bold font-mono px-2 py-0.5 rounded-full" style="background-color: #6A0F23; color: #F4F0E6;">55°F • Ideal</span>
+          </div>
+
+          <!-- Visual Zone Slider with Bottle Icon Marker -->
+          <div class="relative pt-2 pb-1">
+            <!-- Three Labeled Zones Track -->
+            <div class="grid grid-cols-3 h-8 rounded-xl overflow-hidden border text-[10px] font-bold" style="border-color: #D3CBB8;">
+              <div onclick="updateSmartStorageTemp(44)" class="cursor-pointer flex items-center justify-center px-1 text-center transition" style="background-color: #F4F0E6; color: #746F69;">
+                Too Cold
+              </div>
+              <div onclick="updateSmartStorageTemp(55)" class="cursor-pointer flex items-center justify-center px-1 text-center transition shadow-inner" style="background-color: #6A0F23; color: #F4F0E6; box-shadow: inset 0 0 12px rgba(204, 164, 59, 0.35);">
+                Ideal Cellar Temp (55°F)
+              </div>
+              <div onclick="updateSmartStorageTemp(66)" class="cursor-pointer flex items-center justify-center px-1 text-center transition" style="background-color: rgba(179, 58, 58, 0.14); color: #B33A3A;">
+                Too Warm
+              </div>
+            </div>
+
+            <!-- Interactive Range Input -->
+            <input type="range" id="smartStorageSlider" min="40" max="70" value="55" oninput="updateSmartStorageTemp(this.value)" class="storage-slider-input mt-2" aria-label="Cellar Temperature Slider">
+
+            <!-- Floating Bottle Icon Indicator -->
+            <div class="flex items-center justify-between text-[10px] mt-0.5" style="color: #746F69;">
+              <span>40°F (Over-chilled)</span>
+              <span id="smartStorageBottleIndicator" class="inline-flex items-center gap-1 font-bold burgundy-highlight">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#6A0F23"><path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/></svg>
+                <span>Bottle at 55°F</span>
+              </span>
+              <span>70°F (Heat Risk)</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="smartStorageStatusBox" class="p-2 rounded-xl border text-[11px] flex items-center justify-between" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;">
+          <span id="smartStorageAdviceText">✔ Optimal 55°F equilibrium for long-term tannin &amp; cork preservation.</span>
+          <button onclick="openStorageModal()" class="text-[11px] font-bold underline shrink-0 ml-2" style="color: #6A0F23;">Zones</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Spiced Brick (#B33A3A) Sommelier Priority / Warning Alert Banner -->
+    <div id="urgentAlertBox" class="hidden rounded-xl p-4 flex items-center justify-between gap-4 border" style="background-color: rgba(179, 58, 58, 0.10); border-color: #B33A3A;">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl" style="color: #B33A3A;">⚠️</span>
+        <div>
+          <h2 class="font-serif-title text-sm font-bold" style="color: #B33A3A;">Spiced Brick Priority Alert • Drink Soon</h2>
+          <p id="urgentAlertText" class="text-xs mt-0.5" style="color: #2C2C2C;">Bottles are entering their final maturity window.</p>
+        </div>
+      </div>
+      <button onclick="setFilter('urgent')" class="shrink-0 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors" style="background-color: #B33A3A; color: #F4F0E6;">
         Review Bottles
       </button>
     </div>
 
-    <!-- Filter & Search Controls -->
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-      <!-- Status Pills -->
+    <!-- Filter & Search Controls on Aged Parchment (#E8E3D3) -->
+    <div class="surface-parchment border rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+      <!-- Status Pills with Minimalist Icons (Fill with Deep Burgundy when selected) -->
       <div class="flex items-center gap-1.5 flex-wrap w-full md:w-auto">
-        <button onclick="setFilter('all')" id="btnFilterAll" class="filter-pill active px-3 py-1.5 text-xs font-medium rounded-lg bg-rose-600 text-white transition-all">
-          All Bottles
+        <button onclick="setFilter('all')" id="btnFilterAll" class="filter-pill active btn-burgundy px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/></svg>
+          <span>All Bottles</span>
         </button>
-        <button onclick="setFilter('ready')" id="btnFilterReady" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-900/60 transition-all">
-          🍷 Ready to Drink (Peak)
+        <button onclick="setFilter('ready')" id="btnFilterReady" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg>
+          <span>Ready to Drink (Peak)</span>
         </button>
-        <button onclick="setFilter('approaching')" id="btnFilterApproaching" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-900/60 transition-all">
-          🌊 Approaching Peak
+        <button onclick="setFilter('approaching')" id="btnFilterApproaching" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/></svg>
+          <span>Approaching Peak</span>
         </button>
-        <button onclick="setFilter('aging')" id="btnFilterAging" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/60 transition-all">
-          ⏳ Needs to Age
+        <button onclick="setFilter('aging')" id="btnFilterAging" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+          <span>Needs to Age</span>
         </button>
-        <button onclick="setFilter('urgent')" id="btnFilterUrgent" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 transition-all">
-          Drink Soon ⚠️
+        <button onclick="setFilter('urgent')" id="btnFilterUrgent" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5" style="color: #B33A3A !important;">
+          <span>⚠️ Drink Soon</span>
         </button>
-        <button onclick="setFilter('archive')" id="btnFilterArchive" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all flex items-center gap-1.5" title="View depleted wines at zero bottles">
-          <span>📦</span> Archive (<span id="archiveFilterCount">0</span>)
+        <button onclick="setFilter('archive')" id="btnFilterArchive" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5" title="View depleted wines at zero bottles">
+          <span>📦 Archive (<span id="archiveFilterCount">0</span>)</span>
         </button>
         <span id="dynamicStorageFilterButtons" class="inline-flex items-center gap-2 flex-wrap">
-          <button onclick="setFilter('basement')" id="btnFilterBasement" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
-            🧊 Basement Fridge
+          <button onclick="setFilter('basement')" id="btnFilterBasement" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-medium rounded-lg transition-all">
+            Basement Fridge
           </button>
-          <button onclick="setFilter('upstairs')" id="btnFilterUpstairs" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
-            🧊 Upstairs Fridge
+          <button onclick="setFilter('upstairs')" id="btnFilterUpstairs" class="filter-pill btn-parchment px-3 py-1.5 text-xs font-medium rounded-lg transition-all">
+            Upstairs Fridge
           </button>
         </span>
       </div>
 
       <!-- Search & Wine Type Dropdown -->
       <div class="flex items-center gap-3 w-full md:w-auto">
-        <select id="typeSelect" onchange="applyFilters()" class="bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 px-3 py-2 outline-none focus:border-rose-500">
+        <select id="typeSelect" onchange="applyFilters()" class="rounded-lg text-xs px-3 py-2 border outline-none">
           <option value="all">All Styles</option>
           <option value="red">Reds</option>
           <option value="white">Whites</option>
@@ -327,46 +878,49 @@
           <option value="dessert">Dessert / Sweet</option>
         </select>
         <div class="relative flex-1 md:w-64">
-          <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search producer, varietal, rack..." class="w-full bg-slate-800 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 pl-8 pr-3 py-2 outline-none focus:border-rose-500">
-          <span class="absolute left-2.5 top-2.5 text-slate-500 text-xs">🔍</span>
+          <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Search producer, varietal, rack..." class="w-full rounded-lg text-xs pl-8 pr-3 py-2 border outline-none">
+          <span class="absolute left-2.5 top-2.5 text-xs" style="color: #746F69;">🔍</span>
         </div>
       </div>
     </div>
 
     <!-- Wine Bottles List & Timeline Visualizer -->
     <div class="flex flex-col gap-4">
-      <div class="flex items-center justify-between text-xs text-slate-400 px-1">
-        <span id="resultsCount">Showing 0 bottles</span>
+      <div class="flex items-center justify-between text-xs px-1 flex-wrap gap-2" style="color: #746F69;">
+        <span id="resultsCount" class="font-semibold" style="color: #2C2C2C;">Showing 0 bottles</span>
         <div class="flex items-center gap-4 text-[11px]">
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500/40"></span> Hold</span>
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-cyan-500/40"></span> Approaching</span>
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Prime Peak</span>
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span> Drink Soon</span>
-          <span class="flex items-center gap-1.5"><span class="w-1 h-3 bg-red-400"></span> 2026 Today</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #746F69; opacity: 0.45;"></span> Hold</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #CCA43B; opacity: 0.65;"></span> Approaching</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #6A0F23;"></span> Prime Peak</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background-color: #B33A3A;"></span> Drink Soon</span>
+          <span class="flex items-center gap-1.5"><span class="w-1 h-3" style="background-color: #CCA43B;"></span> 2026 Today</span>
         </div>
       </div>
 
-      <div id="bottleContainer" class="flex flex-col gap-3">
+      <div id="bottleContainer" class="flex flex-col gap-3.5">
         <!-- Rendered via JS -->
       </div>
     </div>
 
   </main>
 
-  <!-- Application Footer & Version Display -->
-  <footer class="border-t border-slate-800/80 bg-slate-950/70 py-6 px-6 mt-12 text-xs text-slate-400">
+  <!-- Application Footer & Brand Identity Display -->
+  <footer class="border-t py-7 px-6 mt-12 text-xs surface-parchment">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2.5 flex-wrap justify-center sm:justify-start">
-        <span class="text-base">🍷</span>
-        <span class="font-bold text-white tracking-wide">Sommelier Wine Cellar Agent</span>
-        <span class="text-slate-600 hidden sm:inline">•</span>
-        <span class="text-slate-400">Intelligent Drinking Window & Inventory Platform</span>
+      <div class="flex items-center gap-3 flex-wrap justify-center sm:justify-start">
+        <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg" style="background-color: #6A0F23; color: #CCA43B;">🍇</span>
+        <span class="text-sm">
+          <span class="brand-vinoveritas">VinoVeritas</span>
+          <span class="brand-ai-badge text-xs ml-0.5">AI</span>
+        </span>
+        <span class="hidden sm:inline" style="color: #746F69;">•</span>
+        <span class="italic" style="color: #746F69;">"Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI."</span>
       </div>
       <div class="flex items-center gap-3">
-        <span class="text-[11px] text-slate-500">Ref Year: 2026</span>
-        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-amber-300 font-mono text-xs font-semibold shadow-inner" title="Current Application Version">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="appVersionBadge">v2.3.0</span>
+        <span class="text-[11px]" style="color: #746F69;">Palette: Cellar &amp; Canvas • Ref Year: 2026</span>
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-xs font-semibold shadow-sm" style="background-color: #F4F0E6; border-color: #CCA43B; color: #6A0F23;" title="Current Application Version">
+          <span class="w-2 h-2 rounded-full ai-spark-pulse" style="background-color: #CCA43B;"></span>
+          <span id="appVersionBadge">v3.0.0</span>
         </div>
       </div>
     </div>
@@ -3199,13 +3753,102 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       if (fCount) fCount.textContent = archCount;
       const mBadge = document.getElementById('archiveModalCountBadge');
       if (mBadge) mBadge.textContent = `${archCount} wine${archCount === 1 ? '' : 's'}`;
+
+      updateAIInsightsAndServingUI();
+    }
+
+    function updateAIInsightsAndServingUI() {
+      const headlineEl = document.getElementById('aiInsightHeadline');
+      const bodyEl = document.getElementById('aiInsightBody');
+      const pairingEl = document.getElementById('aiInsightPairing');
+      if (headlineEl && bodyEl && pairingEl) {
+        const cabernetBottle = cellarBottles.find(b =>
+          ((b.varietal || '').toLowerCase().includes('cabernet') || (b.wine_name || '').toLowerCase().includes('cabernet')) &&
+          b.drinking_window && b.drinking_window.status.includes('Peak')
+        ) || cellarBottles.find(b => b.drinking_window && b.drinking_window.status.includes('Peak'));
+
+        if (cabernetBottle) {
+          const dw = cabernetBottle.drinking_window || {};
+          const v = cabernetBottle.vintage || 2018;
+          const labelName = (cabernetBottle.varietal || '').toLowerCase().includes('cabernet')
+            ? `${v} Cabernet (${cabernetBottle.producer})`
+            : `${v} ${cabernetBottle.producer} ${cabernetBottle.wine_name || cabernetBottle.varietal || ''}`.trim();
+          const isRed = (cabernetBottle.wine_type || 'Red').toLowerCase() === 'red';
+          const tempLabel = isRed ? '60-65°F (Cellar Temp)' : '45-50°F (Chilled)';
+          const decantLabel = dw.decant_hours && dw.decant_hours > 0 ? `${dw.decant_hours} hours` : '45 minutes';
+          headlineEl.textContent = `"Open this 2018 Cabernet now for peak flavor" • Featured: ${labelName}`;
+          bodyEl.innerHTML = `Tannin polymerization has reached harmonious equilibrium. Aeration for <span class="burgundy-highlight">${decantLabel}</span> and serving at <span class="burgundy-highlight">${tempLabel}</span> will reveal tertiary cedar, cassis, and velvet structure.`;
+          pairingEl.textContent = isRed ? 'Prime Ribeye or Herb-Crusted Lamb' : 'Pan-Seared Halibut or Lobster Risotto';
+        }
+      }
+      updateChillingAlertUI();
+    }
+
+    function updateChillingAlertUI() {
+      const selectEl = document.getElementById('chillTargetTimeSelect');
+      const alertTextEl = document.getElementById('aiChillingAlertText');
+      if (!alertTextEl) return;
+      const targetTime = selectEl ? selectEl.value : '7:00 PM';
+      const whiteBottle = cellarBottles.find(b =>
+        (b.varietal || '').toLowerCase().includes('chardonnay') ||
+        (b.wine_type || '').toLowerCase().includes('white')
+      );
+      const bottleName = whiteBottle
+        ? `Chardonnay (${whiteBottle.vintage || 'NV'} ${escapeHtml(whiteBottle.producer)})`
+        : 'Chardonnay';
+      alertTextEl.innerHTML = `<strong class="burgundy-highlight">AI Alert:</strong> Pop your <span class="burgundy-highlight">${bottleName}</span> in the fridge now to reach perfect serving temp (<span class="burgundy-highlight">45-50°F</span>) by <span class="burgundy-highlight">${escapeHtml(targetTime)}</span>.`;
+    }
+
+    function updateSmartStorageTemp(tempVal) {
+      const temp = parseInt(tempVal, 10) || 55;
+      const slider = document.getElementById('smartStorageSlider');
+      if (slider && parseInt(slider.value, 10) !== temp) {
+        slider.value = temp;
+      }
+      const badge = document.getElementById('smartStorageTempBadge');
+      const indicator = document.getElementById('smartStorageBottleIndicator');
+      const advice = document.getElementById('smartStorageAdviceText');
+      const statusBox = document.getElementById('smartStorageStatusBox');
+
+      if (indicator) {
+        indicator.innerHTML = `
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="${temp > 59 ? '#B33A3A' : '#6A0F23'}"><path d="M10 2h4v4.5l2.5 3.5v10a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V10L10 6.5V2z"/></svg>
+          <span style="color: ${temp > 59 ? '#B33A3A' : '#6A0F23'};">Bottle at ${temp}°F</span>
+        `;
+      }
+
+      if (temp < 50) {
+        if (badge) {
+          badge.textContent = `${temp}°F • Too Cold`;
+          badge.style.backgroundColor = '#746F69';
+          badge.style.color = '#F4F0E6';
+        }
+        if (advice) advice.textContent = `❄️ ${temp}°F is in the "Too Cold" zone — mutes aromatics and slows bouquet evolution.`;
+        if (statusBox) statusBox.style.borderColor = '#746F69';
+      } else if (temp <= 59) {
+        if (badge) {
+          badge.textContent = `${temp}°F • Ideal`;
+          badge.style.backgroundColor = '#6A0F23';
+          badge.style.color = '#F4F0E6';
+        }
+        if (advice) advice.textContent = `✔ Ideal Cellar Temp (${temp}°F) — optimal equilibrium for long-term tannin & cork preservation.`;
+        if (statusBox) statusBox.style.borderColor = '#6A0F23';
+      } else {
+        if (badge) {
+          badge.textContent = `${temp}°F • Too Warm`;
+          badge.style.backgroundColor = '#B33A3A';
+          badge.style.color = '#F4F0E6';
+        }
+        if (advice) advice.textContent = `⚠️ Spiced Brick Alert: ${temp}°F is "Too Warm" — accelerates oxidation and premature aging.`;
+        if (statusBox) statusBox.style.borderColor = '#B33A3A';
+      }
     }
 
     function setFilter(filter) {
       currentFilter = filter;
       document.querySelectorAll('.filter-pill').forEach(btn => {
-        btn.classList.remove('bg-rose-600', 'text-white');
-        btn.classList.add('bg-slate-800', 'text-slate-300');
+        btn.classList.remove('active', 'btn-burgundy', 'bg-rose-600', 'text-white');
+        btn.classList.add('btn-parchment');
       });
 
       const map = {
@@ -3224,8 +3867,8 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       };
       const activeBtn = document.getElementById(map[filter]);
       if (activeBtn) {
-        activeBtn.classList.remove('bg-slate-800', 'text-slate-300');
-        activeBtn.classList.add('bg-rose-600', 'text-white');
+        activeBtn.classList.remove('btn-parchment');
+        activeBtn.classList.add('active', 'btn-burgundy');
       }
       applyFilters();
       if (typeof updateStorageUI === 'function') updateStorageUI();
@@ -3289,26 +3932,45 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       setFilter('all');
     }
 
+    function getServingRecommendationHtml(b, dw) {
+      const wType = (b.wine_type || 'Red').toLowerCase();
+      const exactTemp = dw && dw.serving_temp_f ? `${dw.serving_temp_f}°F` : (wType.includes('red') ? '62°F' : '48°F');
+      if (wType.includes('white') || wType.includes('sparkling') || wType.includes('champagne') || wType.includes('ros') || wType.includes('dessert')) {
+        return `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg border font-medium" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="White & Sparkling Serving Recommendation">
+            <svg class="w-3.5 h-3.5 vv-icon shrink-0" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M5 10h14"/><path d="M9 6v2"/><path d="M9 14v3"/></svg>
+            <span>Chill to <strong class="burgundy-highlight">45-50°F</strong> (${exactTemp})</span>
+          </span>
+        `;
+      }
+      return `
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg border font-medium" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Red Wine Cellar Serving Recommendation">
+          <svg class="w-3.5 h-3.5 vv-icon-burgundy shrink-0" viewBox="0 0 24 24"><path d="M4 21V11a8 8 0 0 1 16 0v10"/><path d="M2 21h20"/><path d="M8 14h8"/><path d="M12 7v14"/></svg>
+          <span>Serve at <strong class="burgundy-highlight">60-65°F (Cellar Temp)</strong> (${exactTemp})</span>
+        </span>
+      `;
+    }
+
     function renderBottleList(bottles, isArchive = false) {
       const container = document.getElementById('bottleContainer');
       if (bottles.length === 0) {
         if (isArchive) {
           container.innerHTML = `
-            <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-3">
+            <div class="surface-parchment border rounded-2xl p-8 text-center text-xs flex flex-col items-center justify-center gap-3">
               <span class="text-3xl">📦</span>
-              <p class="font-medium text-slate-300">No wines currently in your archive.</p>
-              <p class="text-[11px] text-slate-500 max-w-sm">When a wine reaches 0 bottles (opened or gifted), it is automatically moved to the archive so your active cellar stays clean.</p>
-              <button onclick="setFilter('all')" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition shadow-md shadow-rose-950/40 flex items-center gap-1.5">
+              <p class="font-serif-title text-sm font-bold" style="color: #2C2C2C;">No wines currently in your archive.</p>
+              <p class="text-[11px] max-w-sm" style="color: #746F69;">When a wine reaches 0 bottles (opened or gifted), it is automatically moved to the archive so your active cellar stays clean.</p>
+              <button onclick="setFilter('all')" class="px-3.5 py-1.5 rounded-lg btn-burgundy font-semibold text-xs transition shadow-sm flex items-center gap-1.5">
                 <span>🍷</span> View Active Cellar
               </button>
             </div>
           `;
         } else {
           container.innerHTML = `
-            <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-3">
+            <div class="surface-parchment border rounded-2xl p-8 text-center text-xs flex flex-col items-center justify-center gap-3">
               <span class="text-3xl">🍷</span>
-              <p class="font-medium text-slate-300">No wines matching the current filter criteria.</p>
-              <button onclick="resetAllFilters()" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition shadow-md shadow-rose-950/40 flex items-center gap-1.5">
+              <p class="font-serif-title text-sm font-bold" style="color: #2C2C2C;">No wines matching the current filter criteria.</p>
+              <button onclick="resetAllFilters()" class="px-3.5 py-1.5 rounded-lg btn-burgundy font-semibold text-xs transition shadow-sm flex items-center gap-1.5">
                 <span>🔄</span> Reset All Filters
               </button>
             </div>
@@ -3321,7 +3983,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const dw = b.drinking_window;
         const vintage = b.vintage || 'NV';
         const statusBadge = isArchive
-          ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800/80 flex items-center gap-1 shadow-sm"><span>📦</span> Archived</span>'
+          ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm" style="background-color: rgba(204, 164, 59, 0.2); color: #6A0F23; border: 1px solid #CCA43B;"><span>📦</span> Archived</span>'
           : getStatusBadgeHtml(dw ? dw.status : '');
 
         // Calculate timeline bar metrics (based on span from 2000 to 2045)
@@ -3351,17 +4013,17 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const actionsHtml = isArchive ? `
           <div class="flex items-center gap-3 self-end md:self-auto">
             <div class="text-right">
-              <span class="text-xs text-slate-400">Inventory:</span>
-              <span class="text-xs font-bold text-amber-400 bg-amber-950/70 px-2 py-0.5 rounded border border-amber-800/80 block">0 btl</span>
+              <span class="text-xs" style="color: #746F69;">Inventory:</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded border block" style="background-color: #F4F0E6; color: #6A0F23; border-color: #D3CBB8;">0 btl</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button onclick="promptRestockBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1 shadow-md shadow-emerald-950/40" title="Restock / add bottles back to active cellar">
+              <button onclick="promptRestockBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg btn-burgundy transition flex items-center gap-1 shadow-sm" title="Restock / add bottles back to active cellar">
                 <span>➕</span> Restock
               </button>
-              <button onclick="openHistoryModal()" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="View tasting notes and history">
+              <button onclick="openHistoryModal()" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg btn-parchment transition" style="background-color: #F4F0E6;" title="View tasting notes and history">
                 <span>📖</span> Log
               </button>
-              <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}', true)" class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-red-900/60 hover:text-red-200 text-slate-400 border border-slate-700 transition" title="Permanently delete from archive">
+              <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}', true)" class="px-2 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #B33A3A;" title="Permanently delete from archive">
                 🗑
               </button>
             </div>
@@ -3369,21 +4031,21 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         ` : `
           <div class="flex items-center gap-3 self-end md:self-auto">
             <div class="text-right">
-              <span class="text-xs text-slate-400">Qty:</span>
-              <span class="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded border border-slate-700">${b.quantity} btl</span>
-              ${b.purchase_price ? `<span class="text-[11px] text-emerald-400 block">$${b.purchase_price}/ea</span>` : ''}
+              <span class="text-xs" style="color: #746F69;">Qty:</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded border" style="background-color: #F4F0E6; color: #2C2C2C; border-color: #D3CBB8;">${b.quantity} btl</span>
+              ${b.purchase_price ? `<span class="text-[11px] font-bold block" style="color: #6A0F23;">$${b.purchase_price}/ea</span>` : ''}
             </div>
             <div class="flex items-center gap-1.5">
-              <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-rose-900/60 hover:text-rose-200 border border-slate-700 transition" title="Mark as consumed / Open bottle">
+              <button onclick="openConsumeModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg btn-burgundy transition shadow-sm" title="Mark as consumed / Open bottle">
                 🥂 Open
               </button>
-              <button onclick="openMoveModal(${b.id})" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-indigo-900/60 hover:text-indigo-200 text-slate-300 border border-slate-700 transition" title="Move bottle to another fridge or storage rack">
+              <button onclick="openMoveModal(${b.id})" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Move bottle to another fridge or storage rack">
                 📍 Move
               </button>
-              <button onclick="openGiftModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-amber-900/60 hover:text-amber-200 text-slate-300 border border-slate-700 transition" title="Gift bottle (remove from cellar without opening)">
+              <button onclick="openGiftModal(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Gift bottle (remove from cellar without opening)">
                 🎁 Gift
               </button>
-              <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-red-900/60 hover:text-red-200 text-slate-400 border border-slate-700 transition" title="Remove / Delete from cellar">
+              <button onclick="deleteBottle(${b.id}, '${escapeHtml(b.producer)} ${escapeHtml(b.wine_name || '')}')" class="px-2 py-1.5 text-xs font-semibold rounded-lg border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #B33A3A;" title="Remove / Delete from cellar">
                 🗑
               </button>
             </div>
@@ -3391,21 +4053,23 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         `;
 
         return `
-          <div class="bg-slate-900 border ${isArchive ? 'border-amber-900/40 bg-slate-900/90' : 'border-slate-800 hover:border-slate-700'} rounded-xl p-4 transition-all flex flex-col gap-3">
+          <div class="surface-parchment border rounded-2xl p-4 sm:p-5 transition-all flex flex-col gap-3.5 shadow-sm hover:shadow-md">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
               <div class="flex items-start gap-3">
-                <span class="text-xl mt-0.5">${getWineIcon(b.wine_type)}</span>
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border" style="background-color: #F4F0E6; border-color: #D3CBB8;">
+                  ${getWineIcon(b.wine_type)}
+                </div>
                 <div>
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-sm font-bold text-white">${vintage} ${escapeHtml(b.producer)}</h3>
-                    ${b.wine_name ? `<span class="text-xs text-rose-300 font-medium">${escapeHtml(b.wine_name)}</span>` : ''}
+                    <h3 class="font-serif-title text-base font-bold" style="color: #2C2C2C;">${vintage} ${escapeHtml(b.producer)}</h3>
+                    ${b.wine_name ? `<span class="font-serif-title text-sm font-bold" style="color: #6A0F23;">${escapeHtml(b.wine_name)}</span>` : ''}
                     ${statusBadge}
-                    ${b.user_rating ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/60 flex items-center gap-1 shadow-sm" title="Your Rating"><span>★</span> ${b.user_rating}/5</span>` : ''}
+                    ${b.user_rating ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1 shadow-sm" style="background-color: rgba(204, 164, 59, 0.25); color: #6A0F23; border: 1px solid #CCA43B;" title="Your Rating"><span style="color: #CCA43B;">★</span> ${b.user_rating}/5</span>` : ''}
                     ${getCriticBadgesHtml(b)}
                   </div>
-                  <p class="text-xs text-slate-400 mt-0.5">
+                  <p class="text-xs mt-0.5" style="color: #746F69;">
                     ${escapeHtml(b.region)} ${b.sub_region ? '• ' + escapeHtml(b.sub_region) : ''} |
-                    <span class="text-slate-300 font-medium">${escapeHtml(b.varietal)}</span>
+                    <span class="font-semibold" style="color: #2C2C2C;">${escapeHtml(b.varietal)}</span>
                   </p>
                 </div>
               </div>
@@ -3413,52 +4077,54 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
               ${actionsHtml}
             </div>
 
-            <!-- Drinking Window Timeline Visualizer -->
-            <div class="bg-slate-950/70 border border-slate-800/60 rounded-lg p-3 flex flex-col gap-2">
-              <div class="flex items-center justify-between text-[11px] text-slate-400">
-                <span>Aging Curve: <strong class="text-slate-300">${dw ? dw.aging_tier : 'Standard'}</strong></span>
-                <span class="font-mono text-emerald-300 font-semibold">Peak Window: ${dw ? dw.peak_start : '?'}-${dw ? dw.peak_end : '?'}</span>
+            <!-- Drinking Window Timeline Visualizer on Linen White (#F4F0E6) -->
+            <div class="rounded-xl p-3 flex flex-col gap-2 border" style="background-color: #F4F0E6; border-color: #D3CBB8;">
+              <div class="flex items-center justify-between text-[11px]" style="color: #746F69;">
+                <span>Aging Curve: <strong style="color: #2C2C2C;">${dw ? dw.aging_tier : 'Standard'}</strong></span>
+                <span class="font-mono font-bold" style="color: #6A0F23;">Peak Window: ${dw ? dw.peak_start : '?'}-${dw ? dw.peak_end : '?'}</span>
               </div>
 
               <!-- Visual Bar -->
-              <div class="relative h-4 bg-slate-900 rounded-full overflow-visible border border-slate-800 my-1">
-                <!-- Approach phase -->
-                <div class="absolute top-0 bottom-0 bg-cyan-900/40 rounded-l-full" style="left: ${startPct}%; width: ${approachWidth}%" title="Approaching Window (${dw ? dw.window_start : ''} - ${dw ? dw.peak_start : ''})"></div>
-                <!-- Prime Peak Window (Highlighted) -->
-                <div class="absolute top-0 bottom-0 bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-sm shadow-emerald-500/50" style="left: ${peakStartPct}%; width: ${peakWidth}%" title="Prime Maturity (${dw ? dw.peak_start : ''} - ${dw ? dw.peak_end : ''})"></div>
-                <!-- Late Peak phase -->
-                <div class="absolute top-0 bottom-0 bg-amber-600/60 rounded-r-full" style="left: ${peakEndPct}%; width: ${lateWidth}%" title="Late Peak (${dw ? dw.peak_end : ''} - ${dw ? dw.window_end : ''})"></div>
+              <div class="relative h-3.5 rounded-full overflow-visible border my-1" style="background-color: #E8E3D3; border-color: #D3CBB8;">
+                <!-- Approach phase (Burnished Gold tint) -->
+                <div class="absolute top-0 bottom-0 rounded-l-full" style="left: ${startPct}%; width: ${approachWidth}%; background-color: rgba(204, 164, 59, 0.55);" title="Approaching Window (${dw ? dw.window_start : ''} - ${dw ? dw.peak_start : ''})"></div>
+                <!-- Prime Peak Window (Deep Burgundy #6A0F23) -->
+                <div class="absolute top-0 bottom-0 shadow-sm" style="left: ${peakStartPct}%; width: ${peakWidth}%; background-color: #6A0F23;" title="Prime Maturity (${dw ? dw.peak_start : ''} - ${dw ? dw.peak_end : ''})"></div>
+                <!-- Late Peak phase (Spiced Brick #B33A3A) -->
+                <div class="absolute top-0 bottom-0 rounded-r-full" style="left: ${peakEndPct}%; width: ${lateWidth}%; background-color: rgba(179, 58, 58, 0.75);" title="Late Peak (${dw ? dw.peak_end : ''} - ${dw ? dw.window_end : ''})"></div>
 
-                <!-- 2026 Today marker pin -->
-                <div class="absolute top-[-4px] bottom-[-4px] w-1 bg-red-400 shadow-md shadow-red-500 z-10 rounded-full" style="left: ${todayPct}%" title="Current Year: 2026">
-                  <span class="absolute -top-4 -left-3 text-[9px] font-bold text-red-400">NOW</span>
+                <!-- 2026 Today marker pin (Burnished Gold #CCA43B) -->
+                <div class="absolute top-[-4px] bottom-[-4px] w-1.5 z-10 rounded-full" style="left: ${todayPct}%; background-color: #CCA43B; box-shadow: 0 0 8px #CCA43B;" title="Current Year: 2026">
+                  <span class="absolute -top-4 -left-3 text-[9px] font-bold" style="color: #6A0F23;">NOW</span>
                 </div>
               </div>
 
               <!-- Timeline labels -->
-              <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+              <div class="flex items-center justify-between text-[10px] font-mono" style="color: #746F69;">
                 <span>${timelineMin} (Vintage)</span>
-                <span class="text-emerald-400 font-bold">${dw ? dw.peak_start : ''} Peak</span>
+                <span class="font-bold" style="color: #6A0F23;">${dw ? dw.peak_start : ''} Peak</span>
                 <span>${timelineMax}+</span>
               </div>
             </div>
 
-            <!-- Sommelier Service Notes & Location -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-t border-slate-800/80 pt-2.5 text-slate-400">
-              <div class="flex items-center gap-3 flex-wrap">
-                <button type="button" onclick="openMoveModal(${b.id})" class="flex items-center gap-1 text-slate-300 hover:text-indigo-300 bg-slate-800/60 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-700/60 transition cursor-pointer" title="Click to move storage location">
-                  <span>📍</span> ${b.location_rack || 'Cellar'} <span class="text-[10px] text-indigo-400">✎ Move</span>
+            <!-- Sommelier Service Notes, Serving Recommendations & AI Insight -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-t pt-2.5" style="border-color: #D3CBB8; color: #746F69;">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <button type="button" onclick="openMoveModal(${b.id})" class="flex items-center gap-1 px-2.5 py-0.5 rounded-lg border transition cursor-pointer font-medium" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;" title="Click to move storage location">
+                  <span>📍</span> ${b.location_rack || 'Cellar'} <span class="text-[10px] font-bold" style="color: #6A0F23;">✎ Move</span>
                 </button>
-                <span class="flex items-center gap-1 text-slate-300">
-                  <span>⏱️</span> Decant: ${dw && dw.decant_hours > 0 ? dw.decant_hours + 'h' : 'Pop & Pour'}
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg border font-medium" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #2C2C2C;">
+                  <span>⏱️</span> Decant: <strong class="burgundy-highlight">${dw && dw.decant_hours > 0 ? dw.decant_hours + 'h' : 'Pop & Pour'}</strong>
                 </span>
-                <span class="flex items-center gap-1 text-slate-300">
-                  <span>🌡️</span> Serve: ${dw ? dw.serving_temp_f + '°F' : '60°F'}
-                </span>
+                ${getServingRecommendationHtml(b, dw)}
               </div>
 
-              <div class="text-[11px] text-slate-400 italic max-w-lg truncate" title="${escapeHtml(dw ? dw.rationale : '')}">
-                "${escapeHtml(dw ? dw.rationale : '')}"
+              <div class="flex items-center gap-1.5 text-[11px] max-w-lg truncate" style="color: #2C2C2C;" title="${escapeHtml(dw ? dw.rationale : '')}">
+                <svg class="w-3.5 h-3.5 shrink-0 ai-spark-pulse" viewBox="0 0 24 24" fill="#CCA43B" stroke="#6A0F23" stroke-width="1.2">
+                  <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
+                </svg>
+                <span class="font-bold" style="color: #6A0F23;">AI Insight:</span>
+                <span class="italic truncate" style="color: #746F69;">"${escapeHtml(dw ? dw.rationale : '')}"</span>
               </div>
             </div>
           </div>
@@ -3468,15 +4134,15 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
     function getStatusBadgeHtml(status) {
       if (status.includes("Peak Window")) {
-        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">In Peak Window 🍷</span>`;
+        return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: #6A0F23; color: #F4F0E6; border: 1px solid #6A0F23;">In Peak Window 🍷</span>`;
       } else if (status.includes("Approaching")) {
-        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800">Approaching Peak</span>`;
+        return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: rgba(204, 164, 59, 0.25); color: #2C2C2C; border: 1px solid #CCA43B;">Approaching Peak ✦</span>`;
       } else if (status.includes("Drink Soon")) {
-        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-950 text-amber-300 border border-amber-800">Drink Soon ⚠️</span>`;
+        return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: rgba(179, 58, 58, 0.16); color: #B33A3A; border: 1px solid #B33A3A;">Drink Soon ⚠️</span>`;
       } else if (status.includes("Past Peak")) {
-        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-950 text-red-300 border border-red-800">Past Peak 🚨</span>`;
+        return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: #B33A3A; color: #F4F0E6; border: 1px solid #B33A3A;">Past Peak 🚨</span>`;
       } else {
-        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">Cellar Hold ⏳</span>`;
+        return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background-color: #F4F0E6; color: #746F69; border: 1px solid #D3CBB8;">Cellar Hold ⏳</span>`;
       }
     }
 
@@ -3500,19 +4166,11 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const badges = reviews.map(r => {
           const code = r.code || r.source.slice(0, 2).toUpperCase();
           const score = r.score;
-          let colorClasses = "bg-amber-950/70 text-amber-300 border-amber-700/60";
-          if (code === "JS") colorClasses = "bg-emerald-950/80 text-emerald-300 border-emerald-600/70 shadow-sm shadow-emerald-900/40";
-          else if (code === "WA" || code === "RP") colorClasses = "bg-rose-950/80 text-rose-300 border-rose-600/70";
-          else if (code === "JD") colorClasses = "bg-purple-950/80 text-purple-300 border-purple-600/70";
-          else if (code === "VN") colorClasses = "bg-teal-950/80 text-teal-300 border-teal-600/70";
-          else if (code === "WS") colorClasses = "bg-blue-950/80 text-blue-300 border-blue-600/70";
-          else if (code === "WE") colorClasses = "bg-indigo-950/80 text-indigo-300 border-indigo-600/70";
-
           const sourceUrl = getCriticSourceUrl(r, b);
           const tooltip = escapeHtml(`${r.source}: ${score} pts${r.reviewer ? ' (' + r.reviewer + ')' : ''}${r.review ? ' — "' + r.review + '"' : ''} • Click to open source document`);
           return `
-            <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorClasses} flex items-center gap-1 hover:brightness-125 hover:underline transition cursor-pointer shadow-sm group" title="${tooltip}">
-              <span>🏆</span> ${code} <strong class="text-white">${score}</strong> <span class="text-[9px] opacity-70 group-hover:opacity-100 font-normal">↗</span>
+            <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 hover:brightness-95 hover:underline transition cursor-pointer shadow-sm group" style="background-color: rgba(204, 164, 59, 0.22); border-color: #CCA43B; color: #2C2C2C;" title="${tooltip}">
+              <span style="color: #CCA43B;">🏆</span> ${code} <strong style="color: #6A0F23;">${score}</strong> <span class="text-[9px] opacity-70 group-hover:opacity-100 font-normal">↗</span>
             </a>
           `;
         }).join('');
@@ -3520,7 +4178,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         return `
           <div class="flex items-center gap-1 flex-wrap">
             ${badges}
-            <button type="button" onclick="openCriticModal(${b.id})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition" title="View all reviewer tasting notes & quotes">
+            <button type="button" onclick="openCriticModal(${b.id})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #6A0F23;" title="View all reviewer tasting notes & quotes">
               📝 Notes (${reviews.length})
             </button>
           </div>
@@ -3529,10 +4187,10 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const sourceUrl = getCriticSourceUrl(null, b);
         return `
           <div class="flex items-center gap-1">
-            <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-950/60 text-amber-300 border-amber-700/50 flex items-center gap-1 hover:brightness-125 hover:underline transition cursor-pointer shadow-sm group" title="Consensus Critic Score • Click to open source document">
-              <span>🏆</span> Score <strong class="text-white">${b.critic_score}</strong> <span class="text-[9px] opacity-70 group-hover:opacity-100 font-normal">↗</span>
+            <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 hover:brightness-95 hover:underline transition cursor-pointer shadow-sm group" style="background-color: rgba(204, 164, 59, 0.22); border-color: #CCA43B; color: #2C2C2C;" title="Consensus Critic Score • Click to open source document">
+              <span style="color: #CCA43B;">🏆</span> Score <strong style="color: #6A0F23;">${b.critic_score}</strong> <span class="text-[9px] opacity-70 group-hover:opacity-100 font-normal">↗</span>
             </a>
-            <button type="button" onclick="openCriticModal(${b.id})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition" title="View or add critic scores">
+            <button type="button" onclick="openCriticModal(${b.id})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold border transition" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #6A0F23;" title="View or add critic scores">
               📝 Details
             </button>
           </div>
@@ -3685,11 +4343,21 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
     function getWineIcon(type) {
       const t = (type || '').toLowerCase();
-      if (t.includes('sparkling') || t.includes('champagne')) return '🍾';
-      if (t.includes('white')) return '🥂';
-      if (t.includes('dessert')) return '🍯';
-      if (t.includes('rose') || t.includes('rosé')) return '🌸';
-      return '🍷';
+      // Minimalist Line Art SVG Icons in Charcoal (#2C2C2C) with Deep Burgundy (#6A0F23) / Burnished Gold (#CCA43B) accents
+      if (t.includes('sparkling') || t.includes('champagne')) {
+        return `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#2C2C2C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M9 2h6l1 7a4 4 0 0 1-8 0l1-7Z"/><circle cx="11" cy="6" r="0.8" fill="#CCA43B" stroke="none"/><circle cx="13" cy="4.5" r="0.8" fill="#CCA43B" stroke="none"/></svg>`;
+      }
+      if (t.includes('white')) {
+        return `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#2C2C2C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/><path d="M7.5 8.5h9" stroke="#CCA43B"/></svg>`;
+      }
+      if (t.includes('dessert')) {
+        return `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#2C2C2C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4v4.5l2 3.5v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10l2-3.5V2z"/><path d="M8 14h8" stroke="#CCA43B"/></svg>`;
+      }
+      if (t.includes('rose') || t.includes('rosé')) {
+        return `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#2C2C2C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" stroke="#6A0F23"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
+      }
+      // Red Wine: Stemmed Glass with Deep Burgundy wine level
+      return `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#2C2C2C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/><path d="M7.3 9h9.4a4.8 4.8 0 0 1-9.4 0Z" fill="#6A0F23" stroke="none"/></svg>`;
     }
 
     function escapeHtml(str) {
@@ -4114,8 +4782,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
             (currentFilter === 'basement' && zone.toLowerCase().includes('basement')) ||
             (currentFilter === 'upstairs' && zone.toLowerCase().includes('upstairs'));
           return `
-            <button onclick="setStorageFilter('${escapeHtml(zone)}')" class="filter-pill px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${isFilterActive ? 'bg-rose-600 text-white font-semibold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}">
-              🧊 ${escapeHtml(zone)}
+            <button onclick="setStorageFilter('${escapeHtml(zone)}')" class="filter-pill px-3 py-1.5 text-xs font-semibold rounded-lg transition-all inline-flex items-center gap-1.5 ${isFilterActive ? 'active btn-burgundy' : 'btn-parchment'}">
+              <svg class="w-3.5 h-3.5 vv-icon" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M5 10h14"/></svg>
+              <span>${escapeHtml(zone)}</span>
             </button>
           `;
         }).join('');
@@ -4139,7 +4808,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         scanFridgeCont.innerHTML = storageZones.map(z => {
           const isSelected = scanCurrentTargetFridge === z;
           return `
-            <button type="button" onclick="setScanFridge('${escapeHtml(z)}')" class="p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all ${isSelected ? 'bg-rose-950/40 border-rose-600 text-rose-200' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'}">
+            <button type="button" onclick="setScanFridge('${escapeHtml(z)}')" class="p-2.5 rounded-lg border text-xs font-bold flex flex-col items-center gap-1 transition-all ${isSelected ? 'btn-burgundy' : 'btn-parchment'}">
               <span class="text-base">🧊</span>
               <span class="truncate max-w-full">${escapeHtml(z)}</span>
             </button>
@@ -4155,8 +4824,8 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       } else {
         currentFilter = filterKey;
         document.querySelectorAll('.filter-pill').forEach(btn => {
-          btn.classList.remove('bg-rose-600', 'text-white');
-          btn.classList.add('bg-slate-800', 'text-slate-300');
+          btn.classList.remove('active', 'btn-burgundy', 'bg-rose-600', 'text-white');
+          btn.classList.add('btn-parchment');
         });
         applyFilters();
         updateStorageUI();

@@ -1,6 +1,26 @@
-# 🍷 Sommelier Wine Cellar Agent & Drinking Window Assistant
+# 🍇 VinoVeritas AI — Sommelier & Cellar Intelligence
 
-An intelligent, master-sommelier-grade agent and cellar management platform built to organize your wine collection, track bin locations, and identify precise drinking windows for every bottle.
+> *"Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI."*
+
+**VinoVeritas AI** (*"In wine, there is truth"*) is an intelligent, master-sommelier-grade wine collection manager and AI sommelier platform built to organize your wine collection, track bin locations, and reveal the truth about every bottle—its perfect serving condition, peak maturity, and ideal pairing.
+
+## 🎨 Brand Identity & "Cellar & Canvas" Design System
+
+- **Brand Essence**: Sophisticated, Intelligent, Trustworthy, Elegant
+- **Logo Concept ("The Digital Grape")**: A stylized grape cluster on a vine stem formed by interconnected Deep Burgundy (`#6A0F23`) data nodes and circuit lines, with a central Burnished Gold (`#CCA43B`) AI intelligence node.
+- **Typography Pairing**:
+  - **Primary Font (Headlines & Titles)**: `Playfair Display` (high-contrast transitional serif)
+  - **Secondary Font (Body Text & UI)**: `Lato` & `Montserrat` (clean geometric sans-serif)
+- **Color Palette ("Cellar & Canvas")**:
+  | Role | Color Name | Hex Code | Usage |
+  |---|---|---|---|
+  | Primary Brand Color | **Deep Burgundy** | `#6A0F23` | Primary buttons, active navigation states, logo icon, key headlines, serving temperature highlights |
+  | Primary Background | **Linen White** | `#F4F0E6` | Main breathable canvas background |
+  | Secondary Background | **Aged Parchment** | `#E8E3D3` | Cards, sidebars, AI Insight cards, modal backgrounds |
+  | Accent Color | **Burnished Gold** | `#CCA43B` | AI spark/pulse effects, central AI logo node, awards, critic scores |
+  | Primary Text | **Charcoal** | `#2C2C2C` | Body text, titles, minimalist line-art icons |
+  | Secondary Text | **Taupe Gray** | `#746F69` | Subtitles, supporting metadata, timestamps |
+  | Error / Warning | **Spiced Brick** | `#B33A3A` | Temperature alerts, Drink Soon / Past Peak warnings |
 
 ---
 
