@@ -764,13 +764,13 @@ def run_server(port: int = 8000, db_path: Optional[str] = None):
     handler = WineRequestHandler
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", port), handler) as httpd:
-        print(f"\n🍇 VinoVeritas AI — Sommelier & Cellar Web UI running on port {port} (http://0.0.0.0:{port})")
+        print(f"\n🍇 Cellar AssIstant — Sommelier & Cellar Web UI running on port {port} (http://0.0.0.0:{port})")
         print('   "Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI."')
         print("Press Ctrl+C to terminate the server.\n")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
-            print("\nShutting down VinoVeritas AI server.")
+            print("\nShutting down Cellar AssIstant server.")
 
 
 if __name__ == "__main__":

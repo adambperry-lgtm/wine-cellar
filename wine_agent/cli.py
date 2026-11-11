@@ -555,7 +555,7 @@ def cmd_ask(agent: SommelierAgent, args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="VinoVeritas AI — Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI."
+        description="Cellar AssIstant — Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI."
     )
     parser.add_argument("--db", type=str, default=None, help="Custom path to SQLite database")
     subparsers = parser.add_subparsers(dest="command")

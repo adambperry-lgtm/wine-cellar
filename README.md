@@ -1,8 +1,8 @@
-# 🍇 VinoVeritas AI — Sommelier & Cellar Intelligence
+# 🍇 Cellar AssIstant — Sommelier & Cellar Intelligence
 
 > *"Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI."*
 
-**VinoVeritas AI** (*"In wine, there is truth"*) is an intelligent, master-sommelier-grade wine collection manager and AI sommelier platform built to organize your wine collection, track bin locations, and reveal the truth about every bottle—its perfect serving condition, peak maturity, and ideal pairing.
+**Cellar AssIstant** is an intelligent, master-sommelier-grade wine collection manager and AI sommelier platform built to organize your wine collection, track bin locations, and reveal the truth about every bottle—its perfect serving condition, peak maturity, and ideal pairing.
 
 ## 🎨 Brand Identity & "Cellar & Canvas" Design System
 
