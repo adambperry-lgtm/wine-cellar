@@ -109,14 +109,14 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
         # ==================== Health & Version Routes ====================
         if path == "/api/version":
             self._send_json({
-                "version": "2026.10.16.5",
-                "build": 1729122500,
+                "version": "2026.11.11.1",
+                "build": 1762881400,
                 "server_time": time.time()
             })
             return
 
         elif path == "/api/health":
-            self._send_json({"status": "healthy", "version": "2026.10.16.5", "timestamp": time.time()})
+            self._send_json({"status": "healthy", "version": "2026.11.11.1", "timestamp": time.time()})
             return
 
         # ==================== Auth Routes ====================

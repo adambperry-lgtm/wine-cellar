@@ -145,7 +145,7 @@ class TestWineDatabaseAndAgent(unittest.TestCase):
         self.assertEqual(bottle.wine_type, WineType.RED)
         self.assertIsNotNone(bottle.drinking_window)
         self.assertEqual(bottle.drinking_window.status, DrinkingStatus.TOO_YOUNG)
-        self.assertEqual(bottle.drinking_window.peak_start, 2032)
+        self.assertEqual(bottle.drinking_window.peak_start, 2028)
         self.assertEqual(bottle.drinking_window.peak_end, 2040)
 
     def test_label_scanner_hunnicutt_935_sku(self):
@@ -1334,8 +1334,99 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         self.assertEqual(hist_entry["rating"], 4.5)
         self.assertIn("Vermilion red", hist_entry["tasting_notes"])
 
+    def test_drinking_window_critic_and_notes_alignment(self):
+        # 1. 2024 Hunnicutt Zinfandel Luvisi Vineyard -> WS 92 (2026-2034) => In Peak Window in 2026
+        zin = WineBottle(
+            producer="Hunnicutt",
+            wine_name="Zinfandel Luvisi Vineyard",
+            vintage=2024,
+            varietal="Zinfandel",
+            region="California",
+            sub_region="Napa Valley / Calistoga",
+            wine_type=WineType.RED
+        )
+        zin_dw = calculate_drinking_window(zin, current_year=2026)
+        self.assertEqual(zin_dw.peak_start, 2026)
+        self.assertEqual(zin_dw.peak_end, 2034)
+        self.assertEqual(zin_dw.status, DrinkingStatus.PEAK)
+        self.assertIn("WS: 2026–2034", zin_dw.rationale)
+
+        # 2. 2024 Hunnicutt Cabernet Sauvignon -> JS 92 (2028-2040) => Hold (Too Young) in 2026
+        cab = WineBottle(
+            producer="Hunnicutt",
+            wine_name="Cabernet Sauvignon",
+            vintage=2024,
+            varietal="Cabernet Sauvignon",
+            region="California",
+            sub_region="Napa Valley",
+            wine_type=WineType.RED
+        )
+        cab_dw = calculate_drinking_window(cab, current_year=2026)
+        self.assertEqual(cab_dw.peak_start, 2028)
+        self.assertEqual(cab_dw.peak_end, 2040)
+        self.assertEqual(cab_dw.status, DrinkingStatus.TOO_YOUNG)
+
+        # 3. 2020 Domaine Armand Rousseau 1er Cru Clos Saint-Jacques -> 1er Cru tier + "Sleep until 2028-2040"
+        rousseau = WineBottle(
+            producer="Domaine Armand Rousseau",
+            wine_name="Gevrey-Chambertin 1er Cru Clos Saint-Jacques",
+            vintage=2020,
+            varietal="Pinot Noir",
+            region="Burgundy",
+            sub_region="Côte de Nuits",
+            wine_type=WineType.RED,
+            personal_notes="Grand Cru quality in all but name. Sleep until 2028-2040."
+        )
+        r_dw = calculate_drinking_window(rousseau, current_year=2026)
+        self.assertEqual(r_dw.aging_tier, "Burgundy 1er Cru Red (8-24 yrs)")
+        self.assertEqual(r_dw.peak_start, 2028)
+        self.assertEqual(r_dw.peak_end, 2040)
+        self.assertEqual(r_dw.status, DrinkingStatus.TOO_YOUNG)
+
+        # 4. 2004 La Rioja Alta Gran Reserva 904 -> Late Peak (Drink Soon) in 2026
+        rioja = WineBottle(
+            producer="La Rioja Alta",
+            wine_name="Gran Reserva 904",
+            vintage=2004,
+            varietal="Tempranillo, Graciano",
+            region="Rioja",
+            sub_region="Rioja Alta",
+            wine_type=WineType.RED,
+            personal_notes="In its glorious late maturity."
+        )
+        rioja_dw = calculate_drinking_window(rioja, current_year=2026)
+        self.assertEqual(rioja_dw.status, DrinkingStatus.LATE_PEAK)
+
+        # 5. 2016 Giacomo Conterno Barolo Francia -> "Do not open before 2030" => Hold (Too Young)
+        conterno = WineBottle(
+            producer="Giacomo Conterno",
+            wine_name="Barolo Francia",
+            vintage=2016,
+            varietal="Nebbiolo",
+            region="Piedmont",
+            sub_region="Serralunga d'Alba",
+            wine_type=WineType.RED,
+            personal_notes="Legendary 2016 vintage. Fierce Serralunga tannins, immense depth. Do not open before 2030."
+        )
+        c_dw = calculate_drinking_window(conterno, current_year=2026)
+        self.assertEqual(c_dw.peak_start, 2030)
+        self.assertEqual(c_dw.status, DrinkingStatus.TOO_YOUNG)
+
+    def test_cellar_db_drinking_windows_match_critics(self):
+        from wine_agent.drinking_window import _extract_critic_consensus_window
+        real_db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cellar.db")
+        if not os.path.exists(real_db_path):
+            return
+        real_db = WineDatabase(real_db_path)
+        bottles = real_db.list_bottles()
+        self.assertGreater(len(bottles), 0)
+        for b in bottles:
+            consensus = _extract_critic_consensus_window(b)
+            self.assertIsNotNone(consensus, f"Missing critic consensus for {b.vintage} {b.producer} {b.wine_name}")
+            c_start, c_end, _ = consensus
+            self.assertEqual(b.drinking_window.peak_start, c_start)
+            self.assertEqual(b.drinking_window.peak_end, c_end)
+
 
 if __name__ == "__main__":
     unittest.main()
-
-

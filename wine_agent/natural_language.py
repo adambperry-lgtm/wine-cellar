@@ -515,7 +515,8 @@ def parse_wine_label(label_text: str, default_fridge: str = "Basement Fridge") -
 
         has_noise = bool(re.search(r'[»«¢=);:“”~_^|\\]', l_clean))
         letters = re.findall(r'[a-zA-Z]', l_clean)
-        if l_clean and len(letters) >= 4 and not has_noise and l_clean.lower() != varietal.lower():
+        is_numeric_cuvee = bool(re.search(r'\b\d+-\d+-\d+\b', l_clean))
+        if l_clean and (len(letters) >= 4 or is_numeric_cuvee) and not has_noise and l_clean.lower() != varietal.lower():
             wine_name_candidates.append(l_clean)
 
     if is_stags_leap:

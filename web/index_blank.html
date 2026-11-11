@@ -3066,12 +3066,11 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm" style="background-color: rgba(204, 164, 59, 0.2); color: #6A0F23; border: 1px solid #CCA43B;"><span>📦</span> Archived</span>'
           : getStatusBadgeHtml(dw ? dw.status : '');
 
-        // Calculate timeline bar metrics (based on span from 2000 to 2045)
-        const timelineMin = Math.min(2010, (b.vintage || 2020) - 2);
-        const timelineMax = Math.max(2040, dw ? dw.window_end + 3 : 2035);
-        const totalSpan = timelineMax - timelineMin;
-
+        // Calculate timeline bar metrics anchored to the bottle's vintage
         const currentYear = 2026;
+        const timelineMin = b.vintage ? Math.min(b.vintage, currentYear - 1) : (currentYear - 4);
+        const timelineMax = Math.max(currentYear + 6, dw ? dw.window_end + 1 : 2035);
+        const totalSpan = Math.max(1, timelineMax - timelineMin);
         const todayPct = Math.max(0, Math.min(100, ((currentYear - timelineMin) / totalSpan) * 100));
 
         let startPct = 0;
@@ -3189,9 +3188,9 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
               <!-- Timeline labels -->
               <div class="flex items-center justify-between text-[10px] font-mono" style="color: #746F69;">
-                <span>${timelineMin} (Vintage)</span>
-                <span class="font-bold" style="color: #6A0F23;">${dw ? dw.peak_start : ''} Peak</span>
-                <span>${timelineMax}+</span>
+                <span>${b.vintage ? b.vintage + ' (Vintage)' : timelineMin}</span>
+                <span class="font-bold" style="color: #6A0F23;">${dw ? dw.peak_start + '–' + dw.peak_end : ''} Peak</span>
+                <span>${dw ? dw.window_end : timelineMax}+</span>
               </div>
             </div>
 
@@ -7849,17 +7848,24 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       if (varietal.includes("Petite Sirah") || producer.includes("Stags' Leap")) {
         wStart = v + 4;
         pStart = v + 7;
-        pEnd = v + 16;
-        wEnd = v + 25;
-        tier = "Napa Petite Sirah (7-25 yrs)";
+        pEnd = v + 15;
+        wEnd = v + 22;
+        tier = "California Petite Sirah (7-18 yrs)";
         decant = 2.0;
         temp = 64;
+      } else if (varietal.includes("Zinfandel")) {
+        wStart = v + 2;
+        pStart = v + 2;
+        pEnd = v + 10;
+        wEnd = v + 14;
+        tier = "Old Vine Zinfandel (2-10 yrs)";
+        decant = 1.0;
       } else if (varietal.includes("Cabernet") || producer.includes("Hunnicutt") || producer.includes("Caymus")) {
-        wStart = v + 5;
-        pStart = v + 8;
+        wStart = v + 3;
+        pStart = v + 4;
         pEnd = v + 16;
-        wEnd = v + 24;
-        tier = "Napa Cabernet (8-24 yrs)";
+        wEnd = v + 22;
+        tier = "Napa Valley AVA Cabernet (4-16 yrs)";
         decant = 2.5;
       } else if (wineType === "Sparkling") {
         wStart = v + 1;
@@ -7869,18 +7875,11 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
         tier = "Champagne (3-12 yrs)";
         decant = 0;
         temp = 48;
-      } else if (varietal.includes("Zinfandel")) {
-        wStart = v + 3;
-        pStart = v + 5;
-        pEnd = v + 10;
-        wEnd = v + 14;
-        tier = "Old Vine Zinfandel (5-14 yrs)";
-        decant = 1.5;
       } else {
-        wStart = v + 4;
-        pStart = v + 6;
-        pEnd = v + 15;
-        wEnd = v + 22;
+        wStart = v + 3;
+        pStart = v + 4;
+        pEnd = v + 14;
+        wEnd = v + 20;
       }
 
       if (curYear < wStart) status = "Hold (Too Young)";
@@ -8285,7 +8284,7 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
     }
 
     // Version management & Auto-Update
-    const APP_BUILD_VERSION = "2026.10.16.5";
+    const APP_BUILD_VERSION = "2026.11.11.1";
 
     async function checkForAppUpdate(force = false) {
       if (force) {

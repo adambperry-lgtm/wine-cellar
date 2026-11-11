@@ -4,7 +4,9 @@ Implements enological rules and vintage maturity profiles across world wine regi
 varietals, bottle formats, and quality tiers.
 """
 
-from typing import Optional, Tuple, Dict, Any
+import math
+import re
+from typing import Optional, Tuple, Dict, Any, List
 from datetime import datetime
 from wine_agent.models import WineType, DrinkingStatus, BottleFormat, DrinkingWindow, WineBottle
 
@@ -59,15 +61,20 @@ AGING_PROFILES = {
     "chateauneuf_du_pape_standard": (4, 6, 14, 20, "Châteauneuf-du-Pape Standard (6-20 yrs)"),
     "cotes_du_rhone": (2, 3, 6, 9, "Côtes du Rhône (3-9 yrs)"),
 
-    # NAPA VALLEY & CALIFORNIA CABERNET
+    # NAPA VALLEY & CALIFORNIA
     "napa_cult_cabernet": (8, 12, 26, 35, "Napa Cult / Mountain Cabernet (12-35 yrs)"),
-    "napa_valley_cabernet": (5, 8, 16, 24, "Napa Valley AVA Cabernet (8-24 yrs)"),
-    "california_pinot_noir": (3, 5, 10, 15, "Sonoma / Santa Barbara Pinot Noir (5-15 yrs)"),
+    "napa_single_vineyard_cabernet": (4, 6, 18, 25, "Single-Vineyard / Reserve Napa & Sonoma Cabernet (6-20 yrs)"),
+    "napa_valley_cabernet": (3, 4, 16, 22, "Napa Valley AVA Cabernet (4-16 yrs)"),
+    "california_pinot_noir": (2, 3, 11, 15, "Sonoma / Anderson Valley Pinot Noir (3-11 yrs)"),
     "california_chardonnay_oaked": (2, 4, 8, 12, "California Premium Chardonnay (4-12 yrs)"),
-    "california_zinfandel": (3, 5, 10, 14, "Old Vine Zinfandel (5-14 yrs)"),
+    "california_zinfandel": (2, 2, 10, 14, "Old Vine Zinfandel (2-10 yrs)"),
+    "california_cult_rhone": (4, 6, 22, 28, "California Cult Rhône / Syrah-Mourvèdre (6-22 yrs)"),
+    "california_cool_syrah": (2, 3, 17, 22, "California Cool-Climate Syrah (3-17 yrs)"),
+    "california_petite_sirah": (4, 7, 15, 22, "California Petite Sirah (7-18 yrs)"),
+    "california_sangiovese": (3, 5, 15, 20, "California Sangiovese / Super Tuscan Blend (5-15 yrs)"),
 
     # SPAIN
-    "rioja_gran_reserva": (8, 12, 24, 35, "Rioja Gran Reserva (12-35 yrs)"),
+    "rioja_gran_reserva": (8, 10, 18, 30, "Rioja Gran Reserva (10-30 yrs)"),
     "rioja_reserva": (5, 7, 14, 20, "Rioja Reserva (7-20 yrs)"),
     "rioja_crianza": (2, 3, 6, 9, "Rioja Crianza (3-9 yrs)"),
     "ribera_del_duero_reserva": (6, 9, 18, 26, "Ribera del Duero Reserva / Gran Reserva (9-26 yrs)"),
@@ -137,7 +144,7 @@ VINTAGE_ADJUSTMENTS = {
     ("champagne", 2015): +2, ("champagne", 2011): -2,
 
     # Rioja
-    ("rioja", 2004): +4, ("rioja", 2005): +3, ("rioja", 2010): +4,
+    ("rioja", 2004): +3, ("rioja", 2005): +3, ("rioja", 2010): +4,
     ("rioja", 2011): +2, ("rioja", 2015): +2, ("rioja", 2013): -2,
 }
 
@@ -184,14 +191,22 @@ def _match_profile_key(bottle: WineBottle) -> str:
     if "barbera" in name_str:
         return "barbera_d_asti"
 
+    # California Sangiovese / Super Tuscan Blends (e.g. Gargiulo Aprile)
+    if "aprile" in name_str or ("sangiovese" in name_str and any(ca in name_str for ca in ["napa", "oakville", "sonoma", "california"])):
+        return "california_sangiovese"
+
     # Tuscany (Sangiovese / Super Tuscan)
     if "brunello" in name_str:
-        if "riserva" in name_str or "biondi-santi" in name_str or "soldera" in name_str:
+        if "riserva" in name_str:
+            return "brunello_riserva"
+        if "annata" in name_str:
+            return "brunello_annata"
+        if "biondi-santi" in name_str or "soldera" in name_str:
             return "brunello_riserva"
         return "brunello_annata"
     if any(st in name_str for st in ["guidalberto", "le serre nuove", "il bruciato"]):
         return "bolgheri_rosso_second"
-    if any(st in name_str for st in ["sassicaia", "ornellaia", "masseto", "tignanello", "solaia", "flaccianello", "redigaffi", "aprile", "super tuscan", "bolgheri"]):
+    if any(st in name_str for st in ["sassicaia", "ornellaia", "masseto", "tignanello", "solaia", "flaccianello", "redigaffi", "super tuscan", "bolgheri"]):
         return "super_tuscan_premium"
     if "primorosso" in name_str or "primo rosso" in name_str:
         return "everyday_red"
@@ -223,16 +238,16 @@ def _match_profile_key(bottle: WineBottle) -> str:
             return "chablis_premier_cru"
 
         if is_white:
-            if "grand cru" in name_str or "montrachet" in name_str or "corton-charlemagne" in name_str:
-                return "burgundy_grand_cru_white"
             if "premier cru" in name_str or "1er cru" in name_str:
                 return "burgundy_premier_cru_white"
+            if "grand cru" in name_str or "montrachet" in name_str or "corton-charlemagne" in name_str:
+                return "burgundy_grand_cru_white"
             return "burgundy_village_white"
         else:
-            if "grand cru" in name_str or any(gc in name_str for gc in ["chambertin", "musigny", "romanée", "romanee", "clos de vougeot", "richebourg", "la tâche", "tache"]):
-                return "burgundy_grand_cru_red"
             if "premier cru" in name_str or "1er cru" in name_str:
                 return "burgundy_premier_cru_red"
+            if "grand cru" in name_str or any(gc in name_str for gc in ["chambertin", "musigny", "romanée", "romanee", "clos de vougeot", "richebourg", "la tâche", "tache"]):
+                return "burgundy_grand_cru_red"
             if any(vill in name_str for vill in ["gevrey", "vosne", "chambolle", "morey", "nuits", "volnay", "pommard"]):
                 return "burgundy_village_red"
             return "burgundy_regional_red"
@@ -253,22 +268,28 @@ def _match_profile_key(bottle: WineBottle) -> str:
     if "zinfandel" in name_str:
         return "california_zinfandel"
 
-    if "pinot noir" in name_str and any(ca in name_str for ca in ["california", "sonoma", "russian river", "santa barbara", "carneros", "napa"]):
+    if "pinot noir" in name_str and any(ca in name_str for ca in ["california", "sonoma", "russian river", "santa barbara", "carneros", "napa", "anderson valley"]):
         return "california_pinot_noir"
 
     if "chardonnay" in name_str and any(ca in name_str for ca in ["california", "napa", "sonoma"]):
         return "california_chardonnay_oaked"
 
     # California & Domestic Rhône Varieties (Syrah, Mourvèdre, Grenache, Petite Sirah)
-    if any(rh in name_str for rh in ["mourvèdre", "mourvedre", "syrah", "shiraz", "petite sirah", "grenache"]):
+    if "petite sirah" in name_str:
+        return "california_petite_sirah"
+    if any(rh in name_str for rh in ["mourvèdre", "mourvedre", "syrah", "grenache"]):
         if any(cult in name_str for cult in ["andremily", "saxum", "sine qua non", "alban"]):
-            return "chateauneuf_du_pape_prestige"
+            return "california_cult_rhone"
+        if any(ca in name_str for ca in ["pax", "hillsiders", "california", "sonoma", "napa", "santa barbara", "paso robles", "russian river", "mendocino", "anderson valley"]):
+            return "california_cool_syrah"
         return "rhone_cornas_st_joseph"
 
     # Napa Valley & California Cabernet / Bordeaux Blends
     if "cabernet" in name_str or "merlot" in name_str or any(ca in name_str for ca in ["napa", "oakville", "rutherford", "howell mountain", "stags leap", "monte bello", "alexander valley", "sonoma", "paso robles", "spring mountain", "columbia valley", "coombsville", "stonestreet", "newton", "arkenstone", "faust"]):
-        if any(cult in name_str for cult in ["screaming eagle", "harlan", "colgin", "opus one", "dominus", "monte bello", "dalla valle", "bryant", "promontory", "shafer hillside", "abreu", "9-3-5", "the puzzle", "puzzle", "stonestreet", "g major 7", "g major", "arkenstone", "brinkman block", "brinkman"]):
+        if any(cult in name_str for cult in ["screaming eagle", "harlan", "colgin", "opus one", "dominus", "monte bello", "dalla valle", "bryant", "promontory", "shafer hillside", "abreu", "g major 7", "g major", "arkenstone", "godward"]):
             return "napa_cult_cabernet"
+        if any(sv in name_str for sv in ["9-3-5", "the puzzle", "puzzle", "stonestreet", "brinkman block", "brinkman", "the pact", "money road ranch", "beckstoffer", "to kalon", "dr. crane", "missouri hopper", "single vineyard", "reserve"]):
+            return "napa_single_vineyard_cabernet"
         return "napa_valley_cabernet"
 
     # Rioja & Ribera
@@ -322,6 +343,93 @@ def _format_scaling_factor(fmt: BottleFormat) -> float:
     return 1.00
 
 
+def _half_up_median(values: List[int]) -> int:
+    """Calculates median of integer years using standard half-up rounding."""
+    s = sorted(values)
+    n = len(s)
+    mid = n // 2
+    if n % 2 == 1:
+        return s[mid]
+    return int(math.floor((s[mid - 1] + s[mid]) / 2.0 + 0.5))
+
+
+def _extract_critic_consensus_window(bottle: WineBottle) -> Optional[Tuple[int, int, str]]:
+    """Extracts consensus (start_year, end_year, attribution) from bottle critic reviews or public registry."""
+    reviews = list(getattr(bottle, "critic_reviews", None) or [])
+    if not reviews and bottle.producer:
+        try:
+            from wine_agent.critic_ratings import get_public_critic_ratings
+            reviews = get_public_critic_ratings(
+                producer=bottle.producer,
+                wine_name=bottle.wine_name or "",
+                vintage=bottle.vintage,
+                varietal=bottle.varietal or ""
+            )
+        except Exception:
+            reviews = []
+
+    if not reviews:
+        return None
+
+    parsed: List[Tuple[int, int, str]] = []
+    for r in reviews:
+        if not isinstance(r, dict):
+            continue
+        dw_str = str(r.get("drinking_window") or "").strip()
+        if not dw_str:
+            continue
+        m = re.search(r'\b(19\d\d|20\d\d)\s*[-–—]\s*(19\d\d|20\d\d)\b', dw_str)
+        if m:
+            s_yr, e_yr = int(m.group(1)), int(m.group(2))
+            if 1900 <= s_yr <= e_yr <= 2150:
+                code = r.get("code") or r.get("source") or "Critic"
+                parsed.append((s_yr, e_yr, str(code)))
+
+    if not parsed:
+        return None
+
+    consensus_start = _half_up_median([p[0] for p in parsed])
+    consensus_end = _half_up_median([p[1] for p in parsed])
+    if len(parsed) == 1:
+        s_yr, e_yr, code = parsed[0]
+        attr = f"Critic window ({code}: {s_yr}–{e_yr})"
+    else:
+        parts = ", ".join(f"{code}: {s_yr}–{e_yr}" for s_yr, e_yr, code in parsed)
+        attr = f"Consensus critic window ({parts})"
+    return consensus_start, consensus_end, attr
+
+
+def _extract_notes_window_override(bottle: WineBottle) -> Tuple[Optional[Tuple[int, int]], Optional[int]]:
+    """Parses explicit drinking window range or minimum open year from personal_notes."""
+    notes = (bottle.personal_notes or "").strip()
+    if not notes:
+        return None, None
+
+    explicit_range: Optional[Tuple[int, int]] = None
+    range_match = re.search(
+        r'(?:sleep until|drink|window|hold until|peak)?\s*\b(20\d{2})\s*[-–—]\s*(20\d{2})\b',
+        notes,
+        re.IGNORECASE
+    )
+    if range_match:
+        s_yr, e_yr = int(range_match.group(1)), int(range_match.group(2))
+        if 2000 <= s_yr <= e_yr <= 2100:
+            explicit_range = (s_yr, e_yr)
+
+    min_open_year: Optional[int] = None
+    hold_match = re.search(
+        r'(?:do not open before|don\'t open before|needs until|hold until|wait until|cellar until|not before|sleep until)\s+(20\d{2})\b',
+        notes,
+        re.IGNORECASE
+    )
+    if hold_match and not explicit_range:
+        yr = int(hold_match.group(1))
+        if 2000 <= yr <= 2100:
+            min_open_year = yr
+
+    return explicit_range, min_open_year
+
+
 def calculate_drinking_window(bottle: WineBottle, current_year: int = CURRENT_YEAR) -> DrinkingWindow:
     """Calculates prime drinking window, serving temp, and decanting guidance."""
     vintage = bottle.vintage if bottle.vintage else (current_year - 2)
@@ -351,6 +459,33 @@ def calculate_drinking_window(bottle: WineBottle, current_year: int = CURRENT_YE
     peak_end = vintage + peak_end_offset
     window_end = vintage + end_offset
 
+    # 1. Align with verified critic drinking windows when present
+    critic_source_note = ""
+    critic_consensus = _extract_critic_consensus_window(bottle)
+    if critic_consensus:
+        c_start, c_end, critic_source_note = critic_consensus
+        peak_start = c_start
+        peak_end = c_end
+        if peak_start > current_year:
+            window_start = max(vintage + 1, peak_start - 1)
+        else:
+            window_start = min(window_start, peak_start)
+        window_end = max(peak_end + 3, min(window_end, peak_end + 6) if window_end > peak_end else peak_end + 4)
+
+    # 2. Respect explicit cellar hold / window instructions in personal_notes
+    explicit_range, min_open_year = _extract_notes_window_override(bottle)
+    if explicit_range:
+        peak_start, peak_end = explicit_range
+        window_start = max(vintage + 1, peak_start - 1) if peak_start > current_year else min(window_start, peak_start)
+        window_end = max(window_end, peak_end + 4)
+    elif min_open_year:
+        peak_start = max(peak_start, min_open_year)
+        window_start = max(window_start, min_open_year - 1)
+        if peak_end < peak_start + 4:
+            peak_end = peak_start + 8
+        if window_end < peak_end + 3:
+            window_end = peak_end + 4
+
     # Ensure logical monotonicity
     if peak_start < window_start:
         peak_start = window_start
@@ -379,7 +514,7 @@ def calculate_drinking_window(bottle: WineBottle, current_year: int = CURRENT_YE
 
     # Decanting and serving temperatures
     decant_hours, temp_c, temp_f, rationale_text = _compute_sommelier_service_notes(
-        bottle, vintage, status, current_year, tier_name, vintage_adj
+        bottle, vintage, status, current_year, tier_name, vintage_adj, critic_source_note
     )
 
     return DrinkingWindow(
@@ -398,7 +533,13 @@ def calculate_drinking_window(bottle: WineBottle, current_year: int = CURRENT_YE
 
 
 def _compute_sommelier_service_notes(
-    bottle: WineBottle, vintage: int, status: DrinkingStatus, current_year: int, tier_name: str, vintage_adj: int
+    bottle: WineBottle,
+    vintage: int,
+    status: DrinkingStatus,
+    current_year: int,
+    tier_name: str,
+    vintage_adj: int,
+    critic_source_note: str = "",
 ) -> Tuple[float, int, int, str]:
     """Generates precise sommelier decanting times, serving temps, and analytical rationale."""
     age = current_year - vintage
@@ -428,7 +569,7 @@ def _compute_sommelier_service_notes(
     decant_hours = 0.0
     if bottle.wine_type == WineType.RED:
         if status == DrinkingStatus.TOO_YOUNG or status == DrinkingStatus.EARLY_WINDOW:
-            if any(k in tier_name.lower() for k in ["barolo", "bordeaux", "napa", "syrah", "hermitage"]):
+            if any(k in tier_name.lower() for k in ["barolo", "bordeaux", "napa", "syrah", "hermitage", "rhône", "rhone"]):
                 decant_hours = 2.5
             else:
                 decant_hours = 1.5
@@ -457,7 +598,9 @@ def _compute_sommelier_service_notes(
     }[status]
 
     vintage_note = ""
-    if vintage_adj > 0:
+    if critic_source_note:
+        vintage_note = f" {critic_source_note}."
+    elif vintage_adj > 0:
         vintage_note = f" The {vintage} vintage was celebrated for structured longevity (+{vintage_adj} yrs added)."
     elif vintage_adj < 0:
         vintage_note = f" The {vintage} vintage favored earlier approachability ({vintage_adj} yrs adjusted)."

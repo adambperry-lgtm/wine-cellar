@@ -292,7 +292,7 @@ PUBLIC_CRITIC_REGISTRY = {
             "code": "JD",
             "score": 96,
             "reviewer": "Jeb Dunnuck",
-            "review": "Crafted by Sam Kaplan from Rutherford gravel. Dense blue and black fruits, scorched earth, and immense power with silky polish.",
+            "review": "Crafted by Sam Kaplan from Howell Mountain volcanic tufa. Dense blue and black fruits, scorched earth, and immense power with silky polish.",
             "drinking_window": "2027-2044"
         },
         {
@@ -300,7 +300,7 @@ PUBLIC_CRITIC_REGISTRY = {
             "code": "VN",
             "score": 95,
             "reviewer": "Antonio Galloni",
-            "review": "A deeply impressive Rutherford expression. Crushed rocks, blackberry, dark spice, and savory complexity.",
+            "review": "A deeply impressive Howell Mountain expression. Crushed rocks, blackberry, dark spice, and savory complexity.",
             "drinking_window": "2026-2040"
         }
     ],
@@ -328,20 +328,20 @@ PUBLIC_CRITIC_REGISTRY = {
     # 2023 Hunnicutt 9-3-5
     ("hunnicutt", "9-3-5", 2023): [
         {
-            "source": "James Suckling",
-            "code": "JS",
-            "score": 91,
-            "reviewer": "James Suckling",
-            "review": "Rich black cherry and currant fruit with cedar and dried thyme. Approachable, balanced, and fleshy.",
-            "drinking_window": "2026-2035"
-        },
-        {
             "source": "Robert Parker's Wine Advocate",
             "code": "WA",
-            "score": 90,
+            "score": 95,
             "reviewer": "Wine Advocate Review",
-            "review": "A forward, textured proprietary red blend with sweet cassis, mocha, and fine spice.",
-            "drinking_window": "2026-2034"
+            "review": "Flagship 10-barrel reserve crafted by Kirk Venge (aged 28 months in 80% new French oak). Massive structure, crème de cassis, espresso, and graphite; built for cellar aging.",
+            "drinking_window": "2028-2044"
+        },
+        {
+            "source": "James Suckling",
+            "code": "JS",
+            "score": 94,
+            "reviewer": "James Suckling",
+            "review": "Concentrated blackberry, dark plum, cedar, and fine-grained mountain and benchland tannins. Powerful and structured; needs bottle age.",
+            "drinking_window": "2028-2042"
         }
     ],
 
@@ -414,7 +414,9 @@ PUBLIC_CRITIC_REGISTRY = {
 def _normalize_str(s: str) -> str:
     if not s:
         return ""
-    return re.sub(r'[\s_\-\.\,]+', ' ', s.lower()).strip()
+    import unicodedata
+    s_ascii = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r'[\s_\-\.\,]+', ' ', s_ascii.lower()).strip()
 
 
 def get_critic_source_url(review: Dict[str, Any], producer: str, wine_name: str = "", vintage: Optional[int] = None) -> str:
@@ -435,26 +437,33 @@ def get_critic_source_url(review: Dict[str, Any], producer: str, wine_name: str 
 def get_public_critic_ratings(producer: str, wine_name: str = "", vintage: Optional[int] = None, varietal: str = "") -> List[Dict[str, Any]]:
     """Searches for verified public ratings from James Suckling and other major critics with source URLs."""
     p_norm = _normalize_str(producer)
-    w_norm = _normalize_str(wine_name)
+    w_norm = _normalize_str(f"{wine_name} {varietal}".strip())
 
     matches = []
     # 1. Exact match in registry
     for (reg_p, reg_w, reg_v), reviews in PUBLIC_CRITIC_REGISTRY.items():
-        if reg_p in p_norm or p_norm in reg_p:
-            if not reg_w or reg_w in w_norm or w_norm in reg_w:
+        reg_p_norm = _normalize_str(reg_p)
+        reg_w_norm = _normalize_str(reg_w)
+        if reg_p_norm and (reg_p_norm in p_norm or p_norm in reg_p_norm):
+            if not reg_w_norm or reg_w_norm in w_norm or w_norm in reg_w_norm:
                 if vintage is None or reg_v == vintage or reg_v is None:
                     matches = reviews
                     break
 
-    # 2. Relaxed match on producer key if vintage matches
+    # 2. Relaxed match on producer key if vintage and wine tokens match
     if not matches:
         for (reg_p, reg_w, reg_v), reviews in PUBLIC_CRITIC_REGISTRY.items():
-            words_p = set(reg_p.split())
+            reg_p_norm = _normalize_str(reg_p)
+            reg_w_norm = _normalize_str(reg_w)
+            words_p = set(reg_p_norm.split())
             words_input = set(p_norm.split())
             if words_p.intersection(words_input):
                 if vintage is None or reg_v == vintage:
-                    matches = reviews
-                    break
+                    words_w = set(reg_w_norm.split())
+                    words_w_in = set(w_norm.split())
+                    if not words_w or not words_w_in or words_w.intersection(words_w_in):
+                        matches = reviews
+                        break
 
     # Ensure every review copy has an authoritative source_url
     results = []

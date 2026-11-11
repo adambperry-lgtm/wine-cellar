@@ -224,7 +224,7 @@ class WineDatabase:
             conn.execute("UPDATE bottles SET user_id = 1 WHERE user_id IS NULL OR user_id = 0")
             conn.execute("UPDATE consumption_log SET user_id = 1 WHERE user_id IS NULL OR user_id = 0")
 
-            # Clean up legacy sample storage names if any exist in bottles
+            # Clean up legacy sample storage names and stale auto-persisted window columns on persistent volumes
             try:
                 conn.execute("""
                     UPDATE bottles SET location_rack = 'Basement Fridge' 
@@ -233,6 +233,11 @@ class WineDatabase:
                 conn.execute("""
                     UPDATE bottles SET location_rack = 'Upstairs Fridge' 
                     WHERE location_rack IN ('Rack B', 'Sparkling Fridge')
+                """)
+                conn.execute("""
+                    UPDATE bottles
+                    SET window_start = NULL, peak_start = NULL, peak_end = NULL, window_end = NULL
+                    WHERE personal_notes IS NULL OR personal_notes NOT LIKE '%[CT iWine:%'
                 """)
             except Exception:
                 pass
@@ -547,10 +552,11 @@ class WineDatabase:
         bottle.user_id = uid
 
         dw = bottle.drinking_window
-        w_start = dw.window_start if dw else None
-        p_start = dw.peak_start if dw else None
-        p_end = dw.peak_end if dw else None
-        w_end = dw.window_end if dw else None
+        is_custom_dw = bool(dw and any(k in (dw.rationale or "").lower() for k in ["imported", "custom", "cellartracker"]))
+        w_start = dw.window_start if is_custom_dw else None
+        p_start = dw.peak_start if is_custom_dw else None
+        p_end = dw.peak_end if is_custom_dw else None
+        w_end = dw.window_end if is_custom_dw else None
 
         with self._get_conn() as conn:
             cursor = conn.execute("""
@@ -1353,11 +1359,31 @@ class WineDatabase:
             user_id=uid
         )
 
+        from wine_agent.critic_ratings import get_public_critic_ratings
+        registry_revs = get_public_critic_ratings(bottle.producer, bottle.wine_name, bottle.vintage, bottle.varietal)
+
+        critic_revs = []
+        try:
+            if "critic_reviews" in r.keys() and r["critic_reviews"]:
+                critic_revs = json.loads(r["critic_reviews"])
+        except Exception:
+            critic_revs = []
+
+        if registry_revs:
+            critic_revs = registry_revs
+
+        bottle.critic_reviews = critic_revs
+        if not bottle.critic_score and critic_revs:
+            scores = [x["score"] for x in critic_revs if isinstance(x.get("score"), (int, float))]
+            if scores:
+                bottle.critic_score = max(scores)
+
         has_custom_dw = False
         try:
             p_start = r["peak_start"]
             p_end = r["peak_end"]
             if p_start and p_end:
+                base_dw = calculate_drinking_window(bottle, CURRENT_YEAR)
                 w_start = r["window_start"] or (p_start - 2)
                 w_end = r["window_end"] or (p_end + 5)
                 st = DrinkingStatus.PEAK
@@ -1377,10 +1403,10 @@ class WineDatabase:
                     window_end=w_end,
                     status=st,
                     progress_pct=progress,
-                    decant_hours=1.5 if w_type == WineType.RED else 0.5,
-                    serving_temp_f=64 if w_type == WineType.RED else 48,
-                    serving_temp_c=18 if w_type == WineType.RED else 9,
-                    aging_tier=f"{bottle.varietal or 'Cellar'} Window",
+                    decant_hours=base_dw.decant_hours if base_dw else (1.5 if w_type == WineType.RED else 0.5),
+                    serving_temp_f=base_dw.serving_temp_f if base_dw else (64 if w_type == WineType.RED else 48),
+                    serving_temp_c=base_dw.serving_temp_c if base_dw else (18 if w_type == WineType.RED else 9),
+                    aging_tier=base_dw.aging_tier if base_dw else f"{bottle.varietal or 'Cellar'} Window",
                     rationale=f"Imported / stored window (Peak: {p_start}–{p_end})."
                 )
                 has_custom_dw = True
@@ -1389,23 +1415,6 @@ class WineDatabase:
 
         if not has_custom_dw:
             bottle.drinking_window = calculate_drinking_window(bottle, CURRENT_YEAR)
-
-        critic_revs = []
-        try:
-            if "critic_reviews" in r.keys() and r["critic_reviews"]:
-                critic_revs = json.loads(r["critic_reviews"])
-        except Exception:
-            critic_revs = []
-
-        if not critic_revs:
-            from wine_agent.critic_ratings import get_public_critic_ratings
-            critic_revs = get_public_critic_ratings(bottle.producer, bottle.wine_name, bottle.vintage, bottle.varietal)
-
-        bottle.critic_reviews = critic_revs
-        if not bottle.critic_score and critic_revs:
-            scores = [x["score"] for x in critic_revs if isinstance(x.get("score"), (int, float))]
-            if scores:
-                bottle.critic_score = max(scores)
 
         return bottle
 
