@@ -1260,6 +1260,80 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         self.assertEqual(matching_logs[0]["rating"], 5.0)
         self.assertIn("Benchmark Tuscan red", matching_logs[0]["tasting_notes"])
 
+    def test_opened_wine_archive_and_consumption_retention(self):
+        """Verifies that consumed/opened wines are retained in archive and history with notes and ratings."""
+        import io
+        import json
+        from unittest.mock import MagicMock
+        from wine_agent.server import WineRequestHandler, SommelierAgent
+
+        agent = SommelierAgent(self.db)
+        WineRequestHandler.agent = agent
+
+        # Add a test wine (e.g. Grounded Wine Co. Landform)
+        b = WineBottle(
+            producer="Grounded Wine Co.",
+            wine_name="Landform Pinot Noir",
+            vintage=2023,
+            varietal="Pinot Noir",
+            region="Willamette Valley, Oregon",
+            quantity=1,
+            user_id=1
+        )
+        b_id = self.db.add_bottle(b, user_id=1)
+
+        def make_request(method, path, body=None):
+            req_handler = WineRequestHandler.__new__(WineRequestHandler)
+            req_handler.agent = agent
+            req_handler.path = path
+            req_handler.headers = {"Content-Type": "application/json"}
+            if body:
+                body_bytes = json.dumps(body).encode("utf-8")
+                req_handler.headers["Content-Length"] = str(len(body_bytes))
+                req_handler.rfile = io.BytesIO(body_bytes)
+            else:
+                req_handler.rfile = io.BytesIO(b"")
+
+            wfile = io.BytesIO()
+            req_handler.wfile = wfile
+            req_handler.send_response = MagicMock()
+            req_handler.send_header = MagicMock()
+            req_handler.end_headers = MagicMock()
+
+            if method == "GET":
+                req_handler.do_GET()
+            elif method in ("POST", "PUT"):
+                req_handler.do_POST()
+
+            wfile.seek(0)
+            return json.loads(wfile.read().decode("utf-8"))
+
+        # Consume the bottle using frontend parameter names (tasting_notes, bottles_consumed)
+        consume_res = make_request("POST", "/api/consume", {
+            "bottle_id": b_id,
+            "bottles_consumed": 1,
+            "rating": 4.5,
+            "tasting_notes": "Vermilion red, sweet cherry, and baking spices.",
+            "pairing_notes": "Cedar plank salmon",
+            "aging_curve_stage": "In Peak Window"
+        })
+        self.assertTrue(consume_res.get("success"))
+
+        # Verify wine is now in archive
+        arch = make_request("GET", "/api/archive?consolidate=true")
+        landform = next((x for x in arch if x["producer"] == "Grounded Wine Co."), None)
+        self.assertIsNotNone(landform)
+        self.assertEqual(landform["quantity"], 0)
+        self.assertEqual(landform["user_rating"], 4.5)
+        self.assertIn("Vermilion red", landform["personal_notes"])
+
+        # Verify wine is in consumption history
+        history = make_request("GET", "/api/history")
+        hist_entry = next((h for h in history if h["bottle_id"] == b_id), None)
+        self.assertIsNotNone(hist_entry)
+        self.assertEqual(hist_entry["rating"], 4.5)
+        self.assertIn("Vermilion red", hist_entry["tasting_notes"])
+
 
 if __name__ == "__main__":
     unittest.main()

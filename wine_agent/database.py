@@ -988,6 +988,22 @@ class WineDatabase:
         are consolidated into a single entry with combined notes and highest rating.
         """
         bottles = self.list_bottles(only_in_stock=False, archived_only=True, user_id=user_id)
+        if bottles:
+            with self._get_conn() as conn:
+                uid_sql = " AND (user_id = ? OR (user_id IS NULL AND ? = 1))" if user_id is not None else ""
+                uid_p = [user_id, user_id] if user_id is not None else []
+                for b in bottles:
+                    if not b.user_rating or not b.personal_notes:
+                        row = conn.execute(
+                            f"SELECT rating, tasting_notes FROM consumption_log WHERE bottle_id = ?{uid_sql} ORDER BY id DESC LIMIT 1",
+                            [b.id] + uid_p
+                        ).fetchone()
+                        if row:
+                            if not b.user_rating and row["rating"]:
+                                b.user_rating = row["rating"]
+                            if not b.personal_notes and row["tasting_notes"]:
+                                b.personal_notes = row["tasting_notes"]
+
         if not consolidate:
             return bottles
 
@@ -1128,8 +1144,12 @@ class WineDatabase:
 
         new_qty = max(0, bottle.quantity - count)
         with self._get_conn() as conn:
-            if rating is not None:
+            if rating is not None and tasting_notes:
+                conn.execute("UPDATE bottles SET quantity = ?, user_rating = ?, personal_notes = ? WHERE id = ?", (new_qty, rating, tasting_notes, bottle_id))
+            elif rating is not None:
                 conn.execute("UPDATE bottles SET quantity = ?, user_rating = ? WHERE id = ?", (new_qty, rating, bottle_id))
+            elif tasting_notes:
+                conn.execute("UPDATE bottles SET quantity = ?, personal_notes = ? WHERE id = ?", (new_qty, tasting_notes, bottle_id))
             else:
                 conn.execute("UPDATE bottles SET quantity = ? WHERE id = ?", (new_qty, bottle_id))
             cursor = conn.execute("""

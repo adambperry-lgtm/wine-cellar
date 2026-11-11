@@ -2105,6 +2105,67 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     // Sample fallback data if API is not yet running
     const FALLBACK_BOTTLES = [
     {
+        "id": 36,
+        "producer": "Grounded Wine Co.",
+        "wine_name": "Landform Pinot Noir",
+        "vintage": 2023,
+        "varietal": "Pinot Noir",
+        "region": "Oregon",
+        "sub_region": "Willamette Valley",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 0,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 28.0,
+        "market_value": null,
+        "critic_score": 90,
+        "user_rating": 4.5,
+        "personal_notes": "Brilliant vermilion color with sweet cherry, ripe plum, raspberry, and subtle baking spice. Supple tannins and lively acidity; great pairing with salmon.",
+        "critic_reviews": [
+            {
+                "source": "Wine Enthusiast",
+                "code": "WE",
+                "score": 90,
+                "reviewer": "Buying Guide",
+                "review": "Brilliant vermilion in color with inviting aromas of sweet cherry, plum, and baking spices. The palate is fresh and vibrant with supple tannins and lively acidity.",
+                "drinking_window": "2025-2030",
+                "source_url": "https://www.wineenthusiast.com/buying-guide/grounded-wine-co-2023-landform-pinot-noir-willamette-valley/"
+            },
+            {
+                "source": "Wine.com",
+                "code": "W.COM",
+                "score": 90,
+                "reviewer": "Winemaker Notes",
+                "review": "Pure aromas of sweet cherry, plum, ripe raspberry, and a touch of baking spice. Supple tannins with a lingering, vibrant finish.",
+                "drinking_window": "2025-2029",
+                "source_url": "https://www.wine.com/product/grounded-wine-co-landform-pinot-noir-2023/4125590"
+            }
+        ],
+        "food_pairings": [
+            "Cedar Plank Salmon",
+            "Roasted Chicken with Herbs",
+            "Duck Breast",
+            "Wild Mushroom Risotto"
+        ],
+        "created_at": "2026-10-10T09:42:00.018593",
+        "drinking_window": {
+            "window_start": 2025,
+            "peak_start": 2025,
+            "peak_end": 2029,
+            "window_end": 2031,
+            "status": "In Peak Window",
+            "progress_pct": 50.0,
+            "rationale": "Willamette Valley Pinot Noir (3-8 yrs). In its prime drinking window displaying vibrant red fruit and silky tannins. Ready to enjoy.",
+            "decant_hours": 0.5,
+            "serving_temp_c": 16,
+            "serving_temp_f": 60,
+            "aging_tier": "Willamette Valley Pinot Noir (3-8 yrs)"
+        }
+    },
+    {
         "id": 23,
         "producer": "Stonestreet",
         "wine_name": "Estate Cabernet Sauvignon",
@@ -3619,7 +3680,18 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       try {
         const histRes = await fetch("/api/history");
         if (histRes.ok) {
-          tastingHistory = await histRes.json();
+          const serverHist = await histRes.json();
+          const cachedRaw = localStorage.getItem(`wine_cellar_tasting_history_u${uId}`);
+          const cachedHist = cachedRaw ? JSON.parse(cachedRaw) : [];
+          const combinedHist = Array.isArray(serverHist) ? [...serverHist] : [];
+          if (Array.isArray(cachedHist)) {
+            cachedHist.forEach(ch => {
+              if (!combinedHist.some(sh => sh.id === ch.id || (sh.bottle_id === ch.bottle_id && sh.date_opened === ch.date_opened))) {
+                combinedHist.push(ch);
+              }
+            });
+          }
+          tastingHistory = combinedHist;
           localStorage.setItem(`wine_cellar_tasting_history_u${uId}`, JSON.stringify(tastingHistory));
         } else {
           tastingHistory = JSON.parse(localStorage.getItem(`wine_cellar_tasting_history_u${uId}`) || '[]');
@@ -3632,7 +3704,16 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         const saved = localStorage.getItem(`wine_cellar_bottles_u${uId}`);
         const all = saved ? JSON.parse(saved) : (uId === 1 ? FALLBACK_BOTTLES : []);
         const savedArch = localStorage.getItem(`wine_cellar_archive_u${uId}`);
-        archivedBottles = savedArch ? JSON.parse(savedArch) : all.filter(b => (b.quantity || 0) <= 0);
+        let archList = savedArch ? JSON.parse(savedArch) : [];
+        if (uId === 1 && typeof FALLBACK_BOTTLES !== 'undefined') {
+          const fbArch = FALLBACK_BOTTLES.filter(b => (b.quantity || 0) <= 0);
+          fbArch.forEach(fb => {
+            if (!archList.some(ab => ab.id === fb.id || (ab.producer === fb.producer && ab.vintage === fb.vintage && ab.wine_name === fb.wine_name))) {
+              archList.push(fb);
+            }
+          });
+        }
+        archivedBottles = archList;
         cellarBottles = all.filter(b => (b.quantity || 0) > 0);
         await initStorageZones();
         renderKPIs();
@@ -3658,19 +3739,50 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         cellarBottles = all.filter(b => (b.quantity || 0) > 0);
       }
 
-      // Sync archived bottles (zero quantity)
+      // Sync archived bottles (zero quantity & consumed)
       try {
         const archRes = await fetch("/api/archive");
         if (archRes.ok) {
-          archivedBottles = await archRes.json();
+          const serverArch = await archRes.json();
+          const cachedRaw = localStorage.getItem(`wine_cellar_archive_u${uId}`);
+          const cachedArch = cachedRaw ? JSON.parse(cachedRaw) : [];
+          const combinedArch = Array.isArray(serverArch) ? [...serverArch] : [];
+          if (Array.isArray(cachedArch)) {
+            cachedArch.forEach(cb => {
+              const match = combinedArch.find(sb =>
+                sb.id === cb.id ||
+                (String(sb.producer || '').trim().toLowerCase() === String(cb.producer || '').trim().toLowerCase() &&
+                 String(sb.vintage) === String(cb.vintage) &&
+                 String(sb.wine_name || '').trim().toLowerCase() === String(cb.wine_name || '').trim().toLowerCase())
+              );
+              if (!match) {
+                combinedArch.push(cb);
+              }
+            });
+          }
+          // Ensure fallback sample archive bottles (like 2023 Grounded Wine Co. Landform) are preserved
+          if (uId === 1 && typeof FALLBACK_BOTTLES !== 'undefined') {
+            FALLBACK_BOTTLES.filter(fb => (fb.quantity || 0) <= 0).forEach(fb => {
+              const match = combinedArch.find(sb =>
+                sb.id === fb.id ||
+                (String(sb.producer || '').trim().toLowerCase() === String(fb.producer || '').trim().toLowerCase() &&
+                 String(sb.vintage) === String(fb.vintage) &&
+                 String(sb.wine_name || '').trim().toLowerCase() === String(fb.wine_name || '').trim().toLowerCase())
+              );
+              if (!match) {
+                combinedArch.push(fb);
+              }
+            });
+          }
+          archivedBottles = combinedArch;
           try { localStorage.setItem(`wine_cellar_archive_u${uId}`, JSON.stringify(archivedBottles)); } catch (e) {}
         } else {
           const cachedArch = localStorage.getItem(`wine_cellar_archive_u${uId}`);
-          archivedBottles = cachedArch ? JSON.parse(cachedArch) : [];
+          archivedBottles = cachedArch ? JSON.parse(cachedArch) : (uId === 1 ? FALLBACK_BOTTLES.filter(b => (b.quantity || 0) <= 0) : []);
         }
       } catch (e) {
         const cachedArch = localStorage.getItem(`wine_cellar_archive_u${uId}`);
-        archivedBottles = cachedArch ? JSON.parse(cachedArch) : [];
+        archivedBottles = cachedArch ? JSON.parse(cachedArch) : (uId === 1 ? FALLBACK_BOTTLES.filter(b => (b.quantity || 0) <= 0) : []);
       }
 
       cellarBottles.forEach(b => { b.location_bin = ''; });
@@ -3695,6 +3807,52 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         }
         groups.get(key).push(b);
       });
+
+      // Also ensure any wine with opened history in tastingHistory is represented if not already present in archive
+      if (typeof tastingHistory !== 'undefined' && Array.isArray(tastingHistory)) {
+        tastingHistory.forEach(h => {
+          const wDisp = (h.wine_display_name || '').trim();
+          if (!wDisp) return;
+          let alreadyGrouped = false;
+          for (const grp of groups.values()) {
+            if (grp.some(b => b.id == h.bottle_id || `${b.vintage || 'NV'} ${b.producer} ${b.wine_name || ''}`.trim().toLowerCase() === wDisp.toLowerCase())) {
+              alreadyGrouped = true;
+              break;
+            }
+          }
+          if (!alreadyGrouped) {
+            const fromCellar = (typeof cellarBottles !== 'undefined' && Array.isArray(cellarBottles)) 
+              ? cellarBottles.find(b => b.id == h.bottle_id) : null;
+            const vMatch = wDisp.match(/^(\d{4})\s+/);
+            const vintage = vMatch ? parseInt(vMatch[1]) : (fromCellar ? fromCellar.vintage : null);
+            const restName = vMatch ? wDisp.slice(vMatch[0].length).trim() : wDisp;
+            const syntheticBottle = {
+              id: h.bottle_id || h.id,
+              vintage: vintage,
+              producer: fromCellar ? fromCellar.producer : (restName.split(' ')[0] || 'Wine'),
+              wine_name: fromCellar ? fromCellar.wine_name : (restName.split(' ').slice(1).join(' ') || ''),
+              varietal: fromCellar ? fromCellar.varietal : 'Wine',
+              region: fromCellar ? fromCellar.region : '',
+              wine_type: fromCellar ? fromCellar.wine_type : 'Red',
+              quantity: 0,
+              user_rating: h.rating,
+              personal_notes: h.tasting_notes || '',
+              pairing_notes: h.pairing_notes || '',
+              drinking_window: fromCellar ? fromCellar.drinking_window : null,
+              all_ids: [h.bottle_id || h.id],
+              consolidated_count: 1,
+              is_opened_history: true
+            };
+            const p = (syntheticBottle.producer || '').trim().toLowerCase();
+            const v = (syntheticBottle.vintage !== null && syntheticBottle.vintage !== undefined && syntheticBottle.vintage !== '') ? String(syntheticBottle.vintage) : 'NV';
+            const n = (syntheticBottle.wine_name || '').trim().toLowerCase();
+            const key = `${v}___${p}___${n}`;
+            if (!groups.has(key)) {
+              groups.set(key, [syntheticBottle]);
+            }
+          }
+        });
+      }
 
       const consolidated = [];
       groups.forEach((groupEntries) => {
@@ -3945,7 +4103,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
       if (isArchiveMode) {
         const totalConsolidated = getConsolidatedArchivedBottles(archivedBottles).length;
-        document.getElementById('resultsCount').textContent = `Showing ${filtered.length} of ${totalConsolidated} archived wines (0 bottles remaining)`;
+        document.getElementById('resultsCount').textContent = `Showing ${filtered.length} of ${totalConsolidated} archived wines (${totalConsolidated} wines opened or depleted)`;
       } else {
         document.getElementById('resultsCount').textContent = `Showing ${filtered.length} of ${cellarBottles.length} bottles`;
       }
@@ -4042,7 +4200,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
           <div class="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 pt-2.5 md:pt-0 border-t md:border-t-0" style="border-color: #D3CBB8;">
             <div class="text-left md:text-right flex md:block items-center gap-1.5">
               <span class="text-xs" style="color: #746F69;">Inventory:</span>
-              <span class="text-xs font-bold px-2 py-0.5 rounded border inline-block md:block" style="background-color: #F4F0E6; color: #6A0F23; border-color: #D3CBB8;">0 btl</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded border inline-block md:block" style="background-color: #F4F0E6; color: #6A0F23; border-color: #D3CBB8;">${(b.quantity || 0) > 0 ? (b.quantity + ' btl in cellar') : '0 btl'}</span>
             </div>
             <div class="flex items-center gap-1.5 flex-wrap justify-end">
               <button onclick="openArchiveEditModal(${b.id}, ${JSON.stringify(b.all_ids || [b.id])})" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition flex items-center gap-1 shadow-sm" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #6A0F23;" title="Edit rating and tasting notes for this wine">
@@ -6083,7 +6241,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
                 <div class="flex items-center gap-2 flex-wrap">
                   <h4 class="text-xs font-bold text-white">${vintage} ${escapeHtml(b.producer)}</h4>
                   ${b.wine_name ? `<span class="text-xs text-rose-300 font-medium">${escapeHtml(b.wine_name)}</span>` : ''}
-                  <span class="px-2 py-0.2 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800/80">0 btl</span>
+                  <span class="px-2 py-0.2 rounded-full text-[10px] font-bold ${(b.quantity || 0) > 0 ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80' : 'bg-amber-950/80 text-amber-300 border border-amber-800/80'}">${(b.quantity || 0) > 0 ? (b.quantity + ' btl in cellar • Opened') : '0 btl'}</span>
                   ${b.consolidated_count > 1 ? `<span class="px-2 py-0.2 rounded-full text-[10px] font-bold bg-indigo-950/80 text-indigo-300 border border-indigo-800/80" title="Consolidated entry">📦 ${b.consolidated_count} entries</span>` : ''}
                   ${b.user_rating ? `
                     <button onclick="openArchiveEditModal(${b.id}, ${allIdsJson})" class="px-1.5 py-0.2 rounded bg-amber-950/60 text-amber-300 text-[10px] font-bold border border-amber-800/60 hover:bg-amber-900/80 transition cursor-pointer" title="Click to edit rating">

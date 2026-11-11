@@ -585,10 +585,10 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         elif path == "/api/consume":
             b_id = payload.get("bottle_id")
-            count = int(payload.get("count", 1))
+            count = int(payload.get("count", payload.get("bottles_consumed", 1)))
             rating = float(payload["rating"]) if payload.get("rating") else None
-            notes = payload.get("notes", "")
-            pairing = payload.get("pairing", "")
+            notes = payload.get("notes") or payload.get("tasting_notes", "")
+            pairing = payload.get("pairing") or payload.get("pairing_notes", "")
             aging_stage = payload.get("aging_curve_stage", "")
             rec = self.agent.log_consumption(b_id, count, rating, notes, pairing, aging_stage, user_id=current_user.id)
             if rec:
