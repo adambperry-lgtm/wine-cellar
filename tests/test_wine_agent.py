@@ -1157,6 +1157,109 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         data_active3 = make_request("GET", "/api/bottles")
         self.assertTrue(any(x["id"] == b_id and x["quantity"] == 3 for x in data_active3))
 
+    def test_archive_consolidation_and_review_edits(self):
+        from wine_agent.agent import SommelierAgent
+        from wine_agent.server import WineRequestHandler
+        import io
+        import json
+        from unittest.mock import MagicMock
+
+        agent = SommelierAgent(db=self.db)
+
+        def make_request(method, path, body=None):
+            req_handler = WineRequestHandler.__new__(WineRequestHandler)
+            req_handler.agent = agent
+            req_handler.path = path
+            req_handler.headers = {"Content-Type": "application/json"}
+            if body:
+                body_bytes = json.dumps(body).encode("utf-8")
+                req_handler.headers["Content-Length"] = str(len(body_bytes))
+                req_handler.rfile = io.BytesIO(body_bytes)
+            else:
+                req_handler.rfile = io.BytesIO(b"")
+
+            wfile = io.BytesIO()
+            req_handler.wfile = wfile
+            req_handler.send_response = MagicMock()
+            req_handler.send_header = MagicMock()
+            req_handler.end_headers = MagicMock()
+
+            if method == "GET":
+                req_handler.do_GET()
+            elif method in ("POST", "PUT"):
+                req_handler.do_POST()
+
+            wfile.seek(0)
+            return json.loads(wfile.read().decode("utf-8"))
+
+        # 1. Add two separate entries for the same wine
+        b1_res = make_request("POST", "/api/bottles", {
+            "producer": "Tenuta San Guido",
+            "wine_name": "Guidalberto Test Cuvée",
+            "vintage": 2022,
+            "varietal": "Cabernet Sauvignon",
+            "region": "Tuscany",
+            "quantity": 1,
+            "location_rack": "Basement Fridge",
+            "wine_type": "Red"
+        })
+        b1_id = b1_res["bottle"]["id"]
+
+        b2_res = make_request("POST", "/api/bottles", {
+            "producer": "Tenuta San Guido",
+            "wine_name": "Guidalberto Test Cuvée",
+            "vintage": 2022,
+            "varietal": "Cabernet Sauvignon",
+            "region": "Tuscany",
+            "quantity": 1,
+            "location_rack": "Upstairs Fridge",
+            "wine_type": "Red"
+        })
+        b2_id = b2_res["bottle"]["id"]
+
+        # 2. Consume both entries so both reach 0 and move to archive
+        make_request("POST", "/api/consume", {
+            "bottle_id": b1_id,
+            "count": 1,
+            "rating": 4.0,
+            "notes": "Enjoyed on terrace."
+        })
+        make_request("POST", "/api/consume", {
+            "bottle_id": b2_id,
+            "count": 1,
+            "rating": 4.5,
+            "notes": "Even better with decanting."
+        })
+
+        # 3. Test raw archive (shows both entries)
+        raw_arch = make_request("GET", "/api/archive")
+        san_guido_raw = [b for b in raw_arch if b.get("wine_name") == "Guidalberto Test Cuvée"]
+        self.assertEqual(len(san_guido_raw), 2)
+
+        # 4. Test consolidated archive (consolidates into 1 entry)
+        consolidated_arch = make_request("GET", "/api/archive?consolidate=true")
+        san_guido_cons = [b for b in consolidated_arch if b.get("wine_name") == "Guidalberto Test Cuvée"]
+        self.assertEqual(len(san_guido_cons), 1)
+
+        # 5. Edit review and tasting notes for the consolidated wine
+        review_res = make_request("POST", "/api/archive/review", {
+            "bottle_id": b1_id,
+            "bottle_ids": [b1_id, b2_id],
+            "rating": 5.0,
+            "tasting_notes": "Benchmark Tuscan red. Velvet tannins, dark plum, and tobacco.",
+            "pairing_notes": "Prime Ribeye Steak"
+        })
+        self.assertTrue(review_res.get("success"))
+        self.assertEqual(review_res["bottle"]["user_rating"], 5.0)
+        self.assertIn("Benchmark Tuscan red", review_res["bottle"]["personal_notes"])
+
+        # 6. Verify consumption_log / history updated
+        hist = make_request("GET", "/api/history")
+        matching_logs = [h for h in hist if h["bottle_id"] in (b1_id, b2_id)]
+        self.assertGreaterEqual(len(matching_logs), 1)
+        self.assertEqual(matching_logs[0]["rating"], 5.0)
+        self.assertIn("Benchmark Tuscan red", matching_logs[0]["tasting_notes"])
+
 
 if __name__ == "__main__":
     unittest.main()

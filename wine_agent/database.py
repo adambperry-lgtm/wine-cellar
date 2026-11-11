@@ -981,9 +981,102 @@ class WineDatabase:
 
         return bottles
 
-    def get_archived_bottles(self, user_id: Optional[int] = 1) -> List[WineBottle]:
-        """Returns all bottles at zero quantity (archived) for the specified user."""
-        return self.list_bottles(only_in_stock=False, archived_only=True, user_id=user_id)
+    def get_archived_bottles(self, user_id: Optional[int] = 1, consolidate: bool = False) -> List[WineBottle]:
+        """Returns all bottles at zero quantity (archived) for the specified user.
+        
+        When consolidate=True, entries for the same bottle (same producer, vintage, and wine_name)
+        are consolidated into a single entry with combined notes and highest rating.
+        """
+        bottles = self.list_bottles(only_in_stock=False, archived_only=True, user_id=user_id)
+        if not consolidate:
+            return bottles
+
+        groups: Dict[Tuple[str, Optional[int], str], List[WineBottle]] = {}
+        for b in bottles:
+            key = (
+                (b.producer or "").strip().lower(),
+                b.vintage,
+                (b.wine_name or "").strip().lower()
+            )
+            groups.setdefault(key, []).append(b)
+
+        consolidated: List[WineBottle] = []
+        for group in groups.values():
+            primary = group[0]
+            # Best rating from group
+            ratings = [g.user_rating for g in group if g.user_rating is not None and g.user_rating > 0]
+            best_rating = ratings[0] if ratings else primary.user_rating
+            # Best notes from group
+            notes_list = [g.personal_notes.strip() for g in group if g.personal_notes and g.personal_notes.strip()]
+            combined_notes = " | ".join(dict.fromkeys(notes_list)) if notes_list else primary.personal_notes
+
+            primary.user_rating = best_rating
+            primary.personal_notes = combined_notes
+            consolidated.append(primary)
+
+        return consolidated
+
+    def update_archive_review(
+        self,
+        bottle_id: int,
+        rating: Optional[float] = None,
+        tasting_notes: str = "",
+        pairing_notes: str = "",
+        bottle_ids: Optional[List[int]] = None,
+        user_id: Optional[int] = 1
+    ) -> Optional[WineBottle]:
+        """Updates user rating and tasting notes for an archived bottle (and any consolidated bottle IDs).
+        Also updates or inserts matching records in consumption_log.
+        """
+        all_ids = list(bottle_ids) if bottle_ids else [bottle_id]
+        if bottle_id not in all_ids:
+            all_ids.append(bottle_id)
+
+        target = self.get_bottle(bottle_id, user_id=user_id)
+        if not target:
+            return None
+
+        uid = user_id if user_id is not None else (target.user_id if target.user_id is not None else 1)
+
+        with self._get_conn() as conn:
+            # Update all specified bottle IDs in bottles table
+            for bid in all_ids:
+                if rating is not None:
+                    conn.execute("UPDATE bottles SET user_rating = ?, personal_notes = ? WHERE id = ?", (rating, tasting_notes, bid))
+                else:
+                    conn.execute("UPDATE bottles SET personal_notes = ? WHERE id = ?", (tasting_notes, bid))
+
+            # Update consumption_log if records exist for these bottle IDs
+            placeholders = ",".join("?" * len(all_ids))
+            existing_logs = conn.execute(
+                f"SELECT id FROM consumption_log WHERE bottle_id IN ({placeholders})",
+                all_ids
+            ).fetchall()
+
+            if existing_logs:
+                for log_row in existing_logs:
+                    conn.execute("""
+                        UPDATE consumption_log
+                        SET rating = ?, tasting_notes = ?, pairing_notes = ?
+                        WHERE id = ?
+                    """, (rating, tasting_notes, pairing_notes, log_row["id"]))
+            else:
+                # Insert a consumption_log entry if none existed
+                dw = target.drinking_window
+                aging_stage = f"{dw.status.value} (Peak: {dw.peak_start}–{dw.peak_end})" if dw else "Archived Wine"
+                conn.execute("""
+                    INSERT INTO consumption_log (
+                        bottle_id, wine_display_name, date_opened, rating,
+                        tasting_notes, pairing_notes, bottles_consumed, aging_curve_stage, action_type, user_id
+                    ) VALUES (?, ?, date('now'), ?, ?, ?, 1, ?, 'opened', ?)
+                """, (
+                    bottle_id, target.display_name, rating,
+                    tasting_notes, pairing_notes, aging_stage, uid
+                ))
+
+            conn.commit()
+
+        return self.get_bottle(bottle_id, user_id=user_id)
 
     def restock_bottle(
         self,

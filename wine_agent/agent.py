@@ -579,9 +579,28 @@ class SommelierAgent:
         """Logs a bottle gift removal and updates inventory without rating or tasting notes."""
         return self.db.gift_bottle(bottle_id, count, situation_notes, user_id=user_id)
 
-    def get_archived_bottles(self, user_id: Optional[int] = 1) -> List[WineBottle]:
+    def get_archived_bottles(self, user_id: Optional[int] = 1, consolidate: bool = False) -> List[WineBottle]:
         """Returns all depleted wines (0 bottles) in the archive for the user."""
-        return self.db.get_archived_bottles(user_id=user_id)
+        return self.db.get_archived_bottles(user_id=user_id, consolidate=consolidate)
+
+    def update_archive_review(
+        self,
+        bottle_id: int,
+        rating: Optional[float] = None,
+        tasting_notes: str = "",
+        pairing_notes: str = "",
+        bottle_ids: Optional[List[int]] = None,
+        user_id: Optional[int] = 1
+    ) -> Optional[WineBottle]:
+        """Updates user rating and tasting notes for an archived bottle."""
+        return self.db.update_archive_review(
+            bottle_id=bottle_id,
+            rating=rating,
+            tasting_notes=tasting_notes,
+            pairing_notes=pairing_notes,
+            bottle_ids=bottle_ids,
+            user_id=user_id
+        )
 
     def restock_bottle(
         self,

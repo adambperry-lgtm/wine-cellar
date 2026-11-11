@@ -154,7 +154,8 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json([b.to_dict() for b in bottles])
 
         elif path in ("/api/archive", "/api/bottles/archive"):
-            archived = self.agent.db.list_bottles(only_in_stock=False, archived_only=True, user_id=current_user.id)
+            consolidate = params.get("consolidate", ["0"])[0].lower() in ("1", "true")
+            archived = self.agent.db.get_archived_bottles(user_id=current_user.id, consolidate=consolidate)
             self._send_json([b.to_dict() for b in archived])
 
         elif path == "/api/stats":
@@ -459,6 +460,41 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._send_json({"error": "Bottle not found"}, status=404)
 
+        elif path in ("/api/archive/review", "/api/archive/update", "/api/bottles/review"):
+            b_id = payload.get("bottle_id") or payload.get("id")
+            if not b_id:
+                self._send_json({"error": "bottle_id is required"}, status=400)
+                return
+            b_ids = payload.get("bottle_ids")
+            if b_ids and isinstance(b_ids, list):
+                b_ids = [int(x) for x in b_ids if str(x).isdigit()]
+            else:
+                b_ids = [int(b_id)]
+
+            rating_raw = payload.get("rating")
+            rating = None
+            if rating_raw is not None and str(rating_raw).strip() != "":
+                try:
+                    rating = float(rating_raw)
+                except ValueError:
+                    rating = None
+
+            tasting_notes = str(payload.get("tasting_notes") or payload.get("notes") or payload.get("personal_notes") or "").strip()
+            pairing_notes = str(payload.get("pairing_notes") or "").strip()
+
+            updated = self.agent.update_archive_review(
+                bottle_id=int(b_id),
+                rating=rating,
+                tasting_notes=tasting_notes,
+                pairing_notes=pairing_notes,
+                bottle_ids=b_ids,
+                user_id=current_user.id
+            )
+            if updated:
+                self._send_json({"success": True, "bottle": updated.to_dict()})
+            else:
+                self._send_json({"error": "Bottle not found"}, status=404)
+
         elif path == "/api/move-bottle":
             b_id = payload.get("bottle_id") or payload.get("id")
             if not b_id:
@@ -499,6 +535,8 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             for key in ("producer", "wine_name", "varietal", "region", "sub_region", "country", "location_rack", "location_bin", "personal_notes"):
                 if key in payload:
                     setattr(existing, key, payload[key])
+            if "tasting_notes" in payload and not payload.get("personal_notes"):
+                existing.personal_notes = str(payload["tasting_notes"]).strip()
             if "vintage" in payload:
                 existing.vintage = int(payload["vintage"]) if payload["vintage"] is not None else None
             if "wine_type" in payload:
