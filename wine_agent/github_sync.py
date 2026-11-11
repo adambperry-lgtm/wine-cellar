@@ -82,12 +82,12 @@ def prepare_distribution_files(base_dir: Optional[str] = None) -> str:
     with open(full_index_path, "r", encoding="utf-8") as f:
         text = f.read()
 
-    # Strip personal cellar bottles so GitHub Pages starts as a clean slate
+    # Strip personal cellar bottles for the blank distribution file
     idx1 = text.find("const FALLBACK_BOTTLES = [")
-    idx2 = text.find("async function loadData()", idx1) if idx1 != -1 else -1
+    semi = text.find("];", idx1) if idx1 != -1 else -1
 
-    if idx1 != -1 and idx2 != -1:
-        blank_content = text[:idx1] + "const FALLBACK_BOTTLES = [];\n\n    " + text[idx2:]
+    if idx1 != -1 and semi != -1:
+        blank_content = text[:idx1] + "const FALLBACK_BOTTLES = [];" + text[semi + 2:]
     else:
         blank_content = text
 
@@ -98,10 +98,10 @@ def prepare_distribution_files(base_dir: Optional[str] = None) -> str:
     with open(github_index_path, "w", encoding="utf-8") as f:
         f.write(blank_content)
 
-    # Also keep repository root index.html synchronized for GitHub Pages
+    # Repository root index.html serves local server & main app with sample collection
     root_index_path = os.path.join(base_dir, "index.html")
     with open(root_index_path, "w", encoding="utf-8") as f:
-        f.write(blank_content)
+        f.write(text)
 
     return blank_content
 

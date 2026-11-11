@@ -465,7 +465,7 @@ class TestWineDatabaseAndAgent(unittest.TestCase):
         # Preserve original key if present
         original_key = get_gemini_api_key()
         try:
-            test_key = "AIzaSyFakeTestKeyForCellarSommelier123"
+            test_key = "AIzaSyTestKeyForPersistenceVerification01"
             saved = save_gemini_api_key(test_key)
             self.assertTrue(saved)
             retrieved = get_gemini_api_key()
@@ -478,6 +478,12 @@ class TestWineDatabaseAndAgent(unittest.TestCase):
                 key_file = os.path.join(base_dir, ".gemini_key")
                 if os.path.exists(key_file):
                     os.remove(key_file)
+                user_key_file = os.path.expanduser("~/.gemini/config/gemini_key.txt")
+                if os.path.exists(user_key_file):
+                    os.remove(user_key_file)
+                home_key_file = os.path.expanduser("~/.gemini_key")
+                if os.path.exists(home_key_file):
+                    os.remove(home_key_file)
 
     def test_validate_gemini_api_key(self):
         from wine_agent.gemini_sommelier import validate_gemini_api_key
@@ -496,6 +502,34 @@ class TestWineDatabaseAndAgent(unittest.TestCase):
             res_valid = validate_gemini_api_key("fake_valid_key")
             self.assertTrue(res_valid["valid"])
             self.assertIn("gemini-flash-lite-latest", res_valid["model"])
+
+    def test_ribeye_recommendation_stonestreet(self):
+        from wine_agent.models import WineBottle
+        self.db.add_bottle(WineBottle(
+            producer="Stonestreet",
+            wine_name="Estate Cabernet Sauvignon",
+            vintage=2018,
+            varietal="Cabernet Sauvignon",
+            region="California",
+            sub_region="Alexander Valley",
+            quantity=1
+        ), user_id=1)
+        recs = self.agent.recommend_bottle(food="ribeye", user_id=1)
+        self.assertGreater(len(recs), 0)
+        producers = [r["bottle"].producer for r in recs]
+        self.assertIn("Stonestreet", producers)
+
+    def test_gemini_sommelier_empty_cellar_instruction(self):
+        from wine_agent.gemini_sommelier import ask_gemini_sommelier
+        with patch("wine_agent.gemini_sommelier.call_gemini_api") as mock_api:
+            mock_api.return_value = "### Sommelier Advice\nPurchase benchmark Rioja or Barolo."
+            res = ask_gemini_sommelier(query="fresh oysters", bottles=[], api_key="AIzaSyTestKeyValidFormatForTesting00000", mode="open")
+            self.assertTrue(res["success"])
+            self.assertIn("Purchase benchmark Rioja", res["advice"])
+            # Verify system prompt instructed to recommend purchases for empty cellar
+            prompt_used = mock_api.call_args[0][0]
+            self.assertIn("cellar is currently empty", prompt_used)
+            self.assertIn("AUTOMATICALLY provide 2 to 3 SPECIFIC benchmark wines to PURCHASE", prompt_used)
 
     def test_critic_source_url(self):
         from wine_agent.critic_ratings import get_public_critic_ratings, get_critic_source_url

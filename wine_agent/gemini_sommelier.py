@@ -80,7 +80,7 @@ def _is_valid_gemini_key(k: Optional[str]) -> bool:
     clean = k.strip()
     # Google AI Studio keys start with AIzaSy and are ~39 chars.
     # Exclude internal tokens starting with "AQ." which cause 403 policy errors.
-    if clean.startswith("AQ.") or len(clean) < 15:
+    if clean.startswith("AQ.") or len(clean) < 15 or "FakeTestKey" in clean:
         return False
     return True
 
@@ -536,12 +536,7 @@ def ask_gemini_sommelier(
 
     cellar_text = format_cellar_context(bottles)
     if not cellar_text:
-        return {
-            "success": False,
-            "error": "Your cellar is currently empty. Add bottles before asking for recommendations.",
-            "source": "gemini",
-            "history": history or []
-        }
+        cellar_text = "The collector's cellar is currently empty (0 bottles in stock)."
 
     has_history = bool(history and len(history) > 0)
     history_transcript = format_history_transcript(history)
@@ -624,30 +619,46 @@ COLLECTOR'S LATEST FOLLOW-UP QUESTION / DIRECTION:
 
 INSTRUCTIONS:
 1. Respond directly to the collector's follow-up or critique regarding what to open from their cellar.
-2. If they ask for alternatives, different styles, different price points, or have questions about decanting/pairing, evaluate bottles strictly from their cellar inventory.
-3. For any recommended bottle, specify full name, vintage, cellar location, pairing harmony, and service guidance (decant duration and temperature).
-4. Use a polished, master sommelier tone with clean Markdown.
+2. If they ask for alternatives, different styles, different price points, or have questions about decanting/pairing, evaluate bottles from their cellar inventory.
+3. If no suitable bottles exist in their cellar matching their revised criteria or dining need:
+   - Clearly explain that their cellar does not contain an ideal match.
+   - AUTOMATICALLY recommend 2 to 3 SPECIFIC real-world benchmark wines to PURCHASE ready to drink now that ship to NJ.
+4. For any recommended bottle from cellar, specify full name, vintage, cellar location, pairing harmony, and service guidance (decant duration and temperature).
+5. Use a polished, master sommelier tone with clean Markdown.
 """
         else:
-            system_prompt = f"""You are a Master Sommelier acting as the private cellar sommelier for a private collector.
-Your recommendations MUST be grounded strictly in the collector's actual cellar bottles listed below.
-Do NOT invent bottles that are not in this cellar list.
+            system_prompt = f"""You are a Master Sommelier acting as the private cellar sommelier for a private collector in New Jersey (NJ).
 
 CURRENT CELLAR INVENTORY:
 {cellar_text}
 
-INSTRUCTIONS:
-1. Recommend 1 to 3 specific bottles from the cellar that best suit the collector's query: "{query}".
-2. PRIORITIZE bottles whose Drinking Status is "In Peak Window" or "Approaching Peak" or "Drink Soon (Late Peak)". If a wine is "Hold (Too Young)", explain why it should be held unless the user specifically wants to open a youthful powerhouse.
-3. For each recommended bottle, specify:
-   - Full Name & Vintage
-   - Storage location (e.g. Basement Fridge)
-   - Why its acid, tannins, and flavor profile harmonize with the food/occasion
-   - Service guidance: Exact decanting duration and ideal serving temperature
-4. Use a polished, evocative, master sommelier tone. Format with clear Markdown headings and bullet points.
-
-USER QUERY:
+USER DINING GOAL / QUERY:
 "{query}"
+
+INSTRUCTIONS:
+1. CELLAR EVALUATION:
+   - Carefully evaluate the collector's cellar inventory to see if they own bottles that pair harmoniously with "{query}".
+2. IF MATCHING BOTTLES EXIST IN THE CELLAR:
+   - Recommend 1 to 3 specific bottles from the cellar to open tonight.
+   - PRIORITIZE bottles whose Drinking Status is "In Peak Window", "Approaching Peak", or "Drink Soon (Late Peak)". If a wine is "Hold (Too Young)", explain why it should be held unless the user specifically wants to open a youthful powerhouse.
+   - For each recommended bottle, specify:
+     * Full Name, Vintage, and Cellar Location (e.g. Upstairs Fridge / Basement Fridge)
+     * Drinking Status & Maturity Window
+     * Why its acid, tannins, and flavor profile harmonize with "{query}"
+     * Precise service guidance: Exact decanting duration and ideal serving temperature (°F)
+3. IF NO MATCHING BOTTLES EXIST IN THE CELLAR (or if the cellar has no bottles suitable for this dish, or the cellar is currently empty):
+   - Explicitly inform the collector that their cellar does not currently contain a bottle that matches "{query}".
+   - AUTOMATICALLY provide 2 to 3 SPECIFIC benchmark wines to PURCHASE ready to drink now that complement their collection and pair magnificently with "{query}".
+   - Every purchase recommendation must be available at retail in New Jersey (NJ) or legally shippable to NJ addresses.
+   - For each recommended purchase, clearly specify:
+     * **Wine & Producer**: Specific estate and cuvée
+     * **Target Vintage(s)**: Current drinking sweet spot (ready to drink now)
+     * **Est. Price**: Estimated retail price
+     * **NJ Availability**: Confirmed retail or shipping to NJ
+     * **Pairing Harmony & Cellar Complement**: Why it pairs with the dish and complements their cellar
+     * **Service Guidance**: Decant time and serving temperature
+     * **Where to Buy**: Direct link formatted as: [🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+PRODUCER+WINE+wine+ship+to+NJ)
+4. Use a polished, evocative, master sommelier tone. Format with clear Markdown headings and bullet points.
 """
 
     try:

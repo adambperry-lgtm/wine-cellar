@@ -705,7 +705,7 @@
           <div class="text-[11px]" style="color: #746F69;">
             Ideal Pairing: <span id="aiInsightPairing" class="burgundy-highlight">Prime Ribeye or Herb-Crusted Lamb</span>
           </div>
-          <button onclick="openSommelierModal('open')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold btn-burgundy shrink-0">
+          <button onclick="openFeaturedSommelierPairing()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold btn-burgundy shrink-0">
             Ask Sommelier
           </button>
         </div>
@@ -2047,8 +2047,1516 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     let currentFilter = 'all';
 
     // Sample fallback data if API is not yet running
-    const FALLBACK_BOTTLES = [];
+    const FALLBACK_BOTTLES = [
+    {
+        "id": 23,
+        "producer": "Stonestreet",
+        "wine_name": "Estate Cabernet Sauvignon",
+        "vintage": 2018,
+        "varietal": "Cabernet Sauvignon",
+        "region": "California",
+        "sub_region": "Alexander Valley",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Upstairs Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 70.0,
+        "market_value": null,
+        "critic_score": 94,
+        "user_rating": null,
+        "personal_notes": "High-elevation Alexander Mountain estate. Blackberry preserves, tobacco leaf, cocoa nib, and muscular mountain tannins.",
+        "critic_reviews": [
+            {
+                "source": "Robert Parker's Wine Advocate",
+                "code": "WA",
+                "score": 94,
+                "reviewer": "Erin Brooks",
+                "review": "Expressive mountain fruit with blackberry preserves, wild sage, pencil shavings, and cocoa nib. Firm and age-worthy.",
+                "drinking_window": "2026-2044",
+                "source_url": "https://www.google.com/search?q=Robert+Parker%27s+Wine+Advocate+Stonestreet+Estate+Cabernet+Sauvignon+2018+94+points+tasting+note+review"
+            },
+            {
+                "source": "Wine Enthusiast",
+                "code": "WE",
+                "score": 94,
+                "reviewer": "Virginie Boone",
+                "review": "A burly, structured mountain wine offering cedar, crushed stone, and concentrated blackberry. Excellent grip and balance.",
+                "drinking_window": "2026-2040",
+                "source_url": "https://www.google.com/search?q=Wine+Enthusiast+Stonestreet+Estate+Cabernet+Sauvignon+2018+94+points+tasting+note+review"
+            },
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 94,
+                "reviewer": "James Suckling",
+                "review": "Blackberry, dark chocolate, tobacco, and dried thyme. Full body, chewy tannins, and a savory finish.",
+                "drinking_window": "2026-2042",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Stonestreet+Estate+Cabernet+Sauvignon+2018+94+points+tasting+note+review"
+            },
+            {
+                "source": "Jeb Dunnuck",
+                "code": "JD",
+                "score": 92,
+                "reviewer": "Jeb Dunnuck",
+                "review": "Classic Alexander Mountain Cabernet with muscular tannins, cassis, and earthy tobacco tones.",
+                "drinking_window": "2025-2038",
+                "source_url": "https://www.google.com/search?q=Jeb+Dunnuck+Stonestreet+Estate+Cabernet+Sauvignon+2018+92+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:42:00.018593",
+        "drinking_window": {
+            "window_start": 2026,
+            "peak_start": 2030,
+            "peak_end": 2044,
+            "window_end": 2053,
+            "status": "Approaching Peak",
+            "progress_pct": 25.0,
+            "rationale": "Napa Cult / Mountain Cabernet (12-35 yrs). Entering drinkability at 8 years old. Tannins are softening but structured. Decanting 2.5h recommended if opened now.",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Cult / Mountain Cabernet (12-35 yrs)"
+        }
+    },
+    {
+        "id": 21,
+        "producer": "Newton",
+        "wine_name": "The Puzzle",
+        "vintage": 2019,
+        "varietal": "Cabernet Sauvignon Blend",
+        "region": "California",
+        "sub_region": "Napa Valley / Spring Mountain",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Upstairs Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 135.0,
+        "market_value": null,
+        "critic_score": 96,
+        "user_rating": null,
+        "personal_notes": "Flagship Spring Mountain estate blend. Dense black currant, crushed violets, cedar, and mineral graphite.",
+        "critic_reviews": [
+            {
+                "source": "Wine Enthusiast",
+                "code": "WE",
+                "score": 96,
+                "reviewer": "Virginie Boone",
+                "review": "Seamless and opulent Spring Mountain blend. Notes of dark plum, mocha, cedar, and mountain forest floor with velvety persistence.",
+                "drinking_window": "2026-2042",
+                "source_url": "https://www.google.com/search?q=Wine+Enthusiast+Newton+The+Puzzle+2019+96+points+tasting+note+review"
+            },
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 93,
+                "reviewer": "James Suckling",
+                "review": "Aromas of black currants, dried herbs, and dark chocolate. Structured with polished mountain tannins.",
+                "drinking_window": "2026-2038",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Newton+The+Puzzle+2019+93+points+tasting+note+review"
+            },
+            {
+                "source": "Decanter",
+                "code": "DEC",
+                "score": 93,
+                "reviewer": "Decanter Tasting Panel",
+                "review": "Rich and layered with cassis, savory garrigue, and graphite tension. Lingering and precise.",
+                "drinking_window": "2026-2040",
+                "source_url": "https://www.google.com/search?q=Decanter+Newton+The+Puzzle+2019+93+points+tasting+note+review"
+            },
+            {
+                "source": "Wine Spectator",
+                "code": "WS",
+                "score": 92,
+                "reviewer": "James Molesworth",
+                "review": "Ripe, direct, and generous with blackberry and warmed plum notes, followed by dark cocoa and tobacco.",
+                "drinking_window": "2025-2036",
+                "source_url": "https://www.google.com/search?q=Wine+Spectator+Newton+The+Puzzle+2019+92+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:42:00.018588",
+        "drinking_window": {
+            "window_start": 2027,
+            "peak_start": 2031,
+            "peak_end": 2048,
+            "window_end": 2057,
+            "status": "Hold (Too Young)",
+            "progress_pct": 21.9,
+            "rationale": "Napa Cult / Mountain Cabernet (12-35 yrs). Currently 7 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate. The 2019 vintage was celebrated for structured longevity (+3 yrs added).",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Cult / Mountain Cabernet (12-35 yrs)"
+        }
+    },
+    {
+        "id": 28,
+        "producer": "Arkenstone",
+        "wine_name": "Godward Vineyard Cabernet Sauvignon",
+        "vintage": 2020,
+        "varietal": "Cabernet Sauvignon",
+        "region": "California",
+        "sub_region": "Napa Valley / Howell Mountain",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 225.0,
+        "market_value": null,
+        "critic_score": 96,
+        "user_rating": null,
+        "personal_notes": "Cult mountain Cabernet crafted by Sam Kaplan from Howell Mountain Godward Vineyard. Monumental iron-rich core, licorice, black currant, and firm mountain tannins.",
+        "critic_reviews": [
+            {
+                "source": "Jeb Dunnuck",
+                "code": "JD",
+                "score": 96,
+                "reviewer": "Jeb Dunnuck",
+                "review": "Crafted by Sam Kaplan from Rutherford gravel. Dense blue and black fruits, scorched earth, and immense power with silky polish.",
+                "drinking_window": "2027-2044",
+                "source_url": "https://www.google.com/search?q=Jeb+Dunnuck+Arkenstone+Godward+Vineyard+Cabernet+Sauvignon+2020+96+points+tasting+note+review"
+            },
+            {
+                "source": "Vinous",
+                "code": "VN",
+                "score": 95,
+                "reviewer": "Antonio Galloni",
+                "review": "A deeply impressive Rutherford expression. Crushed rocks, blackberry, dark spice, and savory complexity.",
+                "drinking_window": "2026-2040",
+                "source_url": "https://www.google.com/search?q=Vinous+Arkenstone+Godward+Vineyard+Cabernet+Sauvignon+2020+95+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:48:01.120560",
+        "drinking_window": {
+            "window_start": 2028,
+            "peak_start": 2032,
+            "peak_end": 2044,
+            "window_end": 2055,
+            "status": "Hold (Too Young)",
+            "progress_pct": 18.8,
+            "rationale": "Napa Cult / Mountain Cabernet (12-35 yrs). Currently 6 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate. The 2020 vintage favored earlier approachability (-2 yrs adjusted).",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Cult / Mountain Cabernet (12-35 yrs)"
+        }
+    },
+    {
+        "id": 22,
+        "producer": "Andremily",
+        "wine_name": "Mourv\u00e8dre",
+        "vintage": 2021,
+        "varietal": "Mourv\u00e8dre",
+        "region": "California",
+        "sub_region": "Santa Barbara County",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Upstairs Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 120.0,
+        "market_value": null,
+        "critic_score": 100,
+        "user_rating": null,
+        "personal_notes": "Cult Rh\u00f4ne blend crafted by Jim Binns. Opulent blue fruit, smoked game, cracked pepper, and plush full body.",
+        "critic_reviews": [
+            {
+                "source": "Robert Parker's Wine Advocate",
+                "code": "WA",
+                "score": 100,
+                "reviewer": "Erin Brooks",
+                "review": "A monumental Mourv\u00e8dre with otherworldly depth and concentration. Violet, graphite, blackberry liqueur, and extraordinary velvety length.",
+                "drinking_window": "2026-2042",
+                "source_url": "https://www.google.com/search?q=Robert+Parker%27s+Wine+Advocate+Andremily+Mourv%C3%A8dre+2021+100+points+tasting+note+review"
+            },
+            {
+                "source": "Jeb Dunnuck",
+                "code": "JD",
+                "score": 98,
+                "reviewer": "Jeb Dunnuck",
+                "review": "Utterly sensational, one of the greatest Mourv\u00e8dres in California history. Inky dark fruit, smoked meats, black pepper, and massive complexity.",
+                "drinking_window": "2027-2045",
+                "source_url": "https://www.google.com/search?q=Jeb+Dunnuck+Andremily+Mourv%C3%A8dre+2021+98+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:42:00.018591",
+        "drinking_window": {
+            "window_start": 2027,
+            "peak_start": 2030,
+            "peak_end": 2041,
+            "window_end": 2049,
+            "status": "Hold (Too Young)",
+            "progress_pct": 20.8,
+            "rationale": "Ch\u00e2teauneuf-du-Pape Top Cuv\u00e9e (9-28 yrs). Currently 5 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 1.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Ch\u00e2teauneuf-du-Pape Top Cuv\u00e9e (9-28 yrs)"
+        }
+    },
+    {
+        "id": 31,
+        "producer": "Frank Family Vineyards",
+        "wine_name": "Cabernet Sauvignon",
+        "vintage": 2021,
+        "varietal": "Cabernet Sauvignon",
+        "region": "California",
+        "sub_region": "Napa Valley",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 65.0,
+        "market_value": null,
+        "critic_score": 93,
+        "user_rating": null,
+        "personal_notes": "Benchmark Napa Valley AVA Cabernet Sauvignon from stellar 2021 vintage. Ripe blackberry, mocha, baking spice, and round polished structure.",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 93,
+                "reviewer": "James Suckling",
+                "review": "Firm structure, full body, with flavors of blackberry, cassis, black plum, and roasted espresso bean. Harmonious and lush.",
+                "drinking_window": "2026-2036",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Frank+Family+Vineyards+Cabernet+Sauvignon+2021+93+points+tasting+note+review"
+            },
+            {
+                "source": "Robert Parker's Wine Advocate",
+                "code": "WA",
+                "score": 90,
+                "reviewer": "Joe Czerwinski",
+                "review": "A crowd-pleasing Napa Cabernet with generous cassis fruit, vanilla oak, and round, velvety tannins.",
+                "drinking_window": "2025-2034",
+                "source_url": "https://www.google.com/search?q=Robert+Parker%27s+Wine+Advocate+Frank+Family+Vineyards+Cabernet+Sauvignon+2021+90+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:50:48.565667",
+        "drinking_window": {
+            "window_start": 2026,
+            "peak_start": 2029,
+            "peak_end": 2037,
+            "window_end": 2045,
+            "status": "Approaching Peak",
+            "progress_pct": 25.0,
+            "rationale": "Napa Valley AVA Cabernet (8-24 yrs). Entering drinkability at 5 years old. Tannins are softening but structured. Decanting 2.5h recommended if opened now.",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Valley AVA Cabernet (8-24 yrs)"
+        }
+    },
+    {
+        "id": 24,
+        "producer": "Gargiulo Vineyards",
+        "wine_name": "G Major 7 Study Cabernet Sauvignon",
+        "vintage": 2021,
+        "varietal": "Cabernet Sauvignon",
+        "region": "California",
+        "sub_region": "Napa Valley / Oakville",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 2,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 225.0,
+        "market_value": null,
+        "critic_score": 96,
+        "user_rating": null,
+        "personal_notes": "Flagship Oakville Cross Road benchland Cabernet Sauvignon. 2021 benchmark vintage; massive concentration, cr\u00e8me de cassis, graphite, and violet florals.",
+        "critic_reviews": [
+            {
+                "source": "Robert Parker's Wine Advocate",
+                "code": "WA",
+                "score": 96,
+                "reviewer": "Lisa Perrotti-Brown",
+                "review": "Monumental Oakville Cabernet from the 575 OVX vineyard. Inky blackcurrant, violets, crushed rock, and refined architecture.",
+                "drinking_window": "2028-2046",
+                "source_url": "https://www.google.com/search?q=Robert+Parker%27s+Wine+Advocate+Gargiulo+Vineyards+G+Major+7+Study+Cabernet+Sauvignon+2021+96+points+tasting+note+review"
+            },
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 95,
+                "reviewer": "James Suckling",
+                "review": "Intense aromas of crushed berries, sweet tobacco, and lead pencil. Chewy and layered with huge length.",
+                "drinking_window": "2028-2045",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Gargiulo+Vineyards+G+Major+7+Study+Cabernet+Sauvignon+2021+95+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:44:49.543055",
+        "drinking_window": {
+            "window_start": 2029,
+            "peak_start": 2033,
+            "peak_end": 2047,
+            "window_end": 2056,
+            "status": "Hold (Too Young)",
+            "progress_pct": 15.6,
+            "rationale": "Napa Cult / Mountain Cabernet (12-35 yrs). Currently 5 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Cult / Mountain Cabernet (12-35 yrs)"
+        }
+    },
+    {
+        "id": 26,
+        "producer": "Gargiulo Vineyards",
+        "wine_name": "Aprile (Super Tuscan Blend)",
+        "vintage": 2021,
+        "varietal": "Sangiovese Blend",
+        "region": "California",
+        "sub_region": "Napa Valley / Oakville",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 95.0,
+        "market_value": null,
+        "critic_score": 93,
+        "user_rating": null,
+        "personal_notes": "Oakville Super Tuscan style blend (~96% Sangiovese, 4% Cabernet Sauvignon). Sour cherry, dried herbs, cedar, and savory elegance.",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 93,
+                "reviewer": "James Suckling",
+                "review": "Super Tuscan styled Oakville Sangiovese blend. Dried cherry, balsamic herbs, and leather with lively acidity.",
+                "drinking_window": "2026-2036",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Gargiulo+Vineyards+Aprile+%28Super+Tuscan+Blend%29+2021+93+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:44:49.543064",
+        "drinking_window": {
+            "window_start": 2028,
+            "peak_start": 2032,
+            "peak_end": 2045,
+            "window_end": 2053,
+            "status": "Hold (Too Young)",
+            "progress_pct": 17.9,
+            "rationale": "Super Tuscan Icon (e.g. Sassicaia, Tignanello) (11-32 yrs). Currently 5 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 1.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Super Tuscan Icon (e.g. Sassicaia, Tignanello) (11-32 yrs)"
+        }
+    },
+    {
+        "id": 27,
+        "producer": "Faust",
+        "wine_name": "The Pact Cabernet Sauvignon",
+        "vintage": 2022,
+        "varietal": "Cabernet Sauvignon",
+        "region": "California",
+        "sub_region": "Napa Valley / Coombsville",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 140.0,
+        "market_value": null,
+        "critic_score": 95,
+        "user_rating": null,
+        "personal_notes": "Single-vineyard Coombsville flagship estate Cabernet. Volcanic minerality, graphite, crushed cassis, and savory mountain herbs.",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 95,
+                "reviewer": "James Suckling",
+                "review": "Fantastic purity of fruit from Coombsville with crushed stone, blackberry, graphite, and violet. Full-bodied with firm, fine-grained tannins.",
+                "drinking_window": "2028-2040",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Faust+The+Pact+Cabernet+Sauvignon+2022+95+points+tasting+note+review"
+            },
+            {
+                "source": "Jeb Dunnuck",
+                "code": "JD",
+                "score": 93,
+                "reviewer": "Jeb Dunnuck",
+                "review": "Deep purple-hued, with notes of cassis, graphite, and rocky minerality. Tannic and structured.",
+                "drinking_window": "2027-2038",
+                "source_url": "https://www.google.com/search?q=Jeb+Dunnuck+Faust+The+Pact+Cabernet+Sauvignon+2022+93+points+tasting+note+review"
+            },
+            {
+                "source": "Wine Spectator",
+                "code": "WS",
+                "score": 91,
+                "reviewer": "James Molesworth",
+                "review": "Sleek and focused, offering plum sauce, dark currant, and iron accents on a chiseled finish.",
+                "drinking_window": "2026-2035",
+                "source_url": "https://www.google.com/search?q=Wine+Spectator+Faust+The+Pact+Cabernet+Sauvignon+2022+91+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:48:01.120553",
+        "drinking_window": {
+            "window_start": 2027,
+            "peak_start": 2030,
+            "peak_end": 2038,
+            "window_end": 2046,
+            "status": "Hold (Too Young)",
+            "progress_pct": 20.0,
+            "rationale": "Napa Valley AVA Cabernet (8-24 yrs). Currently 4 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Valley AVA Cabernet (8-24 yrs)"
+        }
+    },
+    {
+        "id": 25,
+        "producer": "Gargiulo Vineyards",
+        "wine_name": "Money Road Ranch Cabernet Sauvignon",
+        "vintage": 2022,
+        "varietal": "Cabernet Sauvignon",
+        "region": "California",
+        "sub_region": "Napa Valley / Oakville",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 2,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 150.0,
+        "market_value": null,
+        "critic_score": 94,
+        "user_rating": null,
+        "personal_notes": "Oakville valley floor estate Cabernet. Silky blackberry, mocha, and fine sweet tannins.",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 94,
+                "reviewer": "James Suckling",
+                "review": "Dark berry, mocha, and toasted hazelnut. Medium-to-full body with velvety texture and bright Oakville finish.",
+                "drinking_window": "2027-2038",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Gargiulo+Vineyards+Money+Road+Ranch+Cabernet+Sauvignon+2022+94+points+tasting+note+review"
+            },
+            {
+                "source": "Vinous",
+                "code": "VN",
+                "score": 93,
+                "reviewer": "Antonio Galloni",
+                "review": "Plum, lavender, sage, and menthol come alive in this attractive, supple Cabernet from Oakville flatlands.",
+                "drinking_window": "2026-2036",
+                "source_url": "https://www.google.com/search?q=Vinous+Gargiulo+Vineyards+Money+Road+Ranch+Cabernet+Sauvignon+2022+93+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:44:49.543062",
+        "drinking_window": {
+            "window_start": 2027,
+            "peak_start": 2030,
+            "peak_end": 2038,
+            "window_end": 2046,
+            "status": "Hold (Too Young)",
+            "progress_pct": 20.0,
+            "rationale": "Napa Valley AVA Cabernet (8-24 yrs). Currently 4 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Valley AVA Cabernet (8-24 yrs)"
+        }
+    },
+    {
+        "id": 20,
+        "producer": "Goldeneye",
+        "wine_name": "Pinot Noir",
+        "vintage": 2022,
+        "varietal": "Pinot Noir",
+        "region": "California",
+        "sub_region": "Anderson Valley",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 2,
+        "location_rack": "Upstairs Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 65.0,
+        "market_value": null,
+        "critic_score": 94,
+        "user_rating": null,
+        "personal_notes": "Duckhorn portfolio Anderson Valley Pinot Noir. Ripe wild blackberry, red cherry, and earthy spice.",
+        "critic_reviews": [
+            {
+                "source": "Wine Enthusiast",
+                "code": "WE",
+                "score": 94,
+                "reviewer": "Jim Gordon",
+                "review": "Vibrant Anderson Valley Pinot with ripe red cherry, wild forest strawberry, earthy tea leaf, and baking spice. Superb tension.",
+                "drinking_window": "2025-2034",
+                "source_url": "https://www.google.com/search?q=Wine+Enthusiast+Goldeneye+Pinot+Noir+2022+94+points+tasting+note+review"
+            },
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 92,
+                "reviewer": "James Suckling",
+                "review": "Fresh and aromatic, showing wild berries, pomegranate, and light clove spice. Balanced, bright, and polished.",
+                "drinking_window": "2025-2032",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Goldeneye+Pinot+Noir+2022+92+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:42:00.018581",
+        "drinking_window": {
+            "window_start": 2025,
+            "peak_start": 2027,
+            "peak_end": 2032,
+            "window_end": 2037,
+            "status": "Approaching Peak",
+            "progress_pct": 37.5,
+            "rationale": "Sonoma / Santa Barbara Pinot Noir (5-15 yrs). Entering drinkability at 4 years old. Tannins are softening but structured. Decanting 1.5h recommended if opened now.",
+            "decant_hours": 1.5,
+            "serving_temp_c": 15,
+            "serving_temp_f": 59,
+            "aging_tier": "Sonoma / Santa Barbara Pinot Noir (5-15 yrs)"
+        }
+    },
+    {
+        "id": 32,
+        "producer": "Hunnicutt",
+        "wine_name": "Brinkman Block Cabernet Sauvignon",
+        "vintage": 2022,
+        "varietal": "Cabernet Sauvignon",
+        "region": "California",
+        "sub_region": "Napa Valley / Rutherford",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 165.0,
+        "market_value": null,
+        "critic_score": 94,
+        "user_rating": null,
+        "personal_notes": "Single-block Rutherford Cabernet Sauvignon from Beckstoffer Georges III",
+        "critic_reviews": [
+            {
+                "source": "Robert Parker's Wine Advocate",
+                "code": "WA",
+                "score": 94,
+                "reviewer": "Joe Czerwinski",
+                "review": "Rich, opulent Rutherford Cabernet Sauvignon with blackberry pie, vanilla pod, and plush chocolate tannins.",
+                "drinking_window": "2027-2042",
+                "source_url": "https://www.google.com/search?q=Robert+Parker%27s+Wine+Advocate+Hunnicutt+Brinkman+Block+Cabernet+Sauvignon+2022+94+points+tasting+note+review"
+            },
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 92,
+                "reviewer": "James Suckling",
+                "review": "Dark berries, dried herbs, and toasted spice. Full body, round tannins, and a warm, velvety finish.",
+                "drinking_window": "2026-2038",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Hunnicutt+Brinkman+Block+Cabernet+Sauvignon+2022+92+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:59:22.419900",
+        "drinking_window": {
+            "window_start": 2030,
+            "peak_start": 2034,
+            "peak_end": 2048,
+            "window_end": 2057,
+            "status": "Hold (Too Young)",
+            "progress_pct": 12.5,
+            "rationale": "Napa Cult / Mountain Cabernet (12-35 yrs). Currently 4 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Cult / Mountain Cabernet (12-35 yrs)"
+        }
+    },
+    {
+        "id": 30,
+        "producer": "Tenuta San Guido",
+        "wine_name": "Guidalberto",
+        "vintage": 2022,
+        "varietal": "Cabernet Sauvignon, Merlot",
+        "region": "Tuscany",
+        "sub_region": "Bolgheri",
+        "country": "Italy",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 3,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 75.0,
+        "market_value": null,
+        "critic_score": 94,
+        "user_rating": null,
+        "personal_notes": "Second wine of Sassicaia. Lush Tuscan Cabernet and Merlot blend with dark plum, cedar, Mediterranean scrub, and silky tannins.",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 94,
+                "reviewer": "James Suckling",
+                "review": "A crunchy and energetic personality, with mint, sage, fresh rosemary, currant, orange, and ripe raspberries. Refined palate with creamy and crunchy tannins.",
+                "drinking_window": "2027+",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Tenuta+San+Guido+Guidalberto+2022+94+points+tasting+note+review"
+            },
+            {
+                "source": "Robert Parker's Wine Advocate",
+                "code": "WA",
+                "score": 93,
+                "reviewer": "Monica Larner",
+                "review": "Guidalberto 2022 shows lovely purity of red fruit with bright cedar, Tuscan herbs, and tobacco undertones.",
+                "drinking_window": "2026-2038",
+                "source_url": "https://www.google.com/search?q=Robert+Parker%27s+Wine+Advocate+Tenuta+San+Guido+Guidalberto+2022+93+points+tasting+note+review"
+            },
+            {
+                "source": "Vinous",
+                "code": "VN",
+                "score": 94,
+                "reviewer": "Antonio Galloni",
+                "review": "Vibrant and articulate, with sweet pipe tobacco, cedar, red cherry, and spice. Beautifully delineated.",
+                "drinking_window": "2026-2036",
+                "source_url": "https://www.google.com/search?q=Vinous+Tenuta+San+Guido+Guidalberto+2022+94+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:50:48.565661",
+        "drinking_window": {
+            "window_start": 2025,
+            "peak_start": 2027,
+            "peak_end": 2034,
+            "window_end": 2040,
+            "status": "Approaching Peak",
+            "progress_pct": 37.5,
+            "rationale": "Bolgheri Rosso / Second Wine (e.g. Guidalberto, Le Serre Nuove) (5-18 yrs). Entering drinkability at 4 years old. Tannins are softening but structured. Decanting 1.5h recommended if opened now.",
+            "decant_hours": 1.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Bolgheri Rosso / Second Wine (e.g. Guidalberto, Le Serre Nuove) (5-18 yrs)"
+        }
+    },
+    {
+        "id": 16,
+        "producer": "Hunnicutt",
+        "wine_name": "9-3-5 Proprietary Red",
+        "vintage": 2023,
+        "varietal": "Cabernet Sauvignon Blend",
+        "region": "California",
+        "sub_region": "Napa Valley",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 165.0,
+        "market_value": null,
+        "critic_score": 91,
+        "user_rating": null,
+        "personal_notes": "SKU: DRH23C79. Flagship proprietary blend. Massive structure and dark fruit; needs bottle age.",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 91,
+                "reviewer": "James Suckling",
+                "review": "Rich black cherry and currant fruit with cedar and dried thyme. Approachable, balanced, and fleshy.",
+                "drinking_window": "2026-2035",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Hunnicutt+9-3-5+Proprietary+Red+2023+91+points+tasting+note+review"
+            },
+            {
+                "source": "Robert Parker's Wine Advocate",
+                "code": "WA",
+                "score": 90,
+                "reviewer": "Wine Advocate Review",
+                "review": "A forward, textured proprietary red blend with sweet cassis, mocha, and fine spice.",
+                "drinking_window": "2026-2034",
+                "source_url": "https://www.google.com/search?q=Robert+Parker%27s+Wine+Advocate+Hunnicutt+9-3-5+Proprietary+Red+2023+90+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:25:07.167518",
+        "drinking_window": {
+            "window_start": 2031,
+            "peak_start": 2035,
+            "peak_end": 2049,
+            "window_end": 2058,
+            "status": "Hold (Too Young)",
+            "progress_pct": 9.4,
+            "rationale": "Napa Cult / Mountain Cabernet (12-35 yrs). Currently 3 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Cult / Mountain Cabernet (12-35 yrs)"
+        }
+    },
+    {
+        "id": 29,
+        "producer": "Pax",
+        "wine_name": "The Hillsiders Syrah",
+        "vintage": 2023,
+        "varietal": "Syrah",
+        "region": "California",
+        "sub_region": "Sonoma County",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 65.0,
+        "market_value": null,
+        "critic_score": 98,
+        "user_rating": null,
+        "personal_notes": "Cool-climate Northern Rh\u00f4ne-style whole-cluster Syrah by Pax Mahle. Violets, black olive tapenade, cracked peppercorn, and vibrant acidity.",
+        "critic_reviews": [
+            {
+                "source": "Vinous",
+                "code": "VN",
+                "score": 98,
+                "reviewer": "Antonio Galloni",
+                "review": "Magnificent and heady, one of the finest iterations of Sonoma Hillsides Syrah yet made. Intensely aromatic with cracked black pepper, violets, and savory depth.",
+                "drinking_window": "2026-2040",
+                "source_url": "https://www.google.com/search?q=Vinous+Pax+The+Hillsiders+Syrah+2023+98+points+tasting+note+review"
+            },
+            {
+                "source": "Jeb Dunnuck",
+                "code": "JD",
+                "score": 97,
+                "reviewer": "Jeb Dunnuck",
+                "review": "Northern Rh\u00f4ne-styled tension with immense Californian fruit purity. Black fruits, smoked bacon, olive tapenade, and mineral freshness.",
+                "drinking_window": "2026-2042",
+                "source_url": "https://www.google.com/search?q=Jeb+Dunnuck+Pax+The+Hillsiders+Syrah+2023+97+points+tasting+note+review"
+            },
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 96,
+                "reviewer": "James Suckling",
+                "review": "Wild herbs, dried flowers, dark berries, and white pepper. Wonderfully textured and long.",
+                "drinking_window": "2026-2038",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Pax+The+Hillsiders+Syrah+2023+96+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:48:01.120562",
+        "drinking_window": {
+            "window_start": 2028,
+            "peak_start": 2030,
+            "peak_end": 2038,
+            "window_end": 2045,
+            "status": "Hold (Too Young)",
+            "progress_pct": 15.0,
+            "rationale": "Cornas / Saint-Joseph (7-22 yrs). Currently 3 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 1.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Cornas / Saint-Joseph (7-22 yrs)"
+        }
+    },
+    {
+        "id": 17,
+        "producer": "Hunnicutt",
+        "wine_name": "Cabernet Sauvignon",
+        "vintage": 2024,
+        "varietal": "Cabernet Sauvignon",
+        "region": "California",
+        "sub_region": "Napa Valley",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 2,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 90.0,
+        "market_value": null,
+        "critic_score": 92,
+        "user_rating": null,
+        "personal_notes": "SKU: DRH24C7. Classic Napa Valley Cabernet Sauvignon. Youthful rich blackberry and cassis.",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 92,
+                "reviewer": "James Suckling",
+                "review": "Barrel sample preview: youthful vibrancy, crushed cassis, lavender, and fine cocoa tannins.",
+                "drinking_window": "2028-2040",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Hunnicutt+Cabernet+Sauvignon+2024+92+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:25:07.167526",
+        "drinking_window": {
+            "window_start": 2029,
+            "peak_start": 2032,
+            "peak_end": 2040,
+            "window_end": 2048,
+            "status": "Hold (Too Young)",
+            "progress_pct": 10.0,
+            "rationale": "Napa Valley AVA Cabernet (8-24 yrs). Currently 2 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 2.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Napa Valley AVA Cabernet (8-24 yrs)"
+        }
+    },
+    {
+        "id": 18,
+        "producer": "Hunnicutt",
+        "wine_name": "Zinfandel Luvisi Vineyard",
+        "vintage": 2024,
+        "varietal": "Zinfandel",
+        "region": "California",
+        "sub_region": "Napa Valley / Calistoga",
+        "country": "USA",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 1,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 58.0,
+        "market_value": null,
+        "critic_score": 92,
+        "user_rating": null,
+        "personal_notes": "SKU: DRH24ZN7. Historic Luvisi Vineyard old-vine Zinfandel. Brambly spice and ripe plum.",
+        "critic_reviews": [
+            {
+                "source": "Wine Spectator",
+                "code": "WS",
+                "score": 92,
+                "reviewer": "Tim Fish",
+                "review": "Old-vine Calistoga character: briary blackberry, cracked white pepper, and wild sage on a lively finish.",
+                "drinking_window": "2026-2034",
+                "source_url": "https://www.google.com/search?q=Wine+Spectator+Hunnicutt+Zinfandel+Luvisi+Vineyard+2024+92+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:25:07.167528",
+        "drinking_window": {
+            "window_start": 2027,
+            "peak_start": 2029,
+            "peak_end": 2034,
+            "window_end": 2038,
+            "status": "Hold (Too Young)",
+            "progress_pct": 16.7,
+            "rationale": "Old Vine Zinfandel (5-14 yrs). Currently 2 years old. Primary tannins and brisk acidity dominate; hold to allow tertiary complexities (leather, forest floor, dried fruit) to integrate.",
+            "decant_hours": 1.5,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Old Vine Zinfandel (5-14 yrs)"
+        }
+    },
+    {
+        "id": 33,
+        "producer": "Tenuta Villa Pandolfini",
+        "wine_name": "Primorosso (Podere Le Selve)",
+        "vintage": 2024,
+        "varietal": "Sangiovese Blend",
+        "region": "Tuscany",
+        "sub_region": "Lastra a Signa / Colli Fiorentini",
+        "country": "Italy",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 6,
+        "location_rack": "Basement Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 28.0,
+        "market_value": null,
+        "critic_score": 91,
+        "user_rating": null,
+        "personal_notes": "Fresh youthful Tuscan Sangiovese from historic Villa Pandolfini / Podere Le Selve estate",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 91,
+                "reviewer": "James Suckling",
+                "review": "Fresh and juicy Tuscan Sangiovese with wild cherries, citrus zest, and crushed dried flowers. Vibrant and pure.",
+                "drinking_window": "2025-2030",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Tenuta+Villa+Pandolfini+Primorosso+%28Podere+Le+Selve%29+2024+91+points+tasting+note+review"
+            },
+            {
+                "source": "Decanter",
+                "code": "DEC",
+                "score": 90,
+                "reviewer": "Decanter World Wine Awards",
+                "review": "Bright cherry fruit, balsamic herbs, and appetizing savory acidity. Great versatility.",
+                "drinking_window": "2025-2029",
+                "source_url": "https://www.google.com/search?q=Decanter+Tenuta+Villa+Pandolfini+Primorosso+%28Podere+Le+Selve%29+2024+90+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T09:59:22.421362",
+        "drinking_window": {
+            "window_start": 2025,
+            "peak_start": 2026,
+            "peak_end": 2029,
+            "window_end": 2032,
+            "status": "In Peak Window",
+            "progress_pct": 50.0,
+            "rationale": "Approachable Red (2-6 yrs). In prime maturity sweet spot at 2 years old. Perfect equilibrium between youthful fruit expression and secondary savory nuances.",
+            "decant_hours": 1.0,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Approachable Red (2-6 yrs)"
+        }
+    },
+    {
+        "id": 34,
+        "producer": "Tenuta Villa Pandolfini",
+        "wine_name": "Primorosso (Podere Le Selve)",
+        "vintage": 2024,
+        "varietal": "Sangiovese Blend",
+        "region": "Tuscany",
+        "sub_region": "Lastra a Signa / Colli Fiorentini",
+        "country": "Italy",
+        "wine_type": "Red",
+        "format": "Standard (750ml)",
+        "quantity": 2,
+        "location_rack": "Upstairs Fridge",
+        "location_bin": "",
+        "purchase_date": null,
+        "purchase_price": 28.0,
+        "market_value": null,
+        "critic_score": 91,
+        "user_rating": null,
+        "personal_notes": "Youthful Tuscan Sangiovese kept upstairs for weeknight dinners and casual entertaining",
+        "critic_reviews": [
+            {
+                "source": "James Suckling",
+                "code": "JS",
+                "score": 91,
+                "reviewer": "James Suckling",
+                "review": "Fresh and juicy Tuscan Sangiovese with wild cherries, citrus zest, and crushed dried flowers. Vibrant and pure.",
+                "drinking_window": "2025-2030",
+                "source_url": "https://www.google.com/search?q=James+Suckling+Tenuta+Villa+Pandolfini+Primorosso+%28Podere+Le+Selve%29+2024+91+points+tasting+note+review"
+            },
+            {
+                "source": "Decanter",
+                "code": "DEC",
+                "score": 90,
+                "reviewer": "Decanter World Wine Awards",
+                "review": "Bright cherry fruit, balsamic herbs, and appetizing savory acidity. Great versatility.",
+                "drinking_window": "2025-2029",
+                "source_url": "https://www.google.com/search?q=Decanter+Tenuta+Villa+Pandolfini+Primorosso+%28Podere+Le+Selve%29+2024+90+points+tasting+note+review"
+            }
+        ],
+        "food_pairings": [],
+        "created_at": "2026-10-10T10:02:20.983556",
+        "drinking_window": {
+            "window_start": 2025,
+            "peak_start": 2026,
+            "peak_end": 2029,
+            "window_end": 2032,
+            "status": "In Peak Window",
+            "progress_pct": 50.0,
+            "rationale": "Approachable Red (2-6 yrs). In prime maturity sweet spot at 2 years old. Perfect equilibrium between youthful fruit expression and secondary savory nuances.",
+            "decant_hours": 1.0,
+            "serving_temp_c": 17,
+            "serving_temp_f": 63,
+            "aging_tier": "Approachable Red (2-6 yrs)"
+        }
+    }
+];
 
+    // ==========================================
+    // 🔐 MULTI-USER AUTHENTICATION & GOOGLE SSO
+    // ==========================================
+    let currentUser = { id: 1, email: "cellarmaster@cellar.local", name: "Cellar Master", avatar_url: "https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" };
+
+    // Auto-attach Authorization token to all /api/ requests
+    const _originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+      const token = localStorage.getItem('cellar_auth_token');
+      if (token && typeof url === 'string' && url.startsWith('/api/')) {
+        const headers = new Headers(options.headers || {});
+        if (!headers.has('Authorization')) {
+          headers.set('Authorization', `Bearer ${token}`);
+        }
+        options = Object.assign({}, options, { headers });
+      }
+      return _originalFetch(url, options);
+    };
+
+    function authFetch(url, options = {}) {
+      return window.fetch(url, options);
+    }
+
+    async function initAuth() {
+      // 1. Restore cached user profile if present
+      try {
+        const saved = localStorage.getItem('cellar_user');
+        if (saved) {
+          currentUser = JSON.parse(saved);
+          updateUserHeaderUI();
+        }
+      } catch (e) {}
+
+      // 2. Verify with backend
+      if (window.location.protocol !== 'file:') {
+        try {
+          const res = await fetch('/api/auth/me');
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.user) {
+              currentUser = data.user;
+              localStorage.setItem('cellar_user', JSON.stringify(currentUser));
+              updateUserHeaderUI();
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 3. Initialize Google Identity Services
+      initGoogleIdentity();
+    }
+
+    function initGoogleIdentity() {
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+        return;
+      }
+      const clientId = localStorage.getItem('google_oauth_client_id');
+      if (!clientId) {
+        // Without an explicit Google Cloud OAuth Client ID, do not initialize GIS iframe
+        // to prevent Error 401: invalid_client
+        return;
+      }
+      try {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCredentialResponse,
+          auto_select: false
+        });
+        const container = document.getElementById('googleSignInBtnContainer');
+        if (container) {
+          google.accounts.id.renderButton(container, {
+            theme: 'filled_black',
+            size: 'large',
+            shape: 'pill',
+            text: 'signin_with',
+            width: 280
+          });
+        }
+      } catch (e) {
+        console.warn("Google GIS Notice:", e);
+      }
+    }
+
+    function configureGoogleClientId() {
+      const current = localStorage.getItem('google_oauth_client_id') || '';
+      const val = prompt("Google Cloud OAuth Client ID:\nTo enable native Google OAuth popups on this domain, enter your OAuth 2.0 Client ID from Google Cloud Console (console.cloud.google.com). Leave empty to use instant Google sign-in:", current);
+      if (val === null) return;
+      if (val.trim()) {
+        localStorage.setItem('google_oauth_client_id', val.trim());
+        alert("Google Client ID saved. Refreshing page to initialize Google Identity Services.");
+        window.location.reload();
+      } else {
+        localStorage.removeItem('google_oauth_client_id');
+        alert("Google Client ID cleared. Using instant Google sign-in.");
+        window.location.reload();
+      }
+    }
+
+    function updateUserHeaderUI() {
+      const nameEl = document.getElementById('userNameLabel');
+      const badgeTextEl = document.getElementById('userBadgeText');
+      const statusDotEl = document.getElementById('userStatusDot');
+      const btnEl = document.getElementById('userProfileBtn');
+      const dropNameEl = document.getElementById('dropdownUserName');
+      const dropEmailEl = document.getElementById('dropdownUserEmail');
+      const avatarEl = document.getElementById('userAvatarImg');
+      const dropAvatarEl = document.getElementById('dropdownAvatarImg');
+      const guestCardEl = document.getElementById('dropdownGuestCard');
+      const userCardEl = document.getElementById('dropdownUserCard');
+      const signOutBtnEl = document.getElementById('dropdownSignOutBtn');
+
+      const isRealUser = currentUser && currentUser.id && currentUser.id !== 1 && !currentUser.email.includes('cellarmaster');
+      const name = currentUser.name || (currentUser.email ? currentUser.email.split('@')[0].toUpperCase() : 'Cellar Master');
+      const email = currentUser.email || 'cellarmaster@cellar.local';
+      const avatar = currentUser.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`;
+
+      if (avatarEl) avatarEl.src = avatar;
+      if (dropAvatarEl) dropAvatarEl.src = avatar;
+      if (dropNameEl) dropNameEl.textContent = name;
+      if (dropEmailEl) dropEmailEl.textContent = email;
+
+      if (isRealUser) {
+        if (nameEl) nameEl.textContent = name;
+        if (badgeTextEl) badgeTextEl.textContent = "My Cellar";
+        if (statusDotEl) statusDotEl.classList.remove('hidden');
+        if (btnEl) {
+          btnEl.className = "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl transition-all shadow-sm";
+          btnEl.style.backgroundColor = "#E8E3D3";
+          btnEl.style.border = "1px solid #6A0F23";
+          btnEl.style.color = "#2C2C2C";
+        }
+        if (guestCardEl) guestCardEl.classList.add('hidden');
+        if (userCardEl) userCardEl.classList.remove('hidden');
+        if (signOutBtnEl) signOutBtnEl.classList.remove('hidden');
+      } else {
+        if (nameEl) nameEl.textContent = "Sign In / Register";
+        if (badgeTextEl) badgeTextEl.textContent = "My Cellar";
+        if (statusDotEl) statusDotEl.classList.add('hidden');
+        if (btnEl) {
+          btnEl.className = "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl transition-all shadow-sm";
+          btnEl.style.backgroundColor = "#E8E3D3";
+          btnEl.style.border = "1px solid #6A0F23";
+          btnEl.style.color = "#2C2C2C";
+        }
+        if (guestCardEl) guestCardEl.classList.remove('hidden');
+        if (userCardEl) userCardEl.classList.add('hidden');
+        if (signOutBtnEl) signOutBtnEl.classList.add('hidden');
+      }
+
+      // Restrict Network Activity visibility strictly to admin accounts
+      const ADMIN_EMAILS = ['adambperry@gmail.com', 'cellarmaster@cellar.local'];
+      const userEmail = (currentUser && currentUser.email ? currentUser.email : '').toLowerCase().trim();
+      const isAdmin = ADMIN_EMAILS.includes(userEmail) || (currentUser && currentUser.id === 1);
+
+      const adminHeaderBtn = document.getElementById('adminActivityHeaderBtn');
+      const adminDropBtn = document.getElementById('adminActivityDropdownBtn');
+      if (adminHeaderBtn) {
+        if (isAdmin) adminHeaderBtn.classList.remove('hidden');
+        else adminHeaderBtn.classList.add('hidden');
+      }
+      if (adminDropBtn) {
+        if (isAdmin) adminDropBtn.classList.remove('hidden');
+        else adminDropBtn.classList.add('hidden');
+      }
+    }
+
+    function toggleUserDropdown() {
+      const drop = document.getElementById('userDropdown');
+      if (!drop) return;
+      const isOpening = drop.classList.contains('hidden');
+      drop.classList.toggle('hidden');
+      if (isOpening) {
+        // Reset positions
+        drop.style.left = '';
+        drop.style.right = '0px';
+
+        // Check viewport boundaries so menu is NEVER cut off on iPhone or mobile
+        requestAnimationFrame(() => {
+          const rect = drop.getBoundingClientRect();
+          if (rect.left < 8) {
+            // Offscreen on the left
+            drop.style.left = '8px';
+            drop.style.right = 'auto';
+          } else if (rect.right > window.innerWidth - 8) {
+            // Offscreen on the right
+            drop.style.right = '8px';
+            drop.style.left = 'auto';
+          }
+        });
+      }
+    }
+
+    // Close user dropdown if clicking outside
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('userMenuContainer');
+      const drop = document.getElementById('userDropdown');
+      if (container && drop && !container.contains(e.target)) {
+        drop.classList.add('hidden');
+      }
+    });
+
+    function openAuthModal(tab = 'login') {
+      const drop = document.getElementById('userDropdown');
+      if (drop) drop.classList.add('hidden');
+      switchAuthTab(tab);
+      openModal('authModal');
+    }
+
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('authLoginForm');
+      const regForm = document.getElementById('authRegisterForm');
+      const switchForm = document.getElementById('authSwitchForm');
+      const loginBtn = document.getElementById('tabAuthLoginBtn');
+      const regBtn = document.getElementById('tabAuthRegisterBtn');
+      const switchBtn = document.getElementById('tabAuthSwitchBtn');
+      const fb = document.getElementById('authFeedback');
+      if (fb) fb.classList.add('hidden');
+
+      if (loginForm) loginForm.classList.add('hidden');
+      if (regForm) regForm.classList.add('hidden');
+      if (switchForm) switchForm.classList.add('hidden');
+
+      [loginBtn, regBtn, switchBtn].forEach(btn => {
+        if (btn) {
+          btn.className = "pb-2 font-medium transition";
+          btn.style.color = "#746F69";
+          btn.style.borderBottom = "2px solid transparent";
+        }
+      });
+
+      if (tab === 'register') {
+        if (regForm) regForm.classList.remove('hidden');
+        if (regBtn) {
+          regBtn.className = "pb-2 font-bold transition";
+          regBtn.style.color = "#6A0F23";
+          regBtn.style.borderBottom = "2px solid #6A0F23";
+        }
+      } else if (tab === 'switch') {
+        if (switchForm) switchForm.classList.remove('hidden');
+        if (switchBtn) {
+          switchBtn.className = "pb-2 font-bold transition";
+          switchBtn.style.color = "#6A0F23";
+          switchBtn.style.borderBottom = "2px solid #CCA43B";
+        }
+        loadAccountsList();
+      } else {
+        if (loginForm) loginForm.classList.remove('hidden');
+        if (loginBtn) {
+          loginBtn.className = "pb-2 font-bold transition";
+          loginBtn.style.color = "#6A0F23";
+          loginBtn.style.borderBottom = "2px solid #6A0F23";
+        }
+      }
+    }
+
+    function showAuthFeedback(msg, isError = true) {
+      const fb = document.getElementById('authFeedback');
+      if (!fb) return;
+      fb.classList.remove('hidden');
+      if (isError) {
+        fb.style.backgroundColor = "rgba(179, 58, 58, 0.12)";
+        fb.style.borderColor = "#B33A3A";
+        fb.style.color = "#B33A3A";
+        fb.innerHTML = `⚠️ <span>${msg}</span>`;
+      } else {
+        fb.style.backgroundColor = "rgba(204, 164, 59, 0.18)";
+        fb.style.borderColor = "#CCA43B";
+        fb.style.color = "#6A0F23";
+        fb.innerHTML = `✔ <span>${msg}</span>`;
+      }
+    }
+
+    async function submitLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) {
+        showAuthFeedback("Please enter your email and password.");
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Login failed. Check your email or password.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function submitRegister() {
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      if (!email || !password) {
+        showAuthFeedback("Email and password are required.");
+        return;
+      }
+      if (password.length < 6) {
+        showAuthFeedback("Password must be at least 6 characters.");
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Registration failed.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function handleGoogleCredentialResponse(response) {
+      if (!response || !response.credential) return;
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Google Identity authentication failed.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function loginWithDemoGoogle() {
+      let email = (document.getElementById('loginEmail')?.value || document.getElementById('registerEmail')?.value || '').trim();
+      if (!email) {
+        email = prompt("Enter your Google / Gmail account for instant sign-in:", "adambperry@gmail.com");
+      }
+      if (!email || !email.trim()) return;
+      const cleanEmail = email.trim().toLowerCase();
+      const name = cleanEmail.split('@')[0].replace(/[\._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      try {
+        showAuthFeedback("Signing into your Google cellar account...", false);
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: `demo:${cleanEmail}:${name}`, email: cleanEmail, name })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Google sign-in failed.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function loadAccountsList() {
+      const container = document.getElementById('accountsListContainer');
+      if (!container) return;
+      container.innerHTML = '<div class="text-xs py-2" style="color: #746F69;">Loading registered cellars...</div>';
+      try {
+        const res = await fetch('/api/auth/users');
+        if (res.ok) {
+          const users = await res.json();
+          container.innerHTML = users.map(u => {
+            const isCurrent = currentUser && currentUser.id === u.id;
+            return `
+              <div class="flex items-center justify-between p-2.5 rounded-xl border transition" style="${isCurrent ? 'background-color: #F4F0E6; border-color: #6A0F23;' : 'background-color: #F4F0E6; border-color: #D3CBB8;'}">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <img src="${u.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + u.email}" class="w-7 h-7 rounded-full shrink-0 border" style="background-color: #E8E3D3; border-color: #CCA43B;" alt="">
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold truncate flex items-center gap-1.5" style="color: #2C2C2C;">
+                      <span>${escapeHtml(u.name)}</span>
+                      ${isCurrent ? '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style="background-color: #6A0F23; color: #F4F0E6;">Active</span>' : ''}
+                    </div>
+                    <div class="text-[11px] truncate" style="color: #746F69;">${escapeHtml(u.email)}</div>
+                  </div>
+                </div>
+                ${!isCurrent ? `
+                  <button type="button" onclick="switchAccount(${u.id})" class="px-3 py-1 rounded-lg text-xs font-bold shrink-0 transition" style="background-color: #E8E3D3; color: #6A0F23; border: 1px solid #6A0F23;">
+                    Switch
+                  </button>
+                ` : `
+                  <span class="text-xs font-bold px-2" style="color: #6A0F23;">Current</span>
+                `}
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        container.innerHTML = `<div class="text-xs py-2" style="color: #B33A3A;">${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function switchAccount(userId) {
+      try {
+        const res = await fetch('/api/auth/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          handleAuthSuccess(data);
+        } else {
+          showAuthFeedback(data.error || "Failed to switch accounts.");
+        }
+      } catch (e) {
+        showAuthFeedback(e.message);
+      }
+    }
+
+    async function handleAuthSuccess(data) {
+      if (data.token) {
+        localStorage.setItem('cellar_auth_token', data.token);
+      }
+      if (data.user) {
+        currentUser = data.user;
+        localStorage.setItem('cellar_user', JSON.stringify(currentUser));
+        updateUserHeaderUI();
+      }
+      showAuthFeedback(data.message || "Account activated successfully!", false);
+      setTimeout(async () => {
+        closeModal('authModal');
+        await loadData();
+        await renderAuditReport();
+      }, 600);
+    }
+
+    async function logoutUser() {
+      const drop = document.getElementById('userDropdown');
+      if (drop) drop.classList.add('hidden');
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (e) {}
+
+      localStorage.removeItem('cellar_auth_token');
+      localStorage.removeItem('cellar_user');
+      currentUser = { id: 1, email: "cellarmaster@cellar.local", name: "Cellar Master", avatar_url: "https://api.dicebear.com/7.x/bottts/svg?seed=cellarmaster" };
+      updateUserHeaderUI();
+      await loadData();
+      await renderAuditReport();
+      openAuthModal('login');
+      showAuthFeedback("Signed out. Please sign in or create an account to access your personal cellar.", false);
+    }
+
+    // ==========================================
+    // 🍷 INVENTORY & DRINKING WINDOW DATA LOADER
+    // ==========================================
     async function loadData() {
       const uId = currentUser ? currentUser.id : 1;
       // Sync tasting history from storage or backend
@@ -2544,13 +4052,14 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     }
 
     function getStatusBadgeHtml(status) {
-      if (status.includes("Peak Window")) {
+      const s = String(status || '');
+      if (s.includes("Peak Window") || s.includes("In Peak")) {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: #6A0F23; color: #F4F0E6; border: 1px solid #6A0F23;">In Peak Window 🍷</span>`;
-      } else if (status.includes("Approaching")) {
+      } else if (s.includes("Approaching") || s.includes("Early")) {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: rgba(204, 164, 59, 0.25); color: #2C2C2C; border: 1px solid #CCA43B;">Approaching Peak ✦</span>`;
-      } else if (status.includes("Drink Soon")) {
+      } else if (s.includes("Drink Soon") || s.includes("Late Peak")) {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: rgba(179, 58, 58, 0.16); color: #B33A3A; border: 1px solid #B33A3A;">Drink Soon ⚠️</span>`;
-      } else if (status.includes("Past Peak")) {
+      } else if (s.includes("Past Peak")) {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: #B33A3A; color: #F4F0E6; border: 1px solid #B33A3A;">Past Peak 🚨</span>`;
       } else {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background-color: #F4F0E6; color: #746F69; border: 1px solid #D3CBB8;">Cellar Hold ⏳</span>`;
@@ -2839,11 +4348,27 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
     });
 
-    function openSommelierModal(intent = 'open') {
+    function openSommelierModal(intent = 'open', initialQuery = '') {
       openModal('recommendModal');
       setSommelierIntent(intent);
       const modalScroll = document.querySelector('#recommendModal .overflow-y-auto') || document.querySelector('#recommendModal > div');
       if (modalScroll) modalScroll.scrollTop = 0;
+      if (initialQuery) {
+        setPairingTarget(initialQuery);
+      }
+    }
+
+    function openFeaturedSommelierPairing() {
+      const pairingEl = document.getElementById('aiInsightPairing');
+      let query = 'Prime Ribeye Steak';
+      if (pairingEl && pairingEl.textContent) {
+        const text = pairingEl.textContent.trim();
+        if (text.includes('Ribeye')) query = 'Prime Ribeye Steak';
+        else if (text.includes('Lamb')) query = 'Herb-Crusted Lamb';
+        else if (text.includes('Halibut')) query = 'Pan-Seared Halibut';
+        else query = text.split(' or ')[0];
+      }
+      openSommelierModal('open', query);
     }
 
     async function renderAdminActivityReport() {
@@ -5566,26 +7091,45 @@ COLLECTOR'S LATEST FOLLOW-UP QUESTION / DIRECTION:
 
 INSTRUCTIONS:
 1. Respond directly to the collector's follow-up or critique regarding what to open from their cellar.
-2. If they ask for alternatives, different styles, different price points, or have questions about decanting/pairing, evaluate bottles strictly from their cellar inventory.
-3. For any recommended bottle, specify full name, vintage, cellar location, pairing harmony, and service guidance (decant duration and temperature).
-4. Use a polished, master sommelier tone with clean Markdown.`;
+2. If they ask for alternatives, different styles, different price points, or have questions about decanting/pairing, evaluate bottles from their cellar inventory.
+3. If no suitable bottles exist in their cellar matching their revised criteria or dining need:
+   - Clearly explain that their cellar does not contain an ideal match.
+   - AUTOMATICALLY recommend 2 to 3 SPECIFIC real-world benchmark wines to PURCHASE ready to drink now that ship to NJ.
+4. For any recommended bottle from cellar, specify full name, vintage, cellar location, pairing harmony, and service guidance (decant duration and temperature).
+5. Use a polished, master sommelier tone with clean Markdown.`;
         } else {
-          prompt = `You are a Master Sommelier acting as private cellar advisor.
-Your recommendations MUST be grounded strictly in the collector's actual cellar bottles below. Do NOT invent bottles.
+          prompt = `You are a Master Sommelier acting as private cellar advisor for a collector in New Jersey (NJ).
 
 CURRENT CELLAR INVENTORY:
 ${cellarLines}
 
-INSTRUCTIONS:
-1. Recommend 1 to 3 specific bottles from the cellar for: "${query}".
-2. PRIORITIZE bottles currently in "In Peak Window", "Approaching Peak", or "Drink Soon".
-3. For each recommendation, provide:
-   - Full Name, Vintage, and Cellar Location
-   - Why its acid, tannins, and flavors harmonize with the dish/occasion
-   - Service guidance: Exact decanting duration and ideal serving temperature (°F)
-4. Use a polished, evocative master sommelier voice with clear markdown headings and bullet points.
+USER DINING GOAL / QUERY:
+"${query}"
 
-USER QUERY: "${query}"`;
+INSTRUCTIONS:
+1. CELLAR EVALUATION:
+   - Carefully evaluate the collector's cellar inventory to see if they own bottles that pair harmoniously with "${query}".
+2. IF MATCHING BOTTLES EXIST IN THE CELLAR:
+   - Recommend 1 to 3 specific bottles from the cellar to open tonight.
+   - PRIORITIZE bottles whose Drinking Status is "In Peak Window", "Approaching Peak", or "Drink Soon (Late Peak)".
+   - For each recommended bottle, specify:
+     * Full Name, Vintage, and Cellar Location (e.g. Upstairs Fridge / Basement Fridge)
+     * Drinking Status & Maturity Window
+     * Why its acid, tannins, and flavor profile harmonize with "${query}"
+     * Precise service guidance: Exact decanting duration and ideal serving temperature (°F)
+3. IF NO MATCHING BOTTLES EXIST IN THE CELLAR (or if the cellar has no bottles suitable for this dish, or the cellar is currently empty):
+   - Explicitly inform the collector that their cellar does not currently contain a bottle that matches "${query}".
+   - AUTOMATICALLY provide 2 to 3 SPECIFIC benchmark wines to PURCHASE ready to drink now that complement their collection and pair magnificently with "${query}".
+   - Every purchase recommendation must be available at retail in New Jersey (NJ) or legally shippable to NJ addresses.
+   - For each recommended purchase, clearly specify:
+     * **Wine & Producer**: Specific estate and cuvée
+     * **Target Vintage(s)**: Current drinking sweet spot (ready to drink now)
+     * **Est. Price**: Estimated retail price
+     * **NJ Availability**: Confirmed retail or shipping to NJ
+     * **Pairing Harmony & Cellar Complement**: Why it pairs with the dish and complements their cellar
+     * **Service Guidance**: Decant time and serving temperature
+     * **Where to Buy**: Direct link formatted as: [🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+PRODUCER+WINE+wine+ship+to+NJ)
+4. Use a polished, evocative, master sommelier tone. Format with clear Markdown headings and bullet points.`;
         }
       }
 
@@ -5594,7 +7138,7 @@ USER QUERY: "${query}"`;
       for (const currentModel of candidateModels) {
         try {
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 45000);
+          const timer = setTimeout(() => controller.abort(), 12000);
           const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
           const gRes = await fetch(geminiUrl, {
             method: 'POST',
@@ -5617,6 +7161,9 @@ USER QUERY: "${query}"`;
             const errData = await gRes.json().catch(() => ({}));
             const msg = errData.error?.message || `HTTP ${gRes.status}`;
             directCallErr = msg;
+            if (gRes.status === 400 || gRes.status === 401 || gRes.status === 403) {
+              break;
+            }
             if (gRes.status === 404 || gRes.status === 503 || gRes.status === 429) {
               continue;
             }
@@ -5624,6 +7171,7 @@ USER QUERY: "${query}"`;
           }
         } catch (e) {
           directCallErr = e.message;
+          break;
         }
       }
       return { success: false, error: directCallErr || "Unable to reach Gemini API." };
@@ -5633,10 +7181,10 @@ USER QUERY: "${query}"`;
       let geminiResponse = null;
       let geminiError = null;
 
-      // 1. Try local Python server endpoint (with 45-second timeout)
+      // 1. Try local Python server endpoint (with 15-second timeout)
       try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 45000);
+        const timer = setTimeout(() => controller.abort(), 15000);
         const res = await fetch('/api/gemini/sommelier', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -5652,9 +7200,13 @@ USER QUERY: "${query}"`;
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.advice) {
-            geminiResponse = data.advice;
+            return { success: true, advice: data.advice };
           } else if (data.error) {
             geminiError = data.error;
+            // If the server reported an invalid key or auth error, don't retry in browser with the same bad key!
+            if (data.error.includes("API key not valid") || data.error.includes("400") || data.error.includes("403") || data.error.includes("401")) {
+              return { success: false, error: data.error };
+            }
           }
         }
       } catch (e) {
@@ -5665,7 +7217,7 @@ USER QUERY: "${query}"`;
       if (!geminiResponse && userGeminiKey) {
         const directResult = await callGeminiSommelierDirectApi(query, history);
         if (directResult.success) {
-          geminiResponse = directResult.advice;
+          return { success: true, advice: directResult.advice };
         } else if (directResult.error) {
           geminiError = directResult.error;
         }
@@ -6071,6 +7623,7 @@ USER QUERY: "${query}"`;
 
       const scored = candidatesToScore.map(b => {
         let score = 0;
+        let matched = false;
         const dw = b.drinking_window || {};
         const status = dw.status || '';
 
@@ -6082,11 +7635,12 @@ USER QUERY: "${query}"`;
         const desc = `${b.producer} ${b.wine_name || ''} ${b.varietal || ''} ${b.region || ''} ${b.sub_region || ''}`.toLowerCase();
 
         if (foodTargets.length > 0) {
-          const matched = foodTargets.some(t => desc.includes(t.toLowerCase()));
+          matched = foodTargets.some(t => desc.includes(t.toLowerCase()));
           if (matched) score += 60;
         } else if (qLower) {
           const tokens = qLower.split(/\s+/).filter(w => w.length > 2);
-          if (tokens.some(t => desc.includes(t))) score += 40;
+          matched = tokens.some(t => desc.includes(t));
+          if (matched) score += 40;
         }
 
         if (qLower.includes("celebrat") || qLower.includes("prestige")) {
@@ -6094,23 +7648,53 @@ USER QUERY: "${query}"`;
           if (b.purchase_price && b.purchase_price >= 100) score += 30;
         }
 
-        return { bottle: b, score };
+        return { bottle: b, score, matched };
       });
 
-      scored.sort((a, b) => b.score - a.score);
-      const topCandidates = scored.slice(0, 3).map(s => {
-        const b = s.bottle;
-        const dw = b.drinking_window || {};
-        return {
-          bottle: b,
-          drinking_status: dw.status || 'Prime Peak Window',
-          decant_advice: dw.decant_hours ? `Decant ${dw.decant_hours}h` : 'Aeration: 30m',
-          serving_temp: dw.serving_temp_f ? `${dw.serving_temp_f}°F` : '62°F',
-          rationale: dw.rationale || `Matches ${query} profile with ideal maturity balance.`
-        };
-      });
+      // Filter candidates that actually match the pairing inquiry
+      const validCandidates = (foodTargets.length > 0)
+        ? scored.filter(s => s.matched)
+        : scored;
 
-      renderSommelierResults(topCandidates, prefixHtml);
+      if (validCandidates.length > 0) {
+        validCandidates.sort((a, b) => b.score - a.score);
+        const topCandidates = validCandidates.slice(0, 3).map(s => {
+          const b = s.bottle;
+          const dw = b.drinking_window || {};
+          return {
+            bottle: b,
+            drinking_status: dw.status || 'Prime Peak Window',
+            decant_advice: dw.decant_hours ? `Decant ${dw.decant_hours}h` : 'Aeration: 30m',
+            serving_temp: dw.serving_temp_f ? `${dw.serving_temp_f}°F` : '62°F',
+            rationale: dw.rationale || `Matches ${query} profile with ideal maturity balance.`
+          };
+        });
+
+        renderSommelierResults(topCandidates, prefixHtml, query);
+      } else {
+        // No cellar bottles match (or cellar is empty):
+        // AUTOMATICALLY load purchase suggestions!
+        const purchaseRecs = getCatalogPurchaseRecommendations(query);
+        const noMatchNotice = `
+          <div class="bg-indigo-950/40 border border-indigo-800/80 rounded-xl p-3.5 flex flex-col gap-2 mb-3 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-200 flex items-center gap-1.5">
+                <span>🍷</span> Cellar Inventory Assessment
+              </span>
+              <span class="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800 px-2.5 py-0.5 rounded-full">
+                No Cellar Matches Found
+              </span>
+            </div>
+            <p class="text-xs text-indigo-200/90 leading-relaxed">
+              You don't currently have a bottle in your cellar that pairs with <strong class="text-white">${escapeHtml(query)}</strong>.
+            </p>
+            <div class="text-[11px] text-emerald-300 font-semibold border-t border-indigo-900/60 pt-2 flex items-center gap-1.5">
+              <span>🛒</span> <strong>Automatically Loaded Purchase Suggestions:</strong> Here are benchmark sommelier recommendations ready to drink now and ship to NJ:
+            </div>
+          </div>
+        `;
+        renderPurchaseResults(purchaseRecs, prefixHtml + noMatchNotice);
+      }
 
       // Also try server endpoint in background
       try {
@@ -6118,19 +7702,37 @@ USER QUERY: "${query}"`;
         if (res.ok) {
           const recs = await res.json();
           if (recs && recs.length > 0) {
-            renderSommelierResults(recs, prefixHtml);
+            renderSommelierResults(recs, prefixHtml, query);
           }
         }
       } catch (e) {}
     }
 
-    function renderSommelierResults(recs, prefixHtml = '') {
+    function renderSommelierResults(recs, prefixHtml = '', query = '') {
       const container = document.getElementById('sommelierResults');
       if (!container) return;
 
       if (!recs || recs.length === 0) {
-        container.innerHTML = prefixHtml + '<div class="text-xs text-yellow-400 p-3 bg-yellow-950/30 border border-yellow-800/50 rounded-xl">No cellar bottles match this pairing. Try a different dish or style.</div>';
-        scrollSommelierToTop(container);
+        const purchaseRecs = getCatalogPurchaseRecommendations(query || 'ribeye');
+        const noMatchNotice = `
+          <div class="bg-indigo-950/40 border border-indigo-800/80 rounded-xl p-3.5 flex flex-col gap-2 mb-3 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-200 flex items-center gap-1.5">
+                <span>🍷</span> Cellar Inventory Assessment
+              </span>
+              <span class="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800 px-2.5 py-0.5 rounded-full">
+                No Cellar Matches Found
+              </span>
+            </div>
+            <p class="text-xs text-indigo-200/90 leading-relaxed">
+              You don't currently have a bottle in your cellar that pairs with <strong class="text-white">${escapeHtml(query || 'this meal')}</strong>.
+            </p>
+            <div class="text-[11px] text-emerald-300 font-semibold border-t border-indigo-900/60 pt-2 flex items-center gap-1.5">
+              <span>🛒</span> <strong>Automatically Loaded Purchase Suggestions:</strong> Here are benchmark sommelier recommendations ready to drink now and ship to NJ:
+            </div>
+          </div>
+        `;
+        renderPurchaseResults(purchaseRecs, prefixHtml + noMatchNotice);
         return;
       }
 
@@ -6148,18 +7750,55 @@ USER QUERY: "${query}"`;
             </div>
             <div class="flex items-center gap-4 text-[11px] text-slate-400">
               <span>📍 ${b.location_rack || 'Cellar'}</span>
-              <span>⏱️ ${r.decant_advice}</span>
-              <span>🌡️ Serve: ${r.serving_temp}</span>
+              <span>⏱️ ${r.decant_advice || 'Aeration 30m'}</span>
+              <span>🌡️ Serve: ${r.serving_temp || '62°F'}</span>
             </div>
             <p class="text-xs text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-              💡 <em>${escapeHtml(r.rationale)}</em>
+              💡 <em>${escapeHtml(r.rationale || '')}</em>
             </p>
           </div>
         `;
       }).join('');
 
+      // Curated acquisition companion cards for query
+      const curQuery = query || (document.getElementById('foodQueryInput') ? document.getElementById('foodQueryInput').value.trim() : '');
+      const purchaseRecs = getCatalogPurchaseRecommendations(curQuery || 'ribeye').slice(0, 2);
+      const buyCompanionHtml = purchaseRecs.length > 0 ? `
+        <div class="bg-slate-900/90 border border-indigo-900/70 rounded-xl p-3.5 flex flex-col gap-2.5 mt-2 shadow-md">
+          <div class="flex items-center justify-between flex-wrap gap-1">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🛒</span>
+              <span class="text-xs font-bold text-indigo-300">Complement Your Cellar for ${escapeHtml(curQuery || 'Dining')}:</span>
+            </div>
+            <button type="button" onclick="setSommelierIntent('buy'); setPairingTarget('${escapeHtml(curQuery || '')}')" class="text-[11px] text-indigo-400 hover:text-indigo-200 underline font-semibold transition">
+              Explore All Purchase Options →
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            ${purchaseRecs.map((r, i) => `
+              <div class="bg-slate-950/70 border border-indigo-950 rounded-lg p-2.5 flex flex-col justify-between gap-1.5 text-xs">
+                <div>
+                  <div class="font-bold text-white flex items-center justify-between">
+                    <span>${escapeHtml(r.producer)}</span>
+                    <span class="text-amber-300 font-mono text-[11px]">~$${r.est_price || 60}</span>
+                  </div>
+                  <div class="text-rose-300 text-[11px] font-medium truncate">${escapeHtml(r.wine_name)}</div>
+                  <div class="text-slate-400 text-[10px] mt-1">${escapeHtml(r.rationale || '')}</div>
+                </div>
+                <div class="flex items-center justify-between pt-1 border-t border-slate-900">
+                  <span class="text-[10px] text-emerald-400 font-semibold">Target: ${escapeHtml(r.vintage_sweet_spot || '')}</span>
+                  <button type="button" onclick="launchGoogleSearchBuy('${escapeHtml(r.producer)}', '${escapeHtml(r.wine_name)}', '${escapeHtml(r.vintage_sweet_spot || '')}')" class="text-[10px] text-indigo-300 hover:text-white underline font-semibold">
+                    Buy (Ship to NJ) ↗
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : '';
+
       const interactiveBarHtml = getInteractiveFollowUpBarHtml();
-      container.innerHTML = prefixHtml + cardsHtml + interactiveBarHtml;
+      container.innerHTML = prefixHtml + cardsHtml + buyCompanionHtml + interactiveBarHtml;
       scrollSommelierToTop(container);
     }
 

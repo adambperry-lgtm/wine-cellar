@@ -705,7 +705,7 @@
           <div class="text-[11px]" style="color: #746F69;">
             Ideal Pairing: <span id="aiInsightPairing" class="burgundy-highlight">Prime Ribeye or Herb-Crusted Lamb</span>
           </div>
-          <button onclick="openSommelierModal('open')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold btn-burgundy shrink-0">
+          <button onclick="openFeaturedSommelierPairing()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold btn-burgundy shrink-0">
             Ask Sommelier
           </button>
         </div>
@@ -4052,13 +4052,14 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     }
 
     function getStatusBadgeHtml(status) {
-      if (status.includes("Peak Window")) {
+      const s = String(status || '');
+      if (s.includes("Peak Window") || s.includes("In Peak")) {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: #6A0F23; color: #F4F0E6; border: 1px solid #6A0F23;">In Peak Window 🍷</span>`;
-      } else if (status.includes("Approaching")) {
+      } else if (s.includes("Approaching") || s.includes("Early")) {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: rgba(204, 164, 59, 0.25); color: #2C2C2C; border: 1px solid #CCA43B;">Approaching Peak ✦</span>`;
-      } else if (status.includes("Drink Soon")) {
+      } else if (s.includes("Drink Soon") || s.includes("Late Peak")) {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: rgba(179, 58, 58, 0.16); color: #B33A3A; border: 1px solid #B33A3A;">Drink Soon ⚠️</span>`;
-      } else if (status.includes("Past Peak")) {
+      } else if (s.includes("Past Peak")) {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold" style="background-color: #B33A3A; color: #F4F0E6; border: 1px solid #B33A3A;">Past Peak 🚨</span>`;
       } else {
         return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background-color: #F4F0E6; color: #746F69; border: 1px solid #D3CBB8;">Cellar Hold ⏳</span>`;
@@ -4347,11 +4348,27 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
     });
 
-    function openSommelierModal(intent = 'open') {
+    function openSommelierModal(intent = 'open', initialQuery = '') {
       openModal('recommendModal');
       setSommelierIntent(intent);
       const modalScroll = document.querySelector('#recommendModal .overflow-y-auto') || document.querySelector('#recommendModal > div');
       if (modalScroll) modalScroll.scrollTop = 0;
+      if (initialQuery) {
+        setPairingTarget(initialQuery);
+      }
+    }
+
+    function openFeaturedSommelierPairing() {
+      const pairingEl = document.getElementById('aiInsightPairing');
+      let query = 'Prime Ribeye Steak';
+      if (pairingEl && pairingEl.textContent) {
+        const text = pairingEl.textContent.trim();
+        if (text.includes('Ribeye')) query = 'Prime Ribeye Steak';
+        else if (text.includes('Lamb')) query = 'Herb-Crusted Lamb';
+        else if (text.includes('Halibut')) query = 'Pan-Seared Halibut';
+        else query = text.split(' or ')[0];
+      }
+      openSommelierModal('open', query);
     }
 
     async function renderAdminActivityReport() {
@@ -7074,26 +7091,45 @@ COLLECTOR'S LATEST FOLLOW-UP QUESTION / DIRECTION:
 
 INSTRUCTIONS:
 1. Respond directly to the collector's follow-up or critique regarding what to open from their cellar.
-2. If they ask for alternatives, different styles, different price points, or have questions about decanting/pairing, evaluate bottles strictly from their cellar inventory.
-3. For any recommended bottle, specify full name, vintage, cellar location, pairing harmony, and service guidance (decant duration and temperature).
-4. Use a polished, master sommelier tone with clean Markdown.`;
+2. If they ask for alternatives, different styles, different price points, or have questions about decanting/pairing, evaluate bottles from their cellar inventory.
+3. If no suitable bottles exist in their cellar matching their revised criteria or dining need:
+   - Clearly explain that their cellar does not contain an ideal match.
+   - AUTOMATICALLY recommend 2 to 3 SPECIFIC real-world benchmark wines to PURCHASE ready to drink now that ship to NJ.
+4. For any recommended bottle from cellar, specify full name, vintage, cellar location, pairing harmony, and service guidance (decant duration and temperature).
+5. Use a polished, master sommelier tone with clean Markdown.`;
         } else {
-          prompt = `You are a Master Sommelier acting as private cellar advisor.
-Your recommendations MUST be grounded strictly in the collector's actual cellar bottles below. Do NOT invent bottles.
+          prompt = `You are a Master Sommelier acting as private cellar advisor for a collector in New Jersey (NJ).
 
 CURRENT CELLAR INVENTORY:
 ${cellarLines}
 
-INSTRUCTIONS:
-1. Recommend 1 to 3 specific bottles from the cellar for: "${query}".
-2. PRIORITIZE bottles currently in "In Peak Window", "Approaching Peak", or "Drink Soon".
-3. For each recommendation, provide:
-   - Full Name, Vintage, and Cellar Location
-   - Why its acid, tannins, and flavors harmonize with the dish/occasion
-   - Service guidance: Exact decanting duration and ideal serving temperature (°F)
-4. Use a polished, evocative master sommelier voice with clear markdown headings and bullet points.
+USER DINING GOAL / QUERY:
+"${query}"
 
-USER QUERY: "${query}"`;
+INSTRUCTIONS:
+1. CELLAR EVALUATION:
+   - Carefully evaluate the collector's cellar inventory to see if they own bottles that pair harmoniously with "${query}".
+2. IF MATCHING BOTTLES EXIST IN THE CELLAR:
+   - Recommend 1 to 3 specific bottles from the cellar to open tonight.
+   - PRIORITIZE bottles whose Drinking Status is "In Peak Window", "Approaching Peak", or "Drink Soon (Late Peak)".
+   - For each recommended bottle, specify:
+     * Full Name, Vintage, and Cellar Location (e.g. Upstairs Fridge / Basement Fridge)
+     * Drinking Status & Maturity Window
+     * Why its acid, tannins, and flavor profile harmonize with "${query}"
+     * Precise service guidance: Exact decanting duration and ideal serving temperature (°F)
+3. IF NO MATCHING BOTTLES EXIST IN THE CELLAR (or if the cellar has no bottles suitable for this dish, or the cellar is currently empty):
+   - Explicitly inform the collector that their cellar does not currently contain a bottle that matches "${query}".
+   - AUTOMATICALLY provide 2 to 3 SPECIFIC benchmark wines to PURCHASE ready to drink now that complement their collection and pair magnificently with "${query}".
+   - Every purchase recommendation must be available at retail in New Jersey (NJ) or legally shippable to NJ addresses.
+   - For each recommended purchase, clearly specify:
+     * **Wine & Producer**: Specific estate and cuvée
+     * **Target Vintage(s)**: Current drinking sweet spot (ready to drink now)
+     * **Est. Price**: Estimated retail price
+     * **NJ Availability**: Confirmed retail or shipping to NJ
+     * **Pairing Harmony & Cellar Complement**: Why it pairs with the dish and complements their cellar
+     * **Service Guidance**: Decant time and serving temperature
+     * **Where to Buy**: Direct link formatted as: [🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+PRODUCER+WINE+wine+ship+to+NJ)
+4. Use a polished, evocative, master sommelier tone. Format with clear Markdown headings and bullet points.`;
         }
       }
 
@@ -7102,7 +7138,7 @@ USER QUERY: "${query}"`;
       for (const currentModel of candidateModels) {
         try {
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 45000);
+          const timer = setTimeout(() => controller.abort(), 12000);
           const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${encodeURIComponent(userGeminiKey)}`;
           const gRes = await fetch(geminiUrl, {
             method: 'POST',
@@ -7125,6 +7161,9 @@ USER QUERY: "${query}"`;
             const errData = await gRes.json().catch(() => ({}));
             const msg = errData.error?.message || `HTTP ${gRes.status}`;
             directCallErr = msg;
+            if (gRes.status === 400 || gRes.status === 401 || gRes.status === 403) {
+              break;
+            }
             if (gRes.status === 404 || gRes.status === 503 || gRes.status === 429) {
               continue;
             }
@@ -7132,6 +7171,7 @@ USER QUERY: "${query}"`;
           }
         } catch (e) {
           directCallErr = e.message;
+          break;
         }
       }
       return { success: false, error: directCallErr || "Unable to reach Gemini API." };
@@ -7141,10 +7181,10 @@ USER QUERY: "${query}"`;
       let geminiResponse = null;
       let geminiError = null;
 
-      // 1. Try local Python server endpoint (with 45-second timeout)
+      // 1. Try local Python server endpoint (with 15-second timeout)
       try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 45000);
+        const timer = setTimeout(() => controller.abort(), 15000);
         const res = await fetch('/api/gemini/sommelier', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -7160,9 +7200,13 @@ USER QUERY: "${query}"`;
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.advice) {
-            geminiResponse = data.advice;
+            return { success: true, advice: data.advice };
           } else if (data.error) {
             geminiError = data.error;
+            // If the server reported an invalid key or auth error, don't retry in browser with the same bad key!
+            if (data.error.includes("API key not valid") || data.error.includes("400") || data.error.includes("403") || data.error.includes("401")) {
+              return { success: false, error: data.error };
+            }
           }
         }
       } catch (e) {
@@ -7173,7 +7217,7 @@ USER QUERY: "${query}"`;
       if (!geminiResponse && userGeminiKey) {
         const directResult = await callGeminiSommelierDirectApi(query, history);
         if (directResult.success) {
-          geminiResponse = directResult.advice;
+          return { success: true, advice: directResult.advice };
         } else if (directResult.error) {
           geminiError = directResult.error;
         }
@@ -7579,6 +7623,7 @@ USER QUERY: "${query}"`;
 
       const scored = candidatesToScore.map(b => {
         let score = 0;
+        let matched = false;
         const dw = b.drinking_window || {};
         const status = dw.status || '';
 
@@ -7590,11 +7635,12 @@ USER QUERY: "${query}"`;
         const desc = `${b.producer} ${b.wine_name || ''} ${b.varietal || ''} ${b.region || ''} ${b.sub_region || ''}`.toLowerCase();
 
         if (foodTargets.length > 0) {
-          const matched = foodTargets.some(t => desc.includes(t.toLowerCase()));
+          matched = foodTargets.some(t => desc.includes(t.toLowerCase()));
           if (matched) score += 60;
         } else if (qLower) {
           const tokens = qLower.split(/\s+/).filter(w => w.length > 2);
-          if (tokens.some(t => desc.includes(t))) score += 40;
+          matched = tokens.some(t => desc.includes(t));
+          if (matched) score += 40;
         }
 
         if (qLower.includes("celebrat") || qLower.includes("prestige")) {
@@ -7602,23 +7648,53 @@ USER QUERY: "${query}"`;
           if (b.purchase_price && b.purchase_price >= 100) score += 30;
         }
 
-        return { bottle: b, score };
+        return { bottle: b, score, matched };
       });
 
-      scored.sort((a, b) => b.score - a.score);
-      const topCandidates = scored.slice(0, 3).map(s => {
-        const b = s.bottle;
-        const dw = b.drinking_window || {};
-        return {
-          bottle: b,
-          drinking_status: dw.status || 'Prime Peak Window',
-          decant_advice: dw.decant_hours ? `Decant ${dw.decant_hours}h` : 'Aeration: 30m',
-          serving_temp: dw.serving_temp_f ? `${dw.serving_temp_f}°F` : '62°F',
-          rationale: dw.rationale || `Matches ${query} profile with ideal maturity balance.`
-        };
-      });
+      // Filter candidates that actually match the pairing inquiry
+      const validCandidates = (foodTargets.length > 0)
+        ? scored.filter(s => s.matched)
+        : scored;
 
-      renderSommelierResults(topCandidates, prefixHtml);
+      if (validCandidates.length > 0) {
+        validCandidates.sort((a, b) => b.score - a.score);
+        const topCandidates = validCandidates.slice(0, 3).map(s => {
+          const b = s.bottle;
+          const dw = b.drinking_window || {};
+          return {
+            bottle: b,
+            drinking_status: dw.status || 'Prime Peak Window',
+            decant_advice: dw.decant_hours ? `Decant ${dw.decant_hours}h` : 'Aeration: 30m',
+            serving_temp: dw.serving_temp_f ? `${dw.serving_temp_f}°F` : '62°F',
+            rationale: dw.rationale || `Matches ${query} profile with ideal maturity balance.`
+          };
+        });
+
+        renderSommelierResults(topCandidates, prefixHtml, query);
+      } else {
+        // No cellar bottles match (or cellar is empty):
+        // AUTOMATICALLY load purchase suggestions!
+        const purchaseRecs = getCatalogPurchaseRecommendations(query);
+        const noMatchNotice = `
+          <div class="bg-indigo-950/40 border border-indigo-800/80 rounded-xl p-3.5 flex flex-col gap-2 mb-3 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-200 flex items-center gap-1.5">
+                <span>🍷</span> Cellar Inventory Assessment
+              </span>
+              <span class="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800 px-2.5 py-0.5 rounded-full">
+                No Cellar Matches Found
+              </span>
+            </div>
+            <p class="text-xs text-indigo-200/90 leading-relaxed">
+              You don't currently have a bottle in your cellar that pairs with <strong class="text-white">${escapeHtml(query)}</strong>.
+            </p>
+            <div class="text-[11px] text-emerald-300 font-semibold border-t border-indigo-900/60 pt-2 flex items-center gap-1.5">
+              <span>🛒</span> <strong>Automatically Loaded Purchase Suggestions:</strong> Here are benchmark sommelier recommendations ready to drink now and ship to NJ:
+            </div>
+          </div>
+        `;
+        renderPurchaseResults(purchaseRecs, prefixHtml + noMatchNotice);
+      }
 
       // Also try server endpoint in background
       try {
@@ -7626,19 +7702,37 @@ USER QUERY: "${query}"`;
         if (res.ok) {
           const recs = await res.json();
           if (recs && recs.length > 0) {
-            renderSommelierResults(recs, prefixHtml);
+            renderSommelierResults(recs, prefixHtml, query);
           }
         }
       } catch (e) {}
     }
 
-    function renderSommelierResults(recs, prefixHtml = '') {
+    function renderSommelierResults(recs, prefixHtml = '', query = '') {
       const container = document.getElementById('sommelierResults');
       if (!container) return;
 
       if (!recs || recs.length === 0) {
-        container.innerHTML = prefixHtml + '<div class="text-xs text-yellow-400 p-3 bg-yellow-950/30 border border-yellow-800/50 rounded-xl">No cellar bottles match this pairing. Try a different dish or style.</div>';
-        scrollSommelierToTop(container);
+        const purchaseRecs = getCatalogPurchaseRecommendations(query || 'ribeye');
+        const noMatchNotice = `
+          <div class="bg-indigo-950/40 border border-indigo-800/80 rounded-xl p-3.5 flex flex-col gap-2 mb-3 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-200 flex items-center gap-1.5">
+                <span>🍷</span> Cellar Inventory Assessment
+              </span>
+              <span class="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800 px-2.5 py-0.5 rounded-full">
+                No Cellar Matches Found
+              </span>
+            </div>
+            <p class="text-xs text-indigo-200/90 leading-relaxed">
+              You don't currently have a bottle in your cellar that pairs with <strong class="text-white">${escapeHtml(query || 'this meal')}</strong>.
+            </p>
+            <div class="text-[11px] text-emerald-300 font-semibold border-t border-indigo-900/60 pt-2 flex items-center gap-1.5">
+              <span>🛒</span> <strong>Automatically Loaded Purchase Suggestions:</strong> Here are benchmark sommelier recommendations ready to drink now and ship to NJ:
+            </div>
+          </div>
+        `;
+        renderPurchaseResults(purchaseRecs, prefixHtml + noMatchNotice);
         return;
       }
 
@@ -7656,18 +7750,55 @@ USER QUERY: "${query}"`;
             </div>
             <div class="flex items-center gap-4 text-[11px] text-slate-400">
               <span>📍 ${b.location_rack || 'Cellar'}</span>
-              <span>⏱️ ${r.decant_advice}</span>
-              <span>🌡️ Serve: ${r.serving_temp}</span>
+              <span>⏱️ ${r.decant_advice || 'Aeration 30m'}</span>
+              <span>🌡️ Serve: ${r.serving_temp || '62°F'}</span>
             </div>
             <p class="text-xs text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-              💡 <em>${escapeHtml(r.rationale)}</em>
+              💡 <em>${escapeHtml(r.rationale || '')}</em>
             </p>
           </div>
         `;
       }).join('');
 
+      // Curated acquisition companion cards for query
+      const curQuery = query || (document.getElementById('foodQueryInput') ? document.getElementById('foodQueryInput').value.trim() : '');
+      const purchaseRecs = getCatalogPurchaseRecommendations(curQuery || 'ribeye').slice(0, 2);
+      const buyCompanionHtml = purchaseRecs.length > 0 ? `
+        <div class="bg-slate-900/90 border border-indigo-900/70 rounded-xl p-3.5 flex flex-col gap-2.5 mt-2 shadow-md">
+          <div class="flex items-center justify-between flex-wrap gap-1">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🛒</span>
+              <span class="text-xs font-bold text-indigo-300">Complement Your Cellar for ${escapeHtml(curQuery || 'Dining')}:</span>
+            </div>
+            <button type="button" onclick="setSommelierIntent('buy'); setPairingTarget('${escapeHtml(curQuery || '')}')" class="text-[11px] text-indigo-400 hover:text-indigo-200 underline font-semibold transition">
+              Explore All Purchase Options →
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            ${purchaseRecs.map((r, i) => `
+              <div class="bg-slate-950/70 border border-indigo-950 rounded-lg p-2.5 flex flex-col justify-between gap-1.5 text-xs">
+                <div>
+                  <div class="font-bold text-white flex items-center justify-between">
+                    <span>${escapeHtml(r.producer)}</span>
+                    <span class="text-amber-300 font-mono text-[11px]">~$${r.est_price || 60}</span>
+                  </div>
+                  <div class="text-rose-300 text-[11px] font-medium truncate">${escapeHtml(r.wine_name)}</div>
+                  <div class="text-slate-400 text-[10px] mt-1">${escapeHtml(r.rationale || '')}</div>
+                </div>
+                <div class="flex items-center justify-between pt-1 border-t border-slate-900">
+                  <span class="text-[10px] text-emerald-400 font-semibold">Target: ${escapeHtml(r.vintage_sweet_spot || '')}</span>
+                  <button type="button" onclick="launchGoogleSearchBuy('${escapeHtml(r.producer)}', '${escapeHtml(r.wine_name)}', '${escapeHtml(r.vintage_sweet_spot || '')}')" class="text-[10px] text-indigo-300 hover:text-white underline font-semibold">
+                    Buy (Ship to NJ) ↗
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : '';
+
       const interactiveBarHtml = getInteractiveFollowUpBarHtml();
-      container.innerHTML = prefixHtml + cardsHtml + interactiveBarHtml;
+      container.innerHTML = prefixHtml + cardsHtml + buyCompanionHtml + interactiveBarHtml;
       scrollSommelierToTop(container);
     }
 
