@@ -453,8 +453,13 @@
             <span>Unlock AI Sommelier</span>
           </button>
 
+          <button onclick="openChangelogModal()" title="View Version Tracker &amp; Release Changelog" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold btn-parchment transition shadow-sm active:scale-95 shrink-0" style="color: #6A0F23; border-color: #CCA43B;">
+            <span class="w-1.5 h-1.5 rounded-full ai-spark-pulse" style="background-color: #CCA43B;"></span>
+            <span id="headerVersionBadge">v3.2.0</span>
+          </button>
+
           <button onclick="checkForAppUpdate(true)" title="Force Reload & Sync Collection" class="inline-flex items-center justify-center w-8 h-8 rounded-xl btn-parchment transition shadow-sm active:scale-95 shrink-0" aria-label="Refresh and update app">
-            <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+            <svg class="w-4 h-4 vv-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0-6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
           </button>
 
           <!-- Prominent User Account / My Cellar Pill (Cellar & Canvas Palette) -->
@@ -509,8 +514,15 @@
                   <svg class="w-3.5 h-3.5 shrink-0 vv-icon-burgundy" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   <span>Cellar Network Activity</span>
                 </button>
+                <button onclick="openChangelogModal(); toggleUserDropdown();" class="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between gap-2.5 transition font-semibold" style="background-color: #F4F0E6; color: #6A0F23; border: 1px solid #CCA43B;">
+                  <span class="flex items-center gap-2.5">
+                    <svg class="w-3.5 h-3.5 shrink-0 vv-icon-burgundy" viewBox="0 0 24 24" fill="none" stroke="#6A0F23" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>Version &amp; Changelog</span>
+                  </span>
+                  <span id="dropdownVersionBadge" class="font-mono text-[10px] px-1.5 py-0.5 rounded font-bold" style="background-color: rgba(204, 164, 59, 0.25); color: #6A0F23;">v3.2.0</span>
+                </button>
                 <button onclick="checkForAppUpdate(true)" class="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 transition font-semibold" style="background-color: #F4F0E6; color: #2C2C2C; border: 1px solid #D3CBB8;">
-                  <svg class="w-3.5 h-3.5 shrink-0 vv-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                  <svg class="w-3.5 h-3.5 shrink-0 vv-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0-6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
                   <span>Reload App &amp; Clear Cache</span>
                 </button>
                 <button onclick="openAuthModal('switch')" class="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 transition font-semibold" style="background-color: #F4F0E6; color: #2C2C2C; border: 1px solid #D3CBB8;">
@@ -811,10 +823,10 @@
       </div>
       <div class="flex items-center gap-3">
         <span class="text-[11px]" style="color: #746F69;">Palette: Cellar &amp; Canvas • Ref Year: 2026</span>
-        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-xs font-semibold shadow-sm" style="background-color: #F4F0E6; border-color: #CCA43B; color: #6A0F23;" title="Current Application Version">
+        <button onclick="openChangelogModal()" class="flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-xs font-semibold shadow-sm transition hover:brightness-95 active:scale-95 cursor-pointer" style="background-color: #F4F0E6; border-color: #CCA43B; color: #6A0F23;" title="Click to view Version Tracker &amp; Release Changelog">
           <span class="w-2 h-2 rounded-full ai-spark-pulse" style="background-color: #CCA43B;"></span>
-          <span id="appVersionBadge">v3.0.0</span>
-        </div>
+          <span id="appVersionBadge">v3.2.0 • Changelog</span>
+        </button>
       </div>
     </div>
   </footer>
@@ -2093,9 +2105,53 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     </div>
   </div>
 
+  <!-- MODAL: Version Tracker & Release Changelog -->
+  <div id="changelogModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target === this) closeModal('changelogModal')">
+    <div class="rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col max-h-[88vh] overflow-hidden border" style="background-color: #E8E3D3; border-color: #6A0F23;">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b flex items-center justify-between shrink-0" style="background-color: #F4F0E6; border-color: #D3CBB8;">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center border shadow-sm text-lg" style="background-color: #6A0F23; border-color: #CCA43B; color: #CCA43B;">
+            📜
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-serif-title text-base font-bold" style="color: #6A0F23;">Version Tracker &amp; Release Changelog</h3>
+              <span id="changelogModalVersionPill" class="font-mono text-[11px] px-2 py-0.5 rounded-full font-bold border" style="background-color: #E8E3D3; border-color: #CCA43B; color: #6A0F23;">v3.2.0</span>
+            </div>
+            <p class="text-xs mt-0.5" style="color: #746F69;">
+              Build <span id="changelogBuildId" class="font-mono font-semibold" style="color: #2C2C2C;">2026.11.11.2</span> • <span id="changelogSyncStatus" style="color: #2E6F40;">Live &amp; Synced</span>
+            </p>
+          </div>
+        </div>
+        <button onclick="closeModal('changelogModal')" class="w-8 h-8 rounded-lg flex items-center justify-center transition hover:opacity-80" style="background-color: #E8E3D3; color: #6A0F23; border: 1px solid #D3CBB8;" aria-label="Close changelog modal">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body: Release History -->
+      <div id="changelogEntriesContainer" class="p-5 overflow-y-auto space-y-4 custom-scrollbar flex-1" style="background-color: #E8E3D3;">
+        <!-- Populated dynamically by renderChangelogEntries() -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t flex flex-wrap items-center justify-between gap-2 text-xs shrink-0" style="background-color: #F4F0E6; border-color: #D3CBB8; color: #746F69;">
+        <span>Auto-checks Railway deployment every 15s</span>
+        <div class="flex items-center gap-2">
+          <button onclick="checkForAppUpdate(true)" class="px-3 py-1.5 rounded-lg font-semibold transition shadow-sm flex items-center gap-1.5" style="background-color: #E8E3D3; color: #6A0F23; border: 1px solid #CCA43B;">
+            <span>↻</span> Force Check &amp; Reload
+          </button>
+          <button onclick="closeModal('changelogModal')" class="px-4 py-1.5 rounded-lg font-bold transition shadow-sm" style="background-color: #6A0F23; color: #F4F0E6;">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Javascript Application Logic -->
   <script>
-    const APP_VERSION = "v2.3.0";
+    const APP_VERSION = "v3.2.0";
     let cellarBottles = [];
     let archivedBottles = [];
     let tastingHistory = [];
@@ -9346,8 +9402,134 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       window.addEventListener('touchcancel', finishPull, { passive: true });
     }
 
-    // Version management & Auto-Update
-    const APP_BUILD_VERSION = "2026.11.11.1";
+    // Version management, Changelog & Auto-Update
+    const APP_BUILD_VERSION = "2026.11.11.2";
+    let APP_CHANGELOG = [
+      {
+        version: "v3.2.0",
+        build_id: "2026.11.11.2",
+        date: "2026-11-11",
+        title: "Drinking Window Precision & Version Changelog",
+        highlights: [
+          "Added interactive Version Tracker & Release Changelog modal accessible from the header, user menu, and footer version badge.",
+          "Fixed drinking window parser so critic review dates (e.g. 'Reviewed March 2016' or '2025 Review') are never misread as maturity windows.",
+          "Added producer-tier & cuvée-level aging overrides (e.g. Caymus Special Selection vs. Napa Valley, Barolo Riserva, Reserve/Estate Cabernet).",
+          "Aligned critic registry notes with exact drinking windows and added a 4-point visual timeline bar (Release → Open → Peak → End).",
+          "Added automatic Railway startup migration to clear stale auto-persisted window bounds and recompute accurate maturity windows."
+        ]
+      },
+      {
+        version: "v3.1.0",
+        build_id: "2026.11.11.1",
+        date: "2026-11-11",
+        title: "AI Label Scanner & Numeric Cuvée Recognition",
+        highlights: [
+          "Enhanced AI Label Scanner with multi-line producer/cuvée extraction and numeric cuvée support (e.g. Hunnicutt 9-3-5).",
+          "Added live Railway build version polling and one-tap cache refresh."
+        ]
+      },
+      {
+        version: "v3.0.0",
+        build_id: "2026.11.10.1",
+        date: "2026-11-10",
+        title: "Cellar & Canvas Design System & Multi-Account Cellars",
+        highlights: [
+          "Redesigned interface with the Cellar & Canvas heritage palette (#E8E3D3, #F4F0E6, #6A0F23, #CCA43B).",
+          "Added private user authentication, Google Sign-In, and cellar network activity monitoring."
+        ]
+      },
+      {
+        version: "v2.3.0",
+        build_id: "2026.11.01.1",
+        date: "2026-11-01",
+        title: "AI Sommelier Pairing & Decanting Engine",
+        highlights: [
+          "Added 'What Should I Open Tonight?' AI Sommelier dining & occasion pairing modal.",
+          "Added varietal-specific decanting durations, glassware recommendations, and serving temperatures."
+        ]
+      }
+    ];
+
+    function updateVersionBadges(displayVer, buildVer) {
+      const vText = displayVer || APP_VERSION;
+      const bText = buildVer || APP_BUILD_VERSION;
+      const footerBadge = document.getElementById('appVersionBadge');
+      if (footerBadge) footerBadge.textContent = `${vText} • Changelog`;
+      const headerBadge = document.getElementById('headerVersionBadge');
+      if (headerBadge) headerBadge.textContent = vText;
+      const dropdownBadge = document.getElementById('dropdownVersionBadge');
+      if (dropdownBadge) dropdownBadge.textContent = vText;
+      const modalPill = document.getElementById('changelogModalVersionPill');
+      if (modalPill) modalPill.textContent = vText;
+      const buildSpan = document.getElementById('changelogBuildId');
+      if (buildSpan) buildSpan.textContent = bText;
+    }
+
+    function renderChangelogEntries(entries) {
+      const container = document.getElementById('changelogEntriesContainer');
+      if (!container) return;
+      const list = Array.isArray(entries) && entries.length ? entries : APP_CHANGELOG;
+      container.innerHTML = list.map((item, idx) => {
+        const isCurrent = idx === 0;
+        const badgeStyle = isCurrent
+          ? 'background-color: #6A0F23; color: #F4F0E6; border-color: #CCA43B;'
+          : 'background-color: #E8E3D3; color: #6A0F23; border-color: #D3CBB8;';
+        const cardBorder = isCurrent ? '#CCA43B' : '#D3CBB8';
+        const highlightsHtml = (item.highlights || []).map(h => `
+          <li class="flex items-start gap-2 text-xs leading-relaxed" style="color: #2C2C2C;">
+            <span class="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${isCurrent ? '#6A0F23' : '#CCA43B'};"></span>
+            <span>${escapeHtml(h)}</span>
+          </li>
+        `).join('');
+        return `
+          <div class="rounded-xl p-4 border shadow-sm transition" style="background-color: #F4F0E6; border-color: ${cardBorder};">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2.5 border-b" style="border-color: #E8E3D3;">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full border" style="${badgeStyle}">
+                  ${escapeHtml(item.version || '')}
+                </span>
+                ${isCurrent ? '<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style="background-color: rgba(46, 111, 64, 0.14); color: #2E6F40;">Current Release</span>' : ''}
+                <h4 class="font-serif-title font-bold text-sm" style="color: #6A0F23;">${escapeHtml(item.title || '')}</h4>
+              </div>
+              <div class="flex items-center gap-2 text-[11px] font-mono" style="color: #746F69;">
+                ${item.build_id ? `<span>Build ${escapeHtml(item.build_id)}</span><span>•</span>` : ''}
+                <span>${escapeHtml(item.date || '')}</span>
+              </div>
+            </div>
+            <ul class="space-y-1.5">
+              ${highlightsHtml}
+            </ul>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function openChangelogModal() {
+      updateVersionBadges(APP_VERSION, APP_BUILD_VERSION);
+      renderChangelogEntries(APP_CHANGELOG);
+      openModal('changelogModal');
+      try {
+        const res = await fetch('/api/version?_t=' + Date.now(), { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.changelog) && data.changelog.length) {
+            APP_CHANGELOG = data.changelog;
+            renderChangelogEntries(APP_CHANGELOG);
+          }
+          updateVersionBadges(data.display_version || APP_VERSION, data.version || APP_BUILD_VERSION);
+          const syncEl = document.getElementById('changelogSyncStatus');
+          if (syncEl) {
+            if (data.version && data.version !== APP_BUILD_VERSION) {
+              syncEl.textContent = `Update Available (${data.version})`;
+              syncEl.style.color = '#B33A3A';
+            } else {
+              syncEl.textContent = 'Live & Synced with Railway';
+              syncEl.style.color = '#2E6F40';
+            }
+          }
+        }
+      } catch (e) {}
+    }
 
     async function checkForAppUpdate(force = false) {
       if (force) {
@@ -9358,6 +9540,12 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
         const res = await fetch('/api/version?_t=' + Date.now(), { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
+          if (Array.isArray(data.changelog) && data.changelog.length) {
+            APP_CHANGELOG = data.changelog;
+          }
+          if (data.display_version) {
+            updateVersionBadges(data.display_version, data.version || APP_BUILD_VERSION);
+          }
           if (data.version && data.version !== APP_BUILD_VERSION) {
             console.log("New version available:", data.version, "Current:", APP_BUILD_VERSION);
             window.location.href = window.location.pathname + '?v=' + Date.now();
@@ -9376,6 +9564,7 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
 
     // Initial Load
     window.addEventListener('DOMContentLoaded', async () => {
+      updateVersionBadges(APP_VERSION, APP_BUILD_VERSION);
       initPullToRefresh();
       checkForAppUpdate();
       await initAuth();

@@ -1427,6 +1427,26 @@ class TestUserStickyStorageLocations(unittest.TestCase):
             self.assertEqual(b.drinking_window.peak_start, c_start)
             self.assertEqual(b.drinking_window.peak_end, c_end)
 
+    def test_version_tracker_and_changelog(self):
+        from wine_agent.server import APP_VERSION_INFO, APP_CHANGELOG
+        self.assertEqual(APP_VERSION_INFO["display_version"], "v3.2.0")
+        self.assertEqual(APP_VERSION_INFO["version"], "2026.11.11.2")
+        self.assertIsInstance(APP_CHANGELOG, list)
+        self.assertGreaterEqual(len(APP_CHANGELOG), 3)
+        latest = APP_CHANGELOG[0]
+        self.assertEqual(latest["version"], "v3.2.0")
+        self.assertIn("highlights", latest)
+        self.assertGreater(len(latest["highlights"]), 0)
+
+        web_index = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web", "index.html")
+        with open(web_index, "r", encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn('id="changelogModal"', html)
+        self.assertIn('openChangelogModal()', html)
+        self.assertIn(APP_VERSION_INFO["version"], html)
+        self.assertIn(APP_VERSION_INFO["display_version"], html)
+
 
 if __name__ == "__main__":
     unittest.main()
+

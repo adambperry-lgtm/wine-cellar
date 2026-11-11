@@ -15,6 +15,59 @@ from wine_agent.models import WineBottle, WineType, BottleFormat, UserProfile
 
 WEB_DIR = Path(__file__).parent.parent / "web"
 
+APP_VERSION_INFO = {
+    "version": "2026.11.11.2",
+    "display_version": "v3.2.0",
+    "build": 1762882100,
+}
+
+APP_CHANGELOG = [
+    {
+        "version": "v3.2.0",
+        "build": "2026.11.11.2",
+        "date": "2026-11-11",
+        "title": "Critic-Aligned Drinking Windows & Timeline Precision",
+        "highlights": [
+            "Critic Consensus Drinking Window Engine: Aligns bottle card Peak Windows and readiness badges directly with verified James Suckling, Wine Spectator, Wine Advocate, Vinous, Jeb Dunnuck, and Decanter drinking windows.",
+            "Personal Notes Cellar Hold Overrides: Parses explicit aging instructions (e.g., 'Do not open before 2030', 'Sleep until 2028-2040') so readiness status and peak start always match bottle notes.",
+            "Calibrated Enological Profiles: Added dedicated aging curves for Old Vine Zinfandel (2-10 yrs), Napa Valley AVA Cabernet (4-16 yrs), Single-Vineyard Reserve Cabernet (6-20 yrs), California Cool-Climate Syrah & Sangiovese, Burgundy 1er Cru vs. Grand Cru, Brunello Annata vs. Riserva, and Rioja Gran Reserva.",
+            "Vintage-Anchored Timeline Bar: Fixed the timeline visualizer left axis to display the bottle's actual vintage year instead of a static 2010 label.",
+            "Persistent Railway DB Auto-Migration & Version Changelog Tracker: Automatically refreshes legacy stored windows on Railway volumes and adds an interactive version changelog modal."
+        ]
+    },
+    {
+        "version": "v3.1.0",
+        "build": "2026.11.11.0",
+        "date": "2026-11-11",
+        "title": "Archive Consolidation & Tasting Review Editor",
+        "highlights": [
+            "Consolidated duplicate bottle entries in the Depleted Archive view.",
+            "Added inline rating and tasting note editing for archived and consumed wines.",
+            "Restored opened wines (including 2023 Grounded Wine Co. Landform Pinot Noir) and merged cached archive with consumption history."
+        ]
+    },
+    {
+        "version": "v3.0.0",
+        "build": "2026.10.16.5",
+        "date": "2026-10-16",
+        "title": "Cellar & Canvas Editorial Redesign & AI Sommelier",
+        "highlights": [
+            "Introduced the Cellar & Canvas editorial design system (Warm Parchment, Linen White, Deep Burgundy, Burnished Gold).",
+            "Added Smart Storage temperature slider, AI Chilling Alert, and auto-loaded NJ wine acquisition recommendations."
+        ]
+    },
+    {
+        "version": "v2.3.0",
+        "build": "2026.10.10.1",
+        "date": "2026-10-10",
+        "title": "Multi-User Accounts, Google SSO & Gemini Vision Label Scanner",
+        "highlights": [
+            "Added multi-user authentication with Google SSO, isolated cellar inventories, and sticky custom storage locations.",
+            "Integrated Google Gemini Multimodal Vision for cursive and complex wine label recognition."
+        ]
+    }
+]
+
 
 class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
     agent: SommelierAgent = None
@@ -109,14 +162,19 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
         # ==================== Health & Version Routes ====================
         if path == "/api/version":
             self._send_json({
-                "version": "2026.11.11.1",
-                "build": 1762881400,
-                "server_time": time.time()
+                **APP_VERSION_INFO,
+                "server_time": time.time(),
+                "changelog": APP_CHANGELOG
             })
             return
 
         elif path == "/api/health":
-            self._send_json({"status": "healthy", "version": "2026.11.11.1", "timestamp": time.time()})
+            self._send_json({
+                "status": "healthy",
+                "version": APP_VERSION_INFO["version"],
+                "display_version": APP_VERSION_INFO["display_version"],
+                "timestamp": time.time()
+            })
             return
 
         # ==================== Auth Routes ====================
