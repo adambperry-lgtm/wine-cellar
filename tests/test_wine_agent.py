@@ -1523,6 +1523,25 @@ class TestUserStickyStorageLocations(unittest.TestCase):
             self.assertIn("CONVERSATION TRANSCRIPT SO FAR:", captured_prompts[1])
             self.assertIn("What if we add a cheese course at the end?", captured_prompts[1])
 
+    def test_sommelier_chat_persistence(self):
+        tmp_dir = tempfile.TemporaryDirectory()
+        try:
+            db = WineDatabase(os.path.join(tmp_dir.name, "chat_persist.db"))
+            self.assertEqual(db.get_sommelier_chat(1, "open"), [])
+            sample_history = [
+                {"role": "user", "content": "Menu: oysters then ribeye"},
+                {"role": "assistant", "content": "1st: Chablis, 2nd: Napa Cab"}
+            ]
+            db.save_sommelier_chat(1, "open", sample_history)
+            loaded = db.get_sommelier_chat(1, "open")
+            self.assertEqual(loaded, sample_history)
+            self.assertEqual(db.get_sommelier_chat(1, "buy"), [])
+
+            db.clear_sommelier_chat(1, "open")
+            self.assertEqual(db.get_sommelier_chat(1, "open"), [])
+        finally:
+            tmp_dir.cleanup()
+
 
 if __name__ == "__main__":
     unittest.main()

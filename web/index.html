@@ -4619,6 +4619,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
       if (id === 'recommendModal') {
         initGeminiControls();
+        loadSommelierChatState(sommelierIntent);
       }
       if (id === 'scanLabelModal') {
         if (typeof updateScanModalGeminiStatus === 'function') {
@@ -7057,9 +7058,67 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     let sommelierChatHistory = [];
     let sommelierIsThinking = false;
 
+    function getSommelierStorageKey(intent = sommelierIntent) {
+      const uid = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : 1;
+      const cleanIntent = (intent === 'buy') ? 'buy' : 'open';
+      return `sommelier_chat_${uid}_${cleanIntent}`;
+    }
+
+    function saveSommelierChatState(intent = sommelierIntent) {
+      const cleanIntent = (intent === 'buy') ? 'buy' : 'open';
+      try {
+        localStorage.setItem(getSommelierStorageKey(cleanIntent), JSON.stringify(sommelierChatHistory || []));
+      } catch (e) {}
+      fetch('/api/gemini/sommelier/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intent: cleanIntent, history: sommelierChatHistory || [] })
+      }).catch(() => {});
+    }
+
+    function loadSommelierChatState(intent = sommelierIntent) {
+      const cleanIntent = (intent === 'buy') ? 'buy' : 'open';
+      sommelierChatHistory = [];
+      try {
+        const raw = localStorage.getItem(getSommelierStorageKey(cleanIntent));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) sommelierChatHistory = parsed;
+        }
+      } catch (e) {}
+
+      if (sommelierChatHistory.length > 0) {
+        renderSommelierChatThread(false);
+      } else {
+        const resultsContainer = document.getElementById('sommelierResults');
+        if (resultsContainer) resultsContainer.innerHTML = '';
+      }
+
+      fetch(`/api/gemini/sommelier/history?intent=${encodeURIComponent(cleanIntent)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && Array.isArray(data.history) && data.history.length > 0 && sommelierIntent === cleanIntent && sommelierChatHistory.length === 0 && !sommelierIsThinking) {
+            sommelierChatHistory = data.history;
+            try {
+              localStorage.setItem(getSommelierStorageKey(cleanIntent), JSON.stringify(sommelierChatHistory));
+            } catch (e) {}
+            renderSommelierChatThread(false);
+          }
+        })
+        .catch(() => {});
+    }
+
     function resetSommelierChat() {
       sommelierChatHistory = [];
       sommelierIsThinking = false;
+      try {
+        localStorage.removeItem(getSommelierStorageKey(sommelierIntent));
+      } catch (e) {}
+      fetch('/api/gemini/sommelier/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intent: sommelierIntent })
+      }).catch(() => {});
       const resultsContainer = document.getElementById('sommelierResults');
       if (resultsContainer) resultsContainer.innerHTML = '';
       const input = document.getElementById('foodQueryInput');
@@ -7071,7 +7130,6 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
     function setSommelierIntent(intent) {
       sommelierIntent = intent;
-      sommelierChatHistory = [];
       sommelierIsThinking = false;
       const tabOpen = document.getElementById('tabSommOpen');
       const tabBuy = document.getElementById('tabSommBuy');
@@ -7109,6 +7167,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         if (inputEl) inputEl.placeholder = "e.g. Hosting 4 friends: oysters to start, mushroom risotto, then dry-aged ribeye. What should I open and in what order?";
         if (btnEl) btnEl.textContent = "Ask Sommelier";
       }
+      loadSommelierChatState(intent);
     }
 
     const ACQUISITION_CATALOG = [
@@ -7906,6 +7965,7 @@ INSTRUCTIONS:
         sommelierIsThinking = false;
         if (result.success && result.advice) {
           sommelierChatHistory.push({ role: 'assistant', content: result.advice });
+          saveSommelierChatState();
           renderSommelierChatThread(false);
           setTimeout(() => {
             const inp = document.getElementById('sommelierFollowUpInput');
@@ -7973,6 +8033,7 @@ INSTRUCTIONS:
         sommelierIsThinking = false;
         if (result.success && result.advice) {
           sommelierChatHistory.push({ role: 'assistant', content: result.advice });
+          saveSommelierChatState();
           renderSommelierChatThread(false);
           setTimeout(() => {
             const inp = document.getElementById('sommelierFollowUpInput');

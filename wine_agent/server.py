@@ -295,6 +295,11 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
             res = validate_gemini_api_key(key)
             self._send_json(res)
 
+        elif path == "/api/gemini/sommelier/history":
+            intent = params.get("intent", ["open"])[0]
+            history = self.agent.db.get_sommelier_chat(current_user.id, intent)
+            self._send_json({"success": True, "intent": intent, "history": history})
+
         elif path == "/api/export-csv":
             import io
             import csv
@@ -831,7 +836,20 @@ class WineRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
             bottles = self.agent.db.list_bottles(only_in_stock=True, user_id=current_user.id)
             result = ask_gemini_sommelier(query, bottles, api_key=api_key, model=model, mode=mode, history=history)
+            if result.get("success") and result.get("history"):
+                self.agent.db.save_sommelier_chat(current_user.id, mode, result["history"])
             self._send_json(result)
+
+        elif path == "/api/gemini/sommelier/history":
+            intent = payload.get("intent", "open")
+            history = payload.get("history") or []
+            self.agent.db.save_sommelier_chat(current_user.id, intent, history)
+            self._send_json({"success": True})
+
+        elif path == "/api/gemini/sommelier/reset":
+            intent = payload.get("intent", "open")
+            self.agent.db.clear_sommelier_chat(current_user.id, intent)
+            self._send_json({"success": True})
 
         elif path == "/api/gemini/save-key":
             from wine_agent.gemini_sommelier import save_gemini_api_key

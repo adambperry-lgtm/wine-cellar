@@ -186,6 +186,16 @@ class WineDatabase:
                     aging_curve_stage TEXT
                 )
             """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS sommelier_chats (
+                    user_id INTEGER NOT NULL,
+                    intent TEXT NOT NULL,
+                    history_json TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY (user_id, intent),
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            """)
 
             # Migrations for user isolation & drinking window columns
             try:
@@ -247,6 +257,54 @@ class WineDatabase:
                 pass
 
             conn.commit()
+
+    # ==================== Sommelier Chat Memory ====================
+
+    def get_sommelier_chat(self, user_id: int, intent: str = "open") -> List[Dict[str, str]]:
+        """Retrieves the saved sommelier conversation history for a user and intent."""
+        clean_intent = "buy" if intent in ("buy", "acquire", "purchase") else "open"
+        with self._get_conn() as conn:
+            row = conn.execute(
+                "SELECT history_json FROM sommelier_chats WHERE user_id = ? AND intent = ?",
+                (user_id, clean_intent)
+            ).fetchone()
+            if not row or not row["history_json"]:
+                return []
+            try:
+                data = json.loads(row["history_json"])
+                return data if isinstance(data, list) else []
+            except Exception:
+                return []
+
+    def save_sommelier_chat(self, user_id: int, intent: str, history: List[Dict[str, str]]) -> bool:
+        """Persists the sommelier conversation history for a user and intent."""
+        clean_intent = "buy" if intent in ("buy", "acquire", "purchase") else "open"
+        safe_history = [
+            {"role": str(t.get("role", "user")), "content": str(t.get("content", ""))}
+            for t in (history or [])
+            if isinstance(t, dict) and str(t.get("content", "")).strip()
+        ]
+        with self._get_conn() as conn:
+            conn.execute("""
+                INSERT INTO sommelier_chats (user_id, intent, history_json, updated_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(user_id, intent) DO UPDATE SET
+                    history_json = excluded.history_json,
+                    updated_at = excluded.updated_at
+            """, (user_id, clean_intent, json.dumps(safe_history), datetime.now().isoformat()))
+            conn.commit()
+            return True
+
+    def clear_sommelier_chat(self, user_id: int, intent: str = "open") -> bool:
+        """Clears the saved sommelier conversation history for a user and intent."""
+        clean_intent = "buy" if intent in ("buy", "acquire", "purchase") else "open"
+        with self._get_conn() as conn:
+            conn.execute(
+                "DELETE FROM sommelier_chats WHERE user_id = ? AND intent = ?",
+                (user_id, clean_intent)
+            )
+            conn.commit()
+            return True
 
     # ==================== Multi-User & Auth Management ====================
 
