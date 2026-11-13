@@ -833,17 +833,19 @@
 
   <!-- MODAL: Ask Sommelier Tonight -->
   <div id="recommendModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div class="flex items-center gap-2.5">
-          <span id="sommModalIcon" class="text-2xl">✨</span>
-          <div>
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div class="shrink-0 flex items-center justify-between gap-3 px-6 pt-5 pb-3 border-b border-slate-800 bg-slate-900">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span id="sommModalIcon" class="text-2xl shrink-0">✨</span>
+          <div class="min-w-0">
             <h3 id="sommModalTitle" class="text-base font-bold text-white">Ask Sommelier: Chat &amp; Plan Tonight's Wines</h3>
             <p id="sommModalSubtitle" class="text-xs text-slate-400">Tell the sommelier about your dinner menu or occasion to chat through cellar picks, opening order, and decanting times.</p>
           </div>
         </div>
-        <button onclick="closeModal('recommendModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+        <button onclick="closeModal('recommendModal')" aria-label="Close AI Sommelier" class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition text-lg">✕</button>
       </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-4 flex flex-col gap-5">
 
       <!-- Intent Tabs: Pull from Cellar vs Purchase Recommendations -->
       <div class="flex border-b border-slate-800 gap-4">
@@ -945,6 +947,7 @@
       <!-- Recommendation Results -->
       <div id="sommelierResults" class="flex flex-col gap-3 pt-2">
         <!-- Rendered results -->
+      </div>
       </div>
     </div>
   </div>
