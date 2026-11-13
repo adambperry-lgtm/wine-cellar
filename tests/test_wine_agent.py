@@ -109,6 +109,22 @@ class TestWineDatabaseAndAgent(unittest.TestCase):
         updated = self.db.get_bottle(b_id)
         self.assertEqual(updated.quantity, 1)
 
+    def test_agent_log_consumption_keyword_arguments(self):
+        b = WineBottle(producer="Penfolds", wine_name="Grange", vintage=2012, quantity=2)
+        b_id = self.db.add_bottle(b)
+        # Verify agent.log_consumption supports both tasting_notes and notes keyword arguments
+        rec = self.agent.log_consumption(
+            bottle_id=b_id,
+            count=1,
+            rating=5.0,
+            tasting_notes="Immense depth and balance",
+            pairing_notes="Prime Ribeye"
+        )
+        self.assertIsNotNone(rec)
+        self.assertEqual(rec.tasting_notes, "Immense depth and balance")
+        self.assertEqual(rec.pairing_notes, "Prime Ribeye")
+        self.assertEqual(self.db.get_bottle(b_id).quantity, 1)
+
     def test_nlp_parsing(self):
         text = "I bought 3 bottles of 2016 Giacomo Conterno Barolo Francia for $280 each in Rack C Bin 4"
         parsed = parse_wine_natural_language(text)
@@ -479,11 +495,17 @@ class TestWineDatabaseAndAgent(unittest.TestCase):
                 if os.path.exists(key_file):
                     os.remove(key_file)
                 user_key_file = os.path.expanduser("~/.gemini/config/gemini_key.txt")
-                if os.path.exists(user_key_file):
-                    os.remove(user_key_file)
+                try:
+                    if os.path.exists(user_key_file):
+                        os.remove(user_key_file)
+                except OSError:
+                    pass
                 home_key_file = os.path.expanduser("~/.gemini_key")
-                if os.path.exists(home_key_file):
-                    os.remove(home_key_file)
+                try:
+                    if os.path.exists(home_key_file):
+                        os.remove(home_key_file)
+                except OSError:
+                    pass
 
     def test_validate_gemini_api_key(self):
         from wine_agent.gemini_sommelier import validate_gemini_api_key
@@ -1429,12 +1451,12 @@ class TestUserStickyStorageLocations(unittest.TestCase):
 
     def test_version_tracker_and_changelog(self):
         from wine_agent.server import APP_VERSION_INFO, APP_CHANGELOG
-        self.assertEqual(APP_VERSION_INFO["display_version"], "v3.2.0")
-        self.assertEqual(APP_VERSION_INFO["version"], "2026.11.11.2")
+        self.assertEqual(APP_VERSION_INFO["display_version"], "v3.3.0")
+        self.assertEqual(APP_VERSION_INFO["version"], "2026.11.13.1")
         self.assertIsInstance(APP_CHANGELOG, list)
-        self.assertGreaterEqual(len(APP_CHANGELOG), 3)
+        self.assertGreaterEqual(len(APP_CHANGELOG), 4)
         latest = APP_CHANGELOG[0]
-        self.assertEqual(latest["version"], "v3.2.0")
+        self.assertEqual(latest["version"], "v3.3.0")
         self.assertIn("highlights", latest)
         self.assertGreater(len(latest["highlights"]), 0)
 
@@ -1445,6 +1467,61 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         self.assertIn('openChangelogModal()', html)
         self.assertIn(APP_VERSION_INFO["version"], html)
         self.assertIn(APP_VERSION_INFO["display_version"], html)
+
+    def test_sommelier_conversational_menu_sequence(self):
+        from unittest.mock import patch
+        from wine_agent.gemini_sommelier import ask_gemini_sommelier
+        bottles = [
+            WineBottle(
+                id=1,
+                producer="Domaine William Fèvre",
+                wine_name="Chablis Grand Cru Les Clos",
+                vintage=2019,
+                varietal="Chardonnay",
+                region="Burgundy",
+                wine_type=WineType.WHITE,
+                quantity=2,
+            ),
+            WineBottle(
+                id=2,
+                producer="Caymus Vineyards",
+                wine_name="Napa Valley Cabernet Sauvignon",
+                vintage=2018,
+                varietal="Cabernet Sauvignon",
+                region="Napa Valley",
+                wine_type=WineType.RED,
+                quantity=1,
+            ),
+        ]
+        captured_prompts = []
+
+        def fake_call(prompt, api_key, model=None):
+            captured_prompts.append(prompt)
+            return "1st: Chablis -> 2nd: Caymus"
+
+        with patch("wine_agent.gemini_sommelier.call_gemini_api", side_effect=fake_call):
+            res1 = ask_gemini_sommelier(
+                "Oysters to start, then ribeye. Which wines and in what sequence?",
+                bottles,
+                api_key="AIzaSyTestKey1234567890",
+                mode="open",
+            )
+            self.assertTrue(res1["success"])
+            self.assertEqual(len(res1["history"]), 2)
+            self.assertIn("Wine Lineup & Opening Sequence", captured_prompts[0])
+            self.assertIn("Domaine William Fèvre", captured_prompts[0])
+
+            res2 = ask_gemini_sommelier(
+                "What if we add a cheese course at the end?",
+                bottles,
+                api_key="AIzaSyTestKey1234567890",
+                mode="open",
+                history=res1["history"],
+            )
+            self.assertTrue(res2["success"])
+            self.assertEqual(len(res2["history"]), 4)
+            self.assertIn("CONVERSATION TRANSCRIPT SO FAR:", captured_prompts[1])
+            self.assertIn("What if we add a cheese course at the end?", captured_prompts[1])
 
 
 if __name__ == "__main__":

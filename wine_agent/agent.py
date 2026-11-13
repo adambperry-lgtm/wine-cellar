@@ -564,10 +564,14 @@ class SommelierAgent:
         notes: str = "",
         pairing: str = "",
         aging_curve_stage: Optional[str] = None,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        tasting_notes: Optional[str] = None,
+        pairing_notes: Optional[str] = None
     ) -> Optional[ConsumptionRecord]:
         """Logs a bottle consumption and updates inventory."""
-        return self.db.consume_bottle(bottle_id, count, rating, notes, pairing, aging_curve_stage, user_id=user_id)
+        final_notes = tasting_notes if tasting_notes is not None else notes
+        final_pairing = pairing_notes if pairing_notes is not None else pairing
+        return self.db.consume_bottle(bottle_id, count, rating, final_notes, final_pairing, aging_curve_stage, user_id=user_id)
 
     def log_gift(
         self,

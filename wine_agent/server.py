@@ -16,12 +16,23 @@ from wine_agent.models import WineBottle, WineType, BottleFormat, UserProfile
 WEB_DIR = Path(__file__).parent.parent / "web"
 
 APP_VERSION_INFO = {
-    "version": "2026.11.11.2",
-    "display_version": "v3.2.0",
-    "build": 1762882100,
+    "version": "2026.11.13.1",
+    "display_version": "v3.3.0",
+    "build": 1763052969,
 }
 
 APP_CHANGELOG = [
+    {
+        "version": "v3.3.0",
+        "build": "2026.11.13.1",
+        "date": "2026-11-13",
+        "title": "Conversational AI Sommelier & Menu Sequencing",
+        "highlights": [
+            "Two-Way Sommelier Dialogue: Chat iteratively with the AI Sommelier about your dinner, guests, or mood—swap bottles, adjust guest count, or add courses in a continuous conversation.",
+            "Multi-Course Menu & Opening Sequence: Describe a full menu and get cellar recommendations ordered in the exact pouring sequence (1st, 2nd, 3rd...) with palate-arc rationale and decanting/chilling timelines.",
+            "Menu-Ready Chat UI: Upgraded the Sommelier modal with a multi-line menu composer, cellar-specific follow-up chips (Opening & Decant Sequence, Swap a Bottle, Add a Course, Adjust for 6 Guests), and intent-aware badges."
+        ]
+    },
     {
         "version": "v3.2.0",
         "build": "2026.11.11.2",
