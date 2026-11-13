@@ -198,8 +198,6 @@ def format_cellar_context(bottles: List[WineBottle]) -> str:
         price_str = f", Paid: ${b.purchase_price:.0f}" if b.purchase_price else ""
         notes_str = f", Notes: {b.personal_notes}" if b.personal_notes else ""
         loc_str = f"Location: {b.location_rack or 'Cellar'}"
-        if b.location_bin:
-            loc_str += f" / {b.location_bin}"
 
         line = (
             f"- [ID {b.id}] {b.vintage or 'NV'} {b.producer} '{b.wine_name or ''}' ({b.varietal}, {b.region}) | "
@@ -625,7 +623,7 @@ INSTRUCTIONS:
    - If the conversation involves a multi-course meal or multiple bottles, always keep the **Opening & Pouring Sequence** crystal clear (1st, 2nd, 3rd, etc., progressing from sparkling/crisp/lightest to richest/most tannic/sweetest).
    - Update the sequence and prep timeline (when to chill, open, or decant each bottle relative to dinner) whenever the menu or lineup changes.
 3. CELLAR GROUNDING & SERVICE DETAILS:
-   - For every cellar bottle you recommend or discuss, include its full name, vintage, cellar location (rack/bin), drinking status, pairing harmony, and service guidance (decant duration and serving temperature in °F).
+   - For every cellar bottle you recommend or discuss, include its full name, vintage, cellar location (fridge/storage name only—do not mention or invent shelf or bin numbers), drinking status, pairing harmony, and service guidance (decant duration and serving temperature in °F).
 4. IF NO SUITABLE BOTTLES EXIST IN THE CELLAR for a revised dish or course:
    - Clearly note the gap in their cellar, and suggest 2 to 3 specific real-world benchmark wines to PURCHASE (ready to drink now, available at retail in NJ or shippable to NJ).
 5. Use a warm, authoritative Master Sommelier tone with clean Markdown.
@@ -653,7 +651,7 @@ INSTRUCTIONS:
 3. PRIORITIZE PEAK READINESS & SPECIFY DETAILS:
    - Prioritize cellar bottles whose Drinking Status is "In Peak Window", "Approaching Peak", or "Drink Soon (Late Peak)". If a "Hold (Too Young)" bottle is tempting, note why it wants more time or how long to decant it if opened tonight.
    - For each recommended cellar bottle, specify:
-     * Full Name, Vintage, and Cellar Location (e.g., rack/bin)
+     * Full Name, Vintage, and Cellar Location (fridge/storage name only—do not mention or invent shelf or bin numbers)
      * Drinking Status & Maturity Window
      * Pairing harmony with the dish/course
      * Exact decanting duration and ideal serving temperature (°F)

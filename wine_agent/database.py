@@ -239,6 +239,10 @@ class WineDatabase:
                     SET window_start = NULL, peak_start = NULL, peak_end = NULL, window_end = NULL
                     WHERE personal_notes IS NULL OR personal_notes NOT LIKE '%[CT iWine:%'
                 """)
+                conn.execute("""
+                    UPDATE bottles SET location_bin = ''
+                    WHERE location_bin IS NOT NULL AND location_bin != ''
+                """)
             except Exception:
                 pass
 
@@ -1655,7 +1659,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=3,
                 location_rack="Basement Fridge",
-                location_bin="Row 1, Bin 1-3",
+                location_bin="",
                 purchase_date="2014-05-12",
                 purchase_price=195.0,
                 market_value=320.0,
@@ -1676,7 +1680,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=2,
                 location_rack="Basement Fridge",
-                location_bin="Row 2, Bin 4-5",
+                location_bin="",
                 purchase_date="2018-09-20",
                 purchase_price=175.0,
                 market_value=240.0,
@@ -1697,7 +1701,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=2,
                 location_rack="Basement Fridge",
-                location_bin="Row 3, Bin 1-2",
+                location_bin="",
                 purchase_date="2016-03-10",
                 purchase_price=140.0,
                 market_value=190.0,
@@ -1718,7 +1722,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=1,
                 location_rack="Upstairs Fridge",
-                location_bin="Row 1, Bin 6 (Drink Soon)",
+                location_bin="",
                 purchase_date="2015-11-04",
                 purchase_price=75.0,
                 market_value=150.0,
@@ -1739,7 +1743,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=1,
                 location_rack="Upstairs Fridge",
-                location_bin="Row 2, Bin 1",
+                location_bin="",
                 purchase_date="2017-04-18",
                 purchase_price=160.0,
                 market_value=350.0,
@@ -1760,7 +1764,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=4,
                 location_rack="Basement Fridge",
-                location_bin="Deep Cellar 1-4",
+                location_bin="",
                 purchase_date="2022-10-01",
                 purchase_price=225.0,
                 market_value=275.0,
@@ -1781,7 +1785,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=2,
                 location_rack="Basement Fridge",
-                location_bin="Deep Cellar 5-6",
+                location_bin="",
                 purchase_date="2021-06-15",
                 purchase_price=280.0,
                 market_value=420.0,
@@ -1802,7 +1806,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=1,
                 location_rack="Basement Fridge",
-                location_bin="Lockbox 1",
+                location_bin="",
                 purchase_date="2023-02-14",
                 purchase_price=850.0,
                 market_value=1200.0,
@@ -1823,7 +1827,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=2,
                 location_rack="Basement Fridge",
-                location_bin="Row 4, Bin 1-2",
+                location_bin="",
                 purchase_date="2019-11-20",
                 purchase_price=260.0,
                 market_value=360.0,
@@ -1865,7 +1869,7 @@ class WineDatabase:
                 format=BottleFormat.STANDARD,
                 quantity=2,
                 location_rack="Upstairs Fridge",
-                location_bin="Row 3, Bin 3-4",
+                location_bin="",
                 purchase_date="2017-08-10",
                 purchase_price=120.0,
                 market_value=210.0,
@@ -1886,7 +1890,7 @@ class WineDatabase:
                 format=BottleFormat.HALF,
                 quantity=2,
                 location_rack="Upstairs Fridge",
-                location_bin="Half Bottle Bin 1",
+                location_bin="",
                 purchase_date="2010-01-20",
                 purchase_price=290.0,
                 market_value=550.0,

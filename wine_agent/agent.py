@@ -65,7 +65,7 @@ class SommelierAgent:
         if urgent_bottles:
             recommendations.append(
                 f"🚨 **Drink Soon Alert**: You have {len(urgent_bottles)} bottle(s) in late maturity or past peak. "
-                f"Plan to open `{urgent_bottles[0].display_name}` ({urgent_bottles[0].location_rack} / {urgent_bottles[0].location_bin}) within the next 3-6 months before fruit fades."
+                f"Plan to open `{urgent_bottles[0].display_name}` ({urgent_bottles[0].location_rack or 'Cellar'}) within the next 3-6 months before fruit fades."
             )
         if stats["hold_for_future"] > 0:
             recommendations.append(
