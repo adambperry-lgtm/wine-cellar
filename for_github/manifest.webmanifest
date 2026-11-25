@@ -1,0 +1,23 @@
+{
+  "name": "Cellar AssIstant",
+  "short_name": "Cellar AssIstant",
+  "description": "Old-world knowledge meets new-world intelligence. Your personal sommelier, powered by AI.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F4F0E6",
+  "theme_color": "#F4F0E6",
+  "icons": [
+    {
+      "src": "icon-192.png?v=2",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png?v=2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
