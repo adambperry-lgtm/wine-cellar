@@ -833,17 +833,19 @@
 
   <!-- MODAL: Ask Sommelier Tonight -->
   <div id="recommendModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div class="flex items-center gap-2.5">
-          <span id="sommModalIcon" class="text-2xl">✨</span>
-          <div>
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div class="shrink-0 flex items-center justify-between gap-3 px-6 pt-5 pb-3 border-b border-slate-800 bg-slate-900">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span id="sommModalIcon" class="text-2xl shrink-0">✨</span>
+          <div class="min-w-0">
             <h3 id="sommModalTitle" class="text-base font-bold text-white">Ask Sommelier: Chat &amp; Plan Tonight's Wines</h3>
             <p id="sommModalSubtitle" class="text-xs text-slate-400">Tell the sommelier about your dinner menu or occasion to chat through cellar picks, opening order, and decanting times.</p>
           </div>
         </div>
-        <button onclick="closeModal('recommendModal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+        <button onclick="closeModal('recommendModal')" aria-label="Close AI Sommelier" class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition text-lg">✕</button>
       </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-4 flex flex-col gap-5">
 
       <!-- Intent Tabs: Pull from Cellar vs Purchase Recommendations -->
       <div class="flex border-b border-slate-800 gap-4">
@@ -945,6 +947,7 @@
       <!-- Recommendation Results -->
       <div id="sommelierResults" class="flex flex-col gap-3 pt-2">
         <!-- Rendered results -->
+      </div>
       </div>
     </div>
   </div>
@@ -1146,16 +1149,16 @@
 
             <!-- Headline Card -->
             <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col gap-2">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-1.5">
-                  <span id="scanBadgeStatus" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span id="scanBadgeStatus" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800 whitespace-nowrap">
                     Cellar Hold ⏳
                   </span>
-                  <span id="scanEngineSourceBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1">
+                  <span id="scanEngineSourceBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1 whitespace-nowrap">
                     <span>✨</span> Gemini Vision
                   </span>
                 </div>
-                <span id="scanDetectedType" class="text-xs text-slate-400">Red Wine</span>
+                <span id="scanDetectedType" class="text-xs text-slate-400 inline-flex items-center gap-1 shrink-0 whitespace-nowrap">Red Wine</span>
               </div>
               <div>
                 <h4 id="scanDisplayTitle" class="text-base font-bold text-white">2024 Hunnicutt Cabernet Sauvignon</h4>
@@ -3556,6 +3559,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
       }
       if (id === 'recommendModal') {
         initGeminiControls();
+        loadSommelierChatState(sommelierIntent);
       }
       if (id === 'scanLabelModal') {
         if (typeof updateScanModalGeminiStatus === 'function') {
@@ -5994,9 +5998,67 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
     let sommelierChatHistory = [];
     let sommelierIsThinking = false;
 
+    function getSommelierStorageKey(intent = sommelierIntent) {
+      const uid = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : 1;
+      const cleanIntent = (intent === 'buy') ? 'buy' : 'open';
+      return `sommelier_chat_${uid}_${cleanIntent}`;
+    }
+
+    function saveSommelierChatState(intent = sommelierIntent) {
+      const cleanIntent = (intent === 'buy') ? 'buy' : 'open';
+      try {
+        localStorage.setItem(getSommelierStorageKey(cleanIntent), JSON.stringify(sommelierChatHistory || []));
+      } catch (e) {}
+      fetch('/api/gemini/sommelier/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intent: cleanIntent, history: sommelierChatHistory || [] })
+      }).catch(() => {});
+    }
+
+    function loadSommelierChatState(intent = sommelierIntent) {
+      const cleanIntent = (intent === 'buy') ? 'buy' : 'open';
+      sommelierChatHistory = [];
+      try {
+        const raw = localStorage.getItem(getSommelierStorageKey(cleanIntent));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) sommelierChatHistory = parsed;
+        }
+      } catch (e) {}
+
+      if (sommelierChatHistory.length > 0) {
+        renderSommelierChatThread(false);
+      } else {
+        const resultsContainer = document.getElementById('sommelierResults');
+        if (resultsContainer) resultsContainer.innerHTML = '';
+      }
+
+      fetch(`/api/gemini/sommelier/history?intent=${encodeURIComponent(cleanIntent)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && Array.isArray(data.history) && data.history.length > 0 && sommelierIntent === cleanIntent && sommelierChatHistory.length === 0 && !sommelierIsThinking) {
+            sommelierChatHistory = data.history;
+            try {
+              localStorage.setItem(getSommelierStorageKey(cleanIntent), JSON.stringify(sommelierChatHistory));
+            } catch (e) {}
+            renderSommelierChatThread(false);
+          }
+        })
+        .catch(() => {});
+    }
+
     function resetSommelierChat() {
       sommelierChatHistory = [];
       sommelierIsThinking = false;
+      try {
+        localStorage.removeItem(getSommelierStorageKey(sommelierIntent));
+      } catch (e) {}
+      fetch('/api/gemini/sommelier/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intent: sommelierIntent })
+      }).catch(() => {});
       const resultsContainer = document.getElementById('sommelierResults');
       if (resultsContainer) resultsContainer.innerHTML = '';
       const input = document.getElementById('foodQueryInput');
@@ -6008,7 +6070,6 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
 
     function setSommelierIntent(intent) {
       sommelierIntent = intent;
-      sommelierChatHistory = [];
       sommelierIsThinking = false;
       const tabOpen = document.getElementById('tabSommOpen');
       const tabBuy = document.getElementById('tabSommBuy');
@@ -6046,6 +6107,7 @@ Silver Oak,Alexander Valley,2015,Cabernet Sauvignon,1,Upstairs Fridge,85" class=
         if (inputEl) inputEl.placeholder = "e.g. Hosting 4 friends: oysters to start, mushroom risotto, then dry-aged ribeye. What should I open and in what order?";
         if (btnEl) btnEl.textContent = "Ask Sommelier";
       }
+      loadSommelierChatState(intent);
     }
 
     const ACQUISITION_CATALOG = [
@@ -6553,7 +6615,7 @@ INSTRUCTIONS:
    - If the conversation involves a multi-course meal or multiple bottles, always keep the **Opening & Pouring Sequence** crystal clear (1st, 2nd, 3rd, etc., progressing from sparkling/crisp/lightest to richest/most tannic/sweetest).
    - Update the sequence and prep timeline (when to chill, open, or decant each bottle relative to dinner) whenever the menu or lineup changes.
 3. CELLAR GROUNDING & SERVICE DETAILS:
-   - For every cellar bottle you recommend or discuss, include its full name, vintage, cellar location (rack/bin), drinking status, pairing harmony, and service guidance (decant duration and serving temperature in °F).
+   - For every cellar bottle you recommend or discuss, include its full name, vintage, cellar location (fridge/storage name only—do not mention or invent shelf or bin numbers), drinking status, pairing harmony, and service guidance (decant duration and serving temperature in °F).
 4. IF NO SUITABLE BOTTLES EXIST IN THE CELLAR for a revised dish or course:
    - Clearly note the gap in their cellar, and suggest 2 to 3 specific real-world benchmark wines to PURCHASE (ready to drink now, available at retail in NJ or shippable to NJ).
 5. Use a warm, authoritative Master Sommelier tone with clean Markdown.`;
@@ -6579,7 +6641,7 @@ INSTRUCTIONS:
      * Provide a practical **Service & Decanting Timeline** (what to chill ahead of time, and how many minutes/hours before each course to pull and decant each bottle).
 3. PRIORITIZE PEAK READINESS & SPECIFY DETAILS:
    - Prioritize cellar bottles whose Drinking Status is "In Peak Window", "Approaching Peak", or "Drink Soon (Late Peak)".
-   - For each recommended cellar bottle, specify: Full Name, Vintage, Cellar Location, Drinking Status & Maturity Window, pairing harmony, exact decanting duration, and ideal serving temperature (°F).
+   - For each recommended cellar bottle, specify: Full Name, Vintage, Cellar Location (fridge/storage name only—do not mention or invent shelf or bin numbers), Drinking Status & Maturity Window, pairing harmony, exact decanting duration, and ideal serving temperature (°F).
 4. IF NO MATCHING BOTTLES EXIST IN THE CELLAR for the meal or a specific course (or if the cellar is empty):
    - Explicitly let the collector know which dish/course lacks a cellar match.
    - Automatically recommend 2 to 3 specific benchmark wines to PURCHASE ready to drink now (available at retail in NJ or shippable to NJ), including Wine & Producer, Target Vintage(s), Est. Price, NJ Availability, Pairing Harmony, Service Guidance, and: [🔍 Search Retailers (Ship to NJ)](https://www.google.com/search?q=buy+PRODUCER+WINE+wine+ship+to+NJ)
@@ -6843,10 +6905,11 @@ INSTRUCTIONS:
         sommelierIsThinking = false;
         if (result.success && result.advice) {
           sommelierChatHistory.push({ role: 'assistant', content: result.advice });
+          saveSommelierChatState();
           renderSommelierChatThread(false);
           setTimeout(() => {
             const inp = document.getElementById('sommelierFollowUpInput');
-            if (inp) inp.focus();
+            if (inp) inp.focus({ preventScroll: true });
           }, 50);
         } else {
           const friendlyError = formatSommelierErrorMessage(result.error);
@@ -6855,7 +6918,7 @@ INSTRUCTIONS:
           renderSommelierChatThread(false, friendlyError);
           setTimeout(() => {
             const inp = document.getElementById('sommelierFollowUpInput');
-            if (inp) inp.focus();
+            if (inp) inp.focus({ preventScroll: true });
           }, 50);
         }
       } else {
@@ -6865,7 +6928,7 @@ INSTRUCTIONS:
         renderSommelierChatThread(false);
         setTimeout(() => {
           const inp = document.getElementById('sommelierFollowUpInput');
-          if (inp) inp.focus();
+          if (inp) inp.focus({ preventScroll: true });
         }, 50);
       }
     }
@@ -6910,10 +6973,11 @@ INSTRUCTIONS:
         sommelierIsThinking = false;
         if (result.success && result.advice) {
           sommelierChatHistory.push({ role: 'assistant', content: result.advice });
+          saveSommelierChatState();
           renderSommelierChatThread(false);
           setTimeout(() => {
             const inp = document.getElementById('sommelierFollowUpInput');
-            if (inp) inp.focus();
+            if (inp) inp.focus({ preventScroll: true });
           }, 50);
           return;
         }
@@ -8063,20 +8127,22 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
         document.getElementById('scanDisplayTitle').textContent = `${bottle.vintage || 'NV'} ${bottle.producer} ${bottle.wine_name || bottle.varietal}`;
         document.getElementById('scanDisplaySubtitle').textContent = `${bottle.region || ''} • ${bottle.varietal || ''}`;
       }
-      document.getElementById('scanDetectedType').textContent = `${getWineIcon(bottle ? bottle.wine_type : 'Red')} ${(bottle && bottle.wine_type) || 'Red'} Wine`;
+      const detectedType = (bottle && bottle.wine_type) || 'Red';
+      const detectedTypeLabel = /wine$/i.test(detectedType) ? detectedType : `${detectedType} Wine`;
+      document.getElementById('scanDetectedType').innerHTML = `${getWineIcon(detectedType)}<span>${escapeHtml(detectedTypeLabel)}</span>`;
       
       const badge = document.getElementById('scanBadgeStatus');
       if (status.includes("Peak Window")) {
-        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800";
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 whitespace-nowrap";
         badge.textContent = "In Peak Window 🍷";
       } else if (status.includes("Approaching")) {
-        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-950 text-cyan-300 border border-cyan-800";
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-950 text-cyan-300 border border-cyan-800 whitespace-nowrap";
         badge.textContent = "Approaching Peak";
       } else if (status.includes("Drink Soon")) {
-        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800";
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800 whitespace-nowrap";
         badge.textContent = "Drink Soon ⚠️";
       } else {
-        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-950 text-indigo-300 border border-indigo-800";
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-950 text-indigo-300 border border-indigo-800 whitespace-nowrap";
         badge.textContent = "Cellar Hold ⏳";
       }
 
@@ -8084,13 +8150,13 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       const sourceBadge = document.getElementById('scanEngineSourceBadge');
       if (sourceBadge) {
         if (method === "gemini_vision") {
-          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1";
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1 whitespace-nowrap";
           sourceBadge.innerHTML = "<span>✨</span> Gemini Vision";
         } else if (method === "sample") {
-          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1";
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1 whitespace-nowrap";
           sourceBadge.innerHTML = "<span>⚡</span> Sample Label";
         } else {
-          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1";
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1 whitespace-nowrap";
           sourceBadge.innerHTML = "<span>🔍</span> Optical OCR";
         }
       }

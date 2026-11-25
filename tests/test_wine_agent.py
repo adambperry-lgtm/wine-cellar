@@ -1542,7 +1542,18 @@ class TestUserStickyStorageLocations(unittest.TestCase):
         finally:
             tmp_dir.cleanup()
 
+    def test_scan_detected_type_renders_svg_icon_as_html(self):
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        for rel_path in ("index.html", os.path.join("web", "index.html"), os.path.join("web", "index_blank.html"), os.path.join("for_github", "index.html")):
+            full_path = os.path.join(repo_root, rel_path)
+            with open(full_path, "r", encoding="utf-8") as f:
+                html = f.read()
+            self.assertNotIn("getElementById('scanDetectedType').textContent", html, f"{rel_path} still assigns scanDetectedType via textContent")
+            self.assertIn("getElementById('scanDetectedType').innerHTML", html, f"{rel_path} must render scanDetectedType via innerHTML")
+            self.assertIn('id="scanDetectedType" class="text-xs text-slate-400 inline-flex items-center', html, f"{rel_path} scanDetectedType should use inline-flex alignment")
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

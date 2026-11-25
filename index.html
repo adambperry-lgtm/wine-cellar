@@ -1149,16 +1149,16 @@
 
             <!-- Headline Card -->
             <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col gap-2">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-1.5">
-                  <span id="scanBadgeStatus" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span id="scanBadgeStatus" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800 whitespace-nowrap">
                     Cellar Hold ⏳
                   </span>
-                  <span id="scanEngineSourceBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1">
+                  <span id="scanEngineSourceBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1 whitespace-nowrap">
                     <span>✨</span> Gemini Vision
                   </span>
                 </div>
-                <span id="scanDetectedType" class="text-xs text-slate-400">Red Wine</span>
+                <span id="scanDetectedType" class="text-xs text-slate-400 inline-flex items-center gap-1 shrink-0 whitespace-nowrap">Red Wine</span>
               </div>
               <div>
                 <h4 id="scanDisplayTitle" class="text-base font-bold text-white">2024 Hunnicutt Cabernet Sauvignon</h4>
@@ -9190,20 +9190,22 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
         document.getElementById('scanDisplayTitle').textContent = `${bottle.vintage || 'NV'} ${bottle.producer} ${bottle.wine_name || bottle.varietal}`;
         document.getElementById('scanDisplaySubtitle').textContent = `${bottle.region || ''} • ${bottle.varietal || ''}`;
       }
-      document.getElementById('scanDetectedType').textContent = `${getWineIcon(bottle ? bottle.wine_type : 'Red')} ${(bottle && bottle.wine_type) || 'Red'} Wine`;
+      const detectedType = (bottle && bottle.wine_type) || 'Red';
+      const detectedTypeLabel = /wine$/i.test(detectedType) ? detectedType : `${detectedType} Wine`;
+      document.getElementById('scanDetectedType').innerHTML = `${getWineIcon(detectedType)}<span>${escapeHtml(detectedTypeLabel)}</span>`;
       
       const badge = document.getElementById('scanBadgeStatus');
       if (status.includes("Peak Window")) {
-        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800";
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 whitespace-nowrap";
         badge.textContent = "In Peak Window 🍷";
       } else if (status.includes("Approaching")) {
-        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-950 text-cyan-300 border border-cyan-800";
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-950 text-cyan-300 border border-cyan-800 whitespace-nowrap";
         badge.textContent = "Approaching Peak";
       } else if (status.includes("Drink Soon")) {
-        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800";
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800 whitespace-nowrap";
         badge.textContent = "Drink Soon ⚠️";
       } else {
-        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-950 text-indigo-300 border border-indigo-800";
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-950 text-indigo-300 border border-indigo-800 whitespace-nowrap";
         badge.textContent = "Cellar Hold ⏳";
       }
 
@@ -9211,13 +9213,13 @@ Extract and return ONLY a valid, raw JSON object (without markdown code blocks, 
       const sourceBadge = document.getElementById('scanEngineSourceBadge');
       if (sourceBadge) {
         if (method === "gemini_vision") {
-          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1";
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-950 text-violet-300 border border-violet-800 flex items-center gap-1 whitespace-nowrap";
           sourceBadge.innerHTML = "<span>✨</span> Gemini Vision";
         } else if (method === "sample") {
-          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1";
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1 whitespace-nowrap";
           sourceBadge.innerHTML = "<span>⚡</span> Sample Label";
         } else {
-          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1";
+          sourceBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1 whitespace-nowrap";
           sourceBadge.innerHTML = "<span>🔍</span> Optical OCR";
         }
       }
